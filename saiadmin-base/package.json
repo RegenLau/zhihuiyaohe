@@ -1,0 +1,11 @@
+{
+  "name": "t2-saiadmin",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev:frontend": "pnpm --dir frontend dev",
+    "dev:mock": "pnpm --dir mock-api dev",
+    "install:all": "pnpm --dir frontend install && pnpm --dir mock-api install",
+    "build:frontend": "pnpm --dir frontend build"
+  }
+}

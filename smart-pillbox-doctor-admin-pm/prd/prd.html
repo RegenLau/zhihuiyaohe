@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>智慧药盒医药师后台 PRD</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #64748b;
+      --line: #dbe3ef;
+      --brand: #1f6feb;
+      --brand-soft: #e8f1ff;
+      --ok: #0f8f62;
+      --warn: #b7791f;
+      --danger: #b42318;
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.68;
+    }
+
+    a {
+      color: var(--brand);
+      text-decoration: none;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .toc {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 24px 18px;
+      background: #0f172a;
+      color: #dbeafe;
+      overflow: auto;
+    }
+
+    .toc h2 {
+      margin: 0 0 18px;
+      font-size: 18px;
+      color: #ffffff;
+    }
+
+    .toc a {
+      display: block;
+      padding: 8px 10px;
+      border-radius: 6px;
+      color: #bfdbfe;
+      font-size: 14px;
+    }
+
+    .toc a:hover {
+      background: rgba(255,255,255,.08);
+      color: #ffffff;
+    }
+
+    main {
+      max-width: 1180px;
+      width: 100%;
+      padding: 32px;
+    }
+
+    .hero,
+    section,
+    .module {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 28px rgba(15, 23, 42, .05);
+    }
+
+    .hero {
+      padding: 28px;
+      margin-bottom: 18px;
+    }
+
+    section {
+      padding: 24px;
+      margin: 18px 0;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      line-height: 1.25;
+    }
+
+    h2 {
+      margin: 0 0 16px;
+      font-size: 22px;
+      line-height: 1.35;
+    }
+
+    h3 {
+      margin: 20px 0 10px;
+      font-size: 18px;
+    }
+
+    h4 {
+      margin: 16px 0 8px;
+      font-size: 15px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--brand-soft);
+      color: #174ea6;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .note {
+      padding: 12px 14px;
+      border-left: 4px solid var(--brand);
+      background: #f8fbff;
+      color: #334155;
+      border-radius: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      background: #f1f5f9;
+      font-weight: 700;
+    }
+
+    ul {
+      margin: 8px 0 12px 20px;
+      padding: 0;
+    }
+
+    li {
+      margin: 4px 0;
+    }
+
+    code,
+    pre {
+      font-family: Consolas, "SFMono-Regular", monospace;
+    }
+
+    code {
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: #eef2f7;
+      color: #0f172a;
+    }
+
+    pre {
+      overflow: auto;
+      padding: 14px;
+      border-radius: 8px;
+      background: #111827;
+      color: #e5e7eb;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .module {
+      padding: 18px;
+      margin: 16px 0;
+      box-shadow: none;
+    }
+
+    .module h3 {
+      margin-top: 0;
+    }
+
+    .priority {
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .p0 { color: var(--danger); }
+    .p1 { color: var(--warn); }
+    .p2 { color: var(--ok); }
+
+    .status {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #edf2f7;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .todo {
+      border-style: dashed;
+      background: #fbfdff;
+    }
+
+    @media (max-width: 860px) {
+      .layout {
+        display: block;
+      }
+
+      .toc {
+        position: static;
+        height: auto;
+      }
+
+      main {
+        padding: 18px;
+      }
+
+      .grid-2,
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="toc">
+      <h2>PRD 导航</h2>
+      <a href="#info">项目信息</a>
+      <a href="#background">一、需求背景</a>
+      <a href="#goals">二、需求目标</a>
+      <a href="#users">三、用户与场景</a>
+      <a href="#scope">四、功能清单</a>
+      <a href="#details">五、详细方案</a>
+      <a href="#flow">六、业务流程</a>
+      <a href="#exceptions">七、异常与边界</a>
+      <a href="#data">八、数据与接口</a>
+      <a href="#roadmap">九、演进规划</a>
+      <a href="#appendix">十、附件</a>
+    </aside>
+
+    <main>
+      <div class="hero">
+        <h1>智慧药盒医药师网页后台 PRD</h1>
+        <p>目标是在 SaiAdmin 后台中完成医药师端管理闭环，支撑智慧药盒在基层医疗和家庭用药管理场景中的正式使用。</p>
+        <div class="meta">
+          <span class="badge">产品：智慧药盒</span>
+          <span class="badge">端：PC 网页后台</span>
+          <span class="badge">用户：医药师 / 管理员</span>
+          <span class="badge">技术基座：SaiAdmin v6</span>
+        </div>
+      </div>
+
+      <section id="info">
+        <h2>项目信息与版本记录</h2>
+        <table>
+          <tr><th>字段</th><th>内容</th></tr>
+          <tr><td>产品名称</td><td>智慧药盒医药师网页后台</td></tr>
+          <tr><td>版本定义</td><td>正式业务闭环版</td></tr>
+          <tr><td>核心目标</td><td>让医药师可以在后台完成患者建档、用药计划维护、药盒绑定、服药任务查看、提醒管理、药盒语音对话追踪和知情同意书配置。</td></tr>
+          <tr><td>实现载体</td><td><code>saiadmin-base/frontend/src/views/plugin/t2</code> 下新增业务模块，接口层先按正式业务结构设计。</td></tr>
+          <tr><td>原始资料</td><td>会议逐字稿、腾讯会议总结、功能需求图 1、功能需求图 2、SaiAdmin 基础架构文档。</td></tr>
+        </table>
+
+        <table>
+          <tr><th>日期</th><th>版本</th><th>修改内容</th><th>修改人</th></tr>
+          <tr><td>2026-05-20</td><td>正式业务闭环版</td><td>基于会议资料生成医药师后台 PRD。</td><td>Codex</td></tr>
+        </table>
+      </section>
+
+      <section id="background">
+        <h2>一、需求背景</h2>
+        <h3>1.1 现状问题</h3>
+        <ul>
+          <li>智慧药盒需要进入基层医疗和家庭场景试点，但目前缺少医药师可操作的 PC 后台。</li>
+          <li>在未接通医院 HIS、审方系统等接口前，处方和用药计划需要由医药师人工维护。</li>
+          <li>患者服药任务、药盒开关记录、提醒结果如果无法在后台查看，就无法形成管理闭环。</li>
+          <li>现场应用需要明确完整功能链路，而不是只依赖单点硬件能力。</li>
+        </ul>
+
+        <h3>1.2 为什么现在做</h3>
+        <p>项目需要在基层医疗机构和患者家庭之间建立一套可持续运行的用药管理链路。医药师后台是业务闭环的中心：所有患者、计划、设备和任务数据都需要先在后台形成，并可被小程序端和药盒端持续使用。</p>
+
+        <h3>1.3 产品定位</h3>
+        <p>当前阶段不替代完整医院信息系统，而是建设一套面向基层慢病用药管理的轻量后台。首次建档采用分步向导，确保患者信息、用药计划、药盒绑定和任务生成不遗漏；后续复诊和日常维护仍保留独立模块，方便单独调整用药计划、药盒和提醒消息。</p>
+      </section>
+
+      <section id="goals">
+        <h2>二、需求目标</h2>
+        <table>
+          <tr><th>目标类型</th><th>描述</th><th>衡量指标</th><th>目标值</th></tr>
+          <tr>
+            <td>业务闭环目标</td>
+            <td>医药师可通过建档向导完整完成新增患者、创建用药计划、绑定药盒、生成任务，并可在独立模块中进行后续维护。</td>
+            <td>核心流程可完成率</td>
+            <td>100%</td>
+          </tr>
+          <tr>
+            <td>业务目标</td>
+            <td>支撑基层医药师管理 10 到 20 名老年慢病患者。</td>
+            <td>单医药师可管理患者数量</td>
+            <td>不少于 20 人</td>
+          </tr>
+          <tr>
+            <td>数据目标</td>
+            <td>沉淀患者、药品、计划、任务、药盒、消息的数据结构，为后续真实接口和数据库做准备。</td>
+            <td>核心实体覆盖率</td>
+            <td>覆盖 P0 模块</td>
+          </tr>
+          <tr>
+            <td>体验目标</td>
+            <td>后台操作像常规管理系统，医药师无需理解底层设备技术即可完成配置。</td>
+            <td>新增患者并创建计划耗时</td>
+            <td>标准录入场景下小于 3 分钟</td>
+          </tr>
+        </table>
+      </section>
+
+      <section id="users">
+        <h2>三、用户与使用场景</h2>
+        <h3>3.1 典型用户</h3>
+        <div class="grid-2">
+          <div class="module">
+            <h3>医药师</h3>
+            <p>医生和药师在系统中合并为同一业务角色。该角色负责患者诊疗信息、基础疾病、处方调整、用药计划录入、处方核对、药盒绑定、服药任务查看、复诊提醒和高风险对话复核。</p>
+          </div>
+          <div class="module">
+            <h3>管理员</h3>
+            <p>负责医药师账号、药盒设备、业务数据和基础字典维护。关注系统环境是否稳定。</p>
+          </div>
+        </div>
+
+        <h3>3.2 核心用户旅程</h3>
+        <table>
+          <tr><th>阶段</th><th>用户触点</th><th>用户行为</th><th>痛点 / 风险</th><th>产品机会点</th></tr>
+          <tr>
+            <td>患者建档</td>
+            <td>医药师后台</td>
+            <td>录入患者基础信息、疾病信息、子女联系方式。</td>
+            <td>没有 HIS 接口时，患者信息只能手动维护；身份证号涉及隐私和合规。</td>
+            <td>提供清晰表单；身份证号设为可选；显示知情同意状态。</td>
+          </tr>
+          <tr>
+            <td>首次开方</td>
+            <td>用药计划页面</td>
+            <td>根据处方手动录入药品、剂量、频次、服药时间。</td>
+            <td>处方来源可能是纸质照片、HIS 截图或人工输入。</td>
+            <td>支持处方附件上传和药品明细手动维护。</td>
+          </tr>
+          <tr>
+            <td>设备绑定</td>
+            <td>药盒绑定页面</td>
+            <td>选择药盒 SN，绑定患者，生成或记录小程序绑定状态。</td>
+            <td>患者和子女不一定同时在现场；配网流程可能不稳定。</td>
+            <td>后台只负责绑定关系和状态展示；小程序端负责配网引导。</td>
+          </tr>
+          <tr>
+            <td>日常管理</td>
+            <td>任务与看板</td>
+            <td>查看患者每日服药任务完成情况、漏服情况和药盒开关记录。</td>
+            <td>如果数据只存在硬件侧，医药师无法评估依从性。</td>
+            <td>按患者聚合任务、完成率、异常记录。</td>
+          </tr>
+          <tr>
+            <td>复诊调整</td>
+            <td>计划和提醒页面</td>
+            <td>停用旧计划，新增或修改新计划，创建复诊提醒。</td>
+            <td>老年慢病患者复诊后常有换药、停药、加药。</td>
+            <td>计划支持版本和启停；旧计划可归档，新计划可生效。</td>
+          </tr>
+        </table>
+      </section>
+
+      <section id="scope">
+        <h2>四、需求功能清单</h2>
+        <table>
+          <tr><th>模块</th><th>功能点</th><th>说明</th><th>优先级</th></tr>
+          <tr><td>医药师工作台</td><td>总览看板</td><td>患者数、绑定药盒数、今日任务、漏服人数、待复诊提醒。</td><td class="priority p0">P0</td></tr>
+          <tr><td>患者建档</td><td>新增患者建档向导</td><td>首次新增患者时按步骤完成患者信息、诊疗信息、用药计划、药盒绑定和任务生成。</td><td class="priority p0">P0</td></tr>
+          <tr><td>患者管理</td><td>患者列表 / 编辑 / 详情 / 删除</td><td>维护患者基础信息、疾病信息、实名状态、知情同意状态。</td><td class="priority p0">P0</td></tr>
+          <tr><td>患者管理</td><td>子女账号绑定信息</td><td>展示子女姓名、手机号、绑定状态、最近查看时间。</td><td class="priority p0">P0</td></tr>
+          <tr><td>用药计划</td><td>计划新增 / 修改 / 停用 / 复制</td><td>支持首次处方和复诊后调整，允许换药、停药、加药。</td><td class="priority p0">P0</td></tr>
+          <tr><td>用药计划</td><td>药品明细维护</td><td>药名、规格、剂量、频次、服药时段、疗程、备注。</td><td class="priority p0">P0</td></tr>
+          <tr><td>处方管理</td><td>处方图片/截图上传</td><td>支持拍照处方、HIS/审方系统截图作为附件。</td><td class="priority p1">P1</td></tr>
+          <tr><td>设备管理</td><td>设备卡片 / 绑定 / 解绑</td><td>维护药盒 SN、在线状态、电量、WiFi 状态、固件版本、最近上报时间和绑定患者。</td><td class="priority p0">P0</td></tr>
+          <tr><td>服药任务</td><td>任务列表 / 状态查看</td><td>查看待服药、已完成、漏服、设备上报异常。</td><td class="priority p0">P0</td></tr>
+          <tr><td>提醒消息</td><td>复诊提醒 / 子女提醒</td><td>支持后台创建消息；小程序当前以消息中心展示为主。</td><td class="priority p0">P0</td></tr>
+          <tr><td>对话记录</td><td>语音问答记录 / 知识库命中 / 复核处理</td><td>查看患者通过药盒发起的语音咨询，支持高风险问题转人工和医药师复核。</td><td class="priority p0">P0</td></tr>
+          <tr><td>系统设置</td><td>知情同意书内容配置</td><td>维护小程序端展示的知情同意书内容、版本和启用状态；患者或家属在小程序端确认。</td><td class="priority p0">P0</td></tr>
+          <tr><td>统计报表</td><td>患者依从性统计</td><td>按患者、按周期统计服药完成率。</td><td class="priority p1">P1</td></tr>
+          <tr><td>知识库接入</td><td>药品相互作用知识库</td><td>用于后续语音问答增强，后台先预留入口。</td><td class="priority p2">P2</td></tr>
+        </table>
+
+        <div class="note">核心业务闭环：新增患者建档 -> 添加用药计划 -> 绑定药盒/小程序 -> 小程序端确认知情同意 -> 生成服药任务 -> 查看任务和对话记录 -> 创建复诊或子女提醒。</div>
+      </section>
+
+      <section id="details">
+        <h2>五、详细方案</h2>
+
+        <div class="module">
+          <h3>5.1 医药师工作台</h3>
+          <h4>页面目标</h4>
+          <p>医药师登录后第一屏看到当前管理范围内的患者和任务风险，快速进入待处理患者。</p>
+          <h4>核心信息</h4>
+          <ul>
+            <li>统计卡片：患者总数、已绑定药盒数、今日服药任务、今日漏服人数、待复诊人数。</li>
+            <li>风险列表：连续漏服、未绑定药盒、药盒离线、复诊临近。</li>
+            <li>快捷入口：新增患者、创建用药计划、绑定药盒、创建提醒。</li>
+          </ul>
+          <h4>SaiAdmin 落地</h4>
+          <p>建议路径：<code>frontend/src/views/plugin/t2/dashboard/index.vue</code>。使用现有卡片和表格组件实现。</p>
+        </div>
+
+        <div class="module">
+          <h3>5.2 患者管理</h3>
+          <h4>列表字段</h4>
+          <table>
+            <tr><th>字段</th><th>说明</th></tr>
+            <tr><td>患者姓名</td><td>必填；支持按姓名搜索。</td></tr>
+            <tr><td>性别 / 年龄</td><td>基础展示字段。</td></tr>
+            <tr><td>手机号</td><td>用于联系和小程序绑定。</td></tr>
+            <tr><td>身份证号</td><td>选填；为未来医院系统对接预留。</td></tr>
+            <tr><td>基础疾病</td><td>多选或文本；如高血压、糖尿病、帕金森等。</td></tr>
+            <tr><td>实名状态</td><td>未实名 / 已登记 / 已核验；当前可由后台维护展示。</td></tr>
+            <tr><td>知情同意</td><td>待确认 / 已同意 / 已撤回；状态来自小程序端确认结果，后台不代替患者确认。</td></tr>
+            <tr><td>药盒状态</td><td>未绑定 / 已绑定 / 离线。</td></tr>
+            <tr><td>子女绑定</td><td>未绑定 / 已绑定；可查看绑定子女。</td></tr>
+          </table>
+          <h4>操作规则</h4>
+          <ul>
+            <li>新增患者时走建档向导，姓名、手机号、性别、年龄为必填；身份证号为选填。</li>
+            <li>删除患者时，如果存在生效中的用药计划或绑定药盒，默认提示先停用计划或解绑药盒。</li>
+            <li>患者详情页应聚合展示：基本信息、用药计划、服药任务、药盒、子女账号和提醒记录。</li>
+            <li>知情同意由患者或家属在小程序端阅读并点击确认；后台只展示确认状态、协议版本和确认时间。</li>
+          </ul>
+          <h4>首次建档向导</h4>
+          <table>
+            <tr><th>步骤</th><th>内容</th><th>规则</th></tr>
+            <tr><td>1. 患者信息</td><td>姓名、手机号、性别、年龄、身份证号、地址。</td><td>保存患者主档案。</td></tr>
+            <tr><td>2. 诊疗信息</td><td>基础疾病、诊疗备注、子女联系人。</td><td>子女信息可后续补充。</td></tr>
+            <tr><td>3. 用药计划</td><td>处方来源、药品明细、频次、疗程、复诊提醒。</td><td>保存后生成计划草稿或直接生效。</td></tr>
+            <tr><td>4. 设备绑定</td><td>药盒 SN、小程序绑定二维码、知情同意状态。</td><td>知情同意状态为“待患者在小程序确认”。</td></tr>
+            <tr><td>5. 确认建档</td><td>汇总校验并生成服药任务。</td><td>缺少药盒时允许先建档，任务下发状态标记为待绑定。</td></tr>
+          </table>
+          <h4>SaiAdmin 落地</h4>
+          <p>建议路径：<code>frontend/src/views/plugin/t2/patient/index.vue</code>，弹窗模块放在 <code>patient/modules</code>。</p>
+        </div>
+
+        <div class="module">
+          <h3>5.3 用药计划管理</h3>
+          <h4>业务规则</h4>
+          <ul>
+            <li>一个患者可拥有多条历史用药计划，但同一药品同一时段不应存在冲突的生效计划。</li>
+            <li>复诊后可停用旧计划，复制旧计划生成新计划，再进行换药、停药、加药。</li>
+            <li>计划保存后生成每日服药任务；任务用于小程序打卡和药盒提醒。</li>
+            <li>复诊提醒可按药品数量、用法用量、疗程天数推算，也允许医药师手动设置。</li>
+          </ul>
+          <h4>药品明细字段</h4>
+          <table>
+            <tr><th>字段</th><th>说明</th></tr>
+            <tr><td>药品名称</td><td>必填；当前可手动输入。</td></tr>
+            <tr><td>规格</td><td>如 5mg*28 片。</td></tr>
+            <tr><td>单次剂量</td><td>如 1 片、2 粒。</td></tr>
+            <tr><td>服药频次</td><td>每日一次、每日两次、每日三次、按需。</td></tr>
+            <tr><td>服药时段</td><td>早餐后、午餐后、晚餐后、睡前等。</td></tr>
+            <tr><td>开始 / 结束日期</td><td>用于生成任务和推算复诊。</td></tr>
+            <tr><td>状态</td><td>草稿、已生效、已停用、已完成。</td></tr>
+          </table>
+          <h4>SaiAdmin 落地</h4>
+          <p>建议路径：<code>frontend/src/views/plugin/t2/medication-plan/index.vue</code>。计划编辑建议使用抽屉或全屏表单，药品明细用可增删表格。</p>
+        </div>
+
+        <div class="module">
+          <h3>5.4 处方管理</h3>
+          <p>当前不强依赖 OCR，处方先作为用药计划的来源附件，便于业务追溯和后续识别能力接入。</p>
+          <ul>
+            <li>支持上传纸质处方照片。</li>
+            <li>支持上传 HIS 或审方软件截图。</li>
+            <li>一个用药计划可关联多张处方附件。</li>
+            <li>附件字段：文件名、类型、上传人、上传时间、关联患者、关联计划。</li>
+          </ul>
+          <p>建议路径：<code>frontend/src/views/plugin/t2/prescription/index.vue</code>，也可先内嵌在用药计划编辑页。</p>
+        </div>
+
+        <div class="module">
+          <h3>5.5 设备管理</h3>
+          <h4>页面目标</h4>
+          <p>后台负责维护药盒和患者的绑定关系，展示药盒状态。配网本身由小程序端引导，后台不直接承接 WiFi 输入。</p>
+          <h4>列表字段</h4>
+          <ul>
+            <li>药盒 SN、设备名称、在线状态、电量、最近上报时间、绑定患者、绑定时间。</li>
+            <li>开关记录：时间、格口或开关编号、动作、上报结果。</li>
+            <li>下发记录：计划 ID、下发时间、下发状态、失败原因。</li>
+          </ul>
+          <h4>操作规则</h4>
+          <ul>
+            <li>绑定药盒时必须选择患者。</li>
+            <li>同一药盒同一时间只能绑定一个患者。</li>
+            <li>解绑时保留历史任务和开关记录，不物理删除。</li>
+          </ul>
+          <p>建议路径：<code>frontend/src/views/plugin/t2/device/index.vue</code>。</p>
+        </div>
+
+        <div class="module">
+          <h3>5.6 服药任务完成情况</h3>
+          <h4>状态定义</h4>
+          <table>
+            <tr><th>状态</th><th>说明</th></tr>
+            <tr><td>待服药</td><td>计划生成但尚未到服药时间，或到点后未收到完成。</td></tr>
+            <tr><td>已完成</td><td>患者小程序打卡或药盒开关记录匹配成功。</td></tr>
+            <tr><td>漏服</td><td>超过允许时间窗口仍未完成。</td></tr>
+            <tr><td>设备异常</td><td>计划下发失败、药盒离线或开关上报异常。</td></tr>
+            <tr><td>已取消</td><td>计划停用后，未来任务取消。</td></tr>
+          </table>
+          <h4>查看维度</h4>
+          <ul>
+            <li>按患者查看：展示某个患者的今日任务和历史完成率。</li>
+            <li>按日期查看：展示医药师管理范围内当天所有任务。</li>
+            <li>按异常查看：筛选漏服、连续漏服、设备异常。</li>
+          </ul>
+          <p>建议路径：<code>frontend/src/views/plugin/t2/medication-task/index.vue</code>。</p>
+        </div>
+
+        <div class="module">
+          <h3>5.7 复诊提醒与子女提醒</h3>
+          <h4>提醒类型</h4>
+          <ul>
+            <li>复诊提醒：根据用药计划推算或医药师手动创建，可下发到药盒语音提醒和小程序消息中心。</li>
+            <li>子女提醒：当患者近期服药完成情况差时，医药师可生成提醒给子女端消息中心。</li>
+            <li>系统提醒：药盒离线、计划下发失败等系统生成消息。</li>
+          </ul>
+          <h4>约束</h4>
+          <ul>
+            <li>当前小程序不一定具备主动外部推送能力，因此以“消息中心”和后台记录为主。</li>
+            <li>短信、公众号服务号、APP push 作为后续通知渠道扩展。</li>
+          </ul>
+          <p>建议路径：<code>frontend/src/views/plugin/t2/message/index.vue</code>。</p>
+        </div>
+
+        <div class="module">
+          <h3>5.8 对话记录</h3>
+          <h4>页面目标</h4>
+          <p>医药师可以查看患者通过药盒发起的语音问答记录，追踪知识库命中、系统答复、风险等级和复核处理结果。</p>
+          <h4>核心字段</h4>
+          <table>
+            <tr><th>字段</th><th>说明</th></tr>
+            <tr><td>对话时间</td><td>患者发起语音咨询的时间。</td></tr>
+            <tr><td>患者 / 药盒</td><td>关联患者、药盒 SN 和家庭场景。</td></tr>
+            <tr><td>提问内容</td><td>语音识别后的文本，可保留原始语音文件地址。</td></tr>
+            <tr><td>问题类型</td><td>服药方法、药品相互作用、不良反应、复诊咨询等。</td></tr>
+            <tr><td>知识库命中</td><td>命中的知识库、规则或问答条目。</td></tr>
+            <tr><td>答复摘要</td><td>系统返回给患者的核心答复。</td></tr>
+            <tr><td>处理状态</td><td>已答复、待复核、转人工。</td></tr>
+            <tr><td>医药师复核意见</td><td>医药师对答复是否合规、是否需要随访的判断。</td></tr>
+          </table>
+          <h4>业务规则</h4>
+          <ul>
+            <li>涉及胸闷、严重不适、疑似不良反应的问题，应标记为高风险并转人工处理。</li>
+            <li>涉及药品相互作用的问题，应展示知识库来源，便于医药师复核。</li>
+            <li>复核后可生成子女提醒、复诊提醒或随访记录。</li>
+          </ul>
+          <p>建议路径：<code>frontend/src/views/plugin/t2/conversation/index.vue</code>。</p>
+        </div>
+
+        <div class="module">
+          <h3>5.9 系统设置</h3>
+          <h4>页面目标</h4>
+          <p>后台维护小程序端展示的知情同意书内容、版本和启用状态。患者或家属在小程序端阅读并点击确认，后台只记录确认状态和协议版本。</p>
+          <h4>知情同意书配置字段</h4>
+          <table>
+            <tr><th>字段</th><th>说明</th></tr>
+            <tr><td>协议名称</td><td>例如“智慧药盒服务知情同意书”。</td></tr>
+            <tr><td>协议版本</td><td>每次发布新内容生成新版本，历史版本不可覆盖。</td></tr>
+            <tr><td>适用端</td><td>患者端、子女端或两者同时适用。</td></tr>
+            <tr><td>协议摘要</td><td>小程序端列表或弹窗中的简短说明。</td></tr>
+            <tr><td>协议正文</td><td>完整知情同意内容，包含服务目的、信息采集、风险提示和授权确认。</td></tr>
+            <tr><td>启用状态</td><td>启用、停用、归档。</td></tr>
+          </table>
+          <h4>业务规则</h4>
+          <ul>
+            <li>后台可以编辑和发布知情同意书内容，但不能替患者或家属确认。</li>
+            <li>小程序绑定药盒或首次进入服务前，应展示当前启用版本并要求点击确认。</li>
+            <li>患者确认记录需保存协议版本、确认人、确认时间、确认端和关联患者。</li>
+            <li>协议新版本发布后，是否要求老用户重新确认应由系统设置控制。</li>
+          </ul>
+          <p>建议路径：<code>frontend/src/views/plugin/t2/settings/index.vue</code>。</p>
+        </div>
+
+        <div class="module">
+          <h3>5.10 高保真 HTML 原型</h3>
+          <p>原型文件已生成：<a href="../prototype/prototype.html">prototype/prototype.html</a>。该原型支持 Hash 页面切换和 <code>?focus=</code> 专注模式，可作为 PRD 原型切片嵌入。</p>
+          <table>
+            <tr><th>功能点</th><th>原型入口</th><th>说明</th></tr>
+            <tr><td>医药师工作台</td><td><a href="../prototype/prototype.html?focus=dashboard#dashboard">?focus=dashboard#dashboard</a></td><td>总览患者、药盒、任务、漏服和复诊风险。</td></tr>
+            <tr><td>患者管理</td><td><a href="../prototype/prototype.html?focus=patient#patients">?focus=patient#patients</a></td><td>患者列表、首次建档向导、疾病信息和知情同意状态。</td></tr>
+            <tr><td>用药计划</td><td><a href="../prototype/prototype.html?focus=plan#plans">?focus=plan#plans</a></td><td>计划列表、处方附件、药品明细可增删表格。</td></tr>
+            <tr><td>服药任务</td><td><a href="../prototype/prototype.html?focus=task#tasks">?focus=task#tasks</a></td><td>按日期和状态查看已完成、漏服、设备异常任务。</td></tr>
+            <tr><td>设备管理</td><td><a href="../prototype/prototype.html?focus=device#devices">?focus=device#devices</a></td><td>卡片式查看药盒绑定、在线状态、WiFi、电量、固件版本和计划下发记录。</td></tr>
+            <tr><td>提醒消息</td><td><a href="../prototype/prototype.html?focus=message#messages">?focus=message#messages</a></td><td>复诊提醒、子女提醒和系统提醒。</td></tr>
+            <tr><td>对话记录</td><td><a href="../prototype/prototype.html?focus=conversation#conversations">?focus=conversation#conversations</a></td><td>药盒语音问答、知识库命中、风险状态和复核处理。</td></tr>
+            <tr><td>系统设置</td><td><a href="../prototype/prototype.html?focus=settings#settings">?focus=settings#settings</a></td><td>知情同意书内容、版本、启用状态和小程序展示预览。</td></tr>
+          </table>
+
+          <div class="sandbox-preview" style="border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-top: 14px; background: #fff;">
+            <div style="background: #f3f6fb; padding: 8px 12px; color: var(--muted); font-size: 12px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between;">
+              <span>Web 后台原型预览</span>
+              <span>支持 Hash 路由和 Focus 模式</span>
+            </div>
+            <iframe src="../prototype/prototype.html?focus=dashboard#dashboard" style="width: 100%; height: 640px; border: 0;" sandbox="allow-scripts allow-same-origin"></iframe>
+          </div>
+        </div>
+      </section>
+
+      <section id="flow">
+        <h2>六、业务流程图</h2>
+        <p>核心主流程如下，单独 Mermaid 文件位于 <code>flowcharts/doctor-admin-core-flow.mmd</code>。</p>
+        <pre><code>flowchart TD
+    A[医药师登录后台] --> B[进入医药师工作台]
+    B --> C[新增患者建档向导或选择已有患者]
+    C --> C1{是否首次建档}
+    C1 -- 是 --> C2[填写患者信息和诊疗信息]
+    C2 --> E[添加用药计划]
+    C1 -- 否 --> D{是否需要调整用药计划}
+    D -- 是 --> F[复诊后复制或修改计划]
+    D -- 否 --> J
+    E --> G[录入药品明细]
+    F --> G
+    G --> H[上传处方照片或截图]
+    H --> I[保存并生成服药任务]
+    I --> J[绑定药盒]
+    J --> K[记录小程序和子女绑定状态]
+    K --> K1[患者或家属在小程序确认知情同意]
+    K1 --> L[药盒接收计划并提醒]
+    L --> M[患者服药或小程序打卡]
+    L --> T[患者通过药盒发起语音咨询]
+    T --> U[系统生成对话记录]
+    U --> V{是否高风险或需复核}
+    V -- 是 --> W[医药师复核或转人工]
+    V -- 否 --> N
+    M --> N[后台查看任务完成情况]
+    N --> O{是否异常}
+    O -- 否 --> P[持续观察]
+    O -- 漏服或依从性差 --> Q[创建子女提醒]
+    O -- 药快吃完或需复诊 --> R[创建复诊提醒]
+    Q --> S[小程序消息中心查看]
+    R --> S</code></pre>
+      </section>
+
+      <section id="exceptions">
+        <h2>七、异常与边界处理</h2>
+        <table>
+          <tr><th>场景</th><th>处理方式</th><th>提示文案建议</th></tr>
+          <tr><td>新增患者手机号重复</td><td>提示用户选择已有患者或继续创建新患者。</td><td>该手机号已存在患者，请检查后再保存。</td></tr>
+          <tr><td>患者存在生效计划时删除</td><td>阻止删除，要求先停用计划和解绑药盒。</td><td>该患者存在生效中的用药计划，暂不能删除。</td></tr>
+          <tr><td>用药计划时间冲突</td><td>提示冲突药品和时间，允许保存草稿，不允许直接生效。</td><td>当前计划与已有计划存在服药时间冲突。</td></tr>
+          <tr><td>药盒已绑定其他患者</td><td>阻止重复绑定。</td><td>该药盒已绑定患者，请先解绑后再操作。</td></tr>
+          <tr><td>药盒离线</td><td>允许保存计划，但下发状态标记为待下发或失败。</td><td>药盒当前离线，计划将在设备在线后重试下发。</td></tr>
+          <tr><td>处方附件上传失败</td><td>保留表单草稿，允许重新上传。</td><td>附件上传失败，其他信息已暂存。</td></tr>
+          <tr><td>无子女绑定</td><td>允许创建患者和计划，但子女提醒不可发送。</td><td>当前患者未绑定子女账号，暂不能发送子女提醒。</td></tr>
+          <tr><td>小程序无法外部推送</td><td>消息进入消息中心，后台展示未读状态。</td><td>消息已创建，用户登录小程序后可查看。</td></tr>
+        </table>
+      </section>
+
+      <section id="data">
+        <h2>八、数据与接口建议</h2>
+        <h3>8.1 前端模块建议</h3>
+        <pre><code>frontend/src/views/plugin/t2/
+  api/
+    dashboard.ts
+    patient.ts
+    medicationPlan.ts
+    prescription.ts
+    device.ts
+    medicationTask.ts
+    message.ts
+    conversation.ts
+    settings.ts
+  dashboard/index.vue
+  patient/index.vue
+  medication-plan/index.vue
+  prescription/index.vue
+  device/index.vue
+  medication-task/index.vue
+  message/index.vue
+  conversation/index.vue
+  settings/index.vue</code></pre>
+
+        <h3>8.2 业务接口建议</h3>
+        <table>
+          <tr><th>接口</th><th>用途</th></tr>
+          <tr><td><code>GET /t2/dashboard/summary</code></td><td>工作台统计。</td></tr>
+          <tr><td><code>GET /t2/patients</code></td><td>患者分页列表。</td></tr>
+          <tr><td><code>POST /t2/patient-onboarding</code></td><td>提交首次患者建档向导。</td></tr>
+          <tr><td><code>POST /t2/patients</code></td><td>新增患者主档案。</td></tr>
+          <tr><td><code>PUT /t2/patients/:id</code></td><td>编辑患者。</td></tr>
+          <tr><td><code>GET /t2/patients/:id</code></td><td>患者详情。</td></tr>
+          <tr><td><code>GET /t2/medication-plans</code></td><td>用药计划列表。</td></tr>
+          <tr><td><code>POST /t2/medication-plans</code></td><td>创建用药计划。</td></tr>
+          <tr><td><code>POST /t2/devices/:id/bind</code></td><td>绑定药盒。</td></tr>
+          <tr><td><code>POST /t2/devices/:id/unbind</code></td><td>解绑药盒。</td></tr>
+          <tr><td><code>GET /t2/medication-tasks</code></td><td>服药任务列表。</td></tr>
+          <tr><td><code>POST /t2/messages</code></td><td>创建提醒消息。</td></tr>
+          <tr><td><code>GET /t2/conversations</code></td><td>对话记录列表。</td></tr>
+          <tr><td><code>GET /t2/conversations/:id</code></td><td>对话记录详情。</td></tr>
+          <tr><td><code>POST /t2/conversations/:id/review</code></td><td>提交医药师复核意见。</td></tr>
+          <tr><td><code>GET /t2/settings/consent</code></td><td>获取当前启用的知情同意书。</td></tr>
+          <tr><td><code>PUT /t2/settings/consent</code></td><td>保存知情同意书内容和启用状态。</td></tr>
+          <tr><td><code>GET /t2/patients/:id/consent</code></td><td>查看患者知情同意确认状态。</td></tr>
+        </table>
+
+        <h3>8.3 核心实体</h3>
+        <p>建议先建立业务数据模型：<code>patients</code>、<code>familyMembers</code>、<code>devices</code>、<code>prescriptions</code>、<code>medicationPlans</code>、<code>medications</code>、<code>medicationTasks</code>、<code>messages</code>、<code>conversations</code>、<code>conversationReviews</code>、<code>consentDocuments</code>、<code>patientConsentRecords</code>、<code>deviceEvents</code>。</p>
+      </section>
+
+      <section id="roadmap">
+        <h2>九、未来演进规划</h2>
+        <table>
+          <tr><th>版本</th><th>目标</th><th>说明</th></tr>
+          <tr><td>近期建设</td><td>业务闭环</td><td>患者建档向导、用药计划、药盒绑定、任务查看、提醒消息、对话记录、知情同意书设置。</td></tr>
+          <tr><td>能力完善</td><td>交互和校验完善</td><td>完善空状态、异常流、字段校验和权限控制。</td></tr>
+          <tr><td>系统集成</td><td>后端服务接入</td><td>接入真实后端服务和药盒数据上报。</td></tr>
+          <tr><td>医院协同</td><td>院内系统协同</td><td>对接 HIS、审方系统、公众号或服务号推送能力。</td></tr>
+        </table>
+      </section>
+
+      <section id="appendix">
+        <h2>十、附件</h2>
+        <ul>
+          <li>原始会议逐字稿：<code>docs/20260518162651-智慧药箱需求沟通-逐字稿文本-1.txt</code></li>
+          <li>会议总结：<code>docs/腾讯会议总结.md</code></li>
+          <li>功能需求图：<code>docs/功能需求1.png</code>、<code>docs/功能需求2.png</code></li>
+          <li>SaiAdmin 架构说明：<code>saiadmin-base/docs/architecture.md</code></li>
+          <li>API 返回规范：<code>saiadmin-base/docs/api-contracts.md</code></li>
+        </ul>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
