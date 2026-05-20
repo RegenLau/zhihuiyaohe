@@ -1,0 +1,442 @@
+export type StatusType = 'success' | 'warning' | 'danger' | 'primary' | 'info'
+
+export interface Patient {
+  id: number
+  name: string
+  gender: string
+  age: number
+  recordNo: string
+  phone: string
+  diseases: string[]
+  deviceNo: string
+  deviceStatus: string
+  deviceStatusType: StatusType
+  consent: string
+  child: string
+  nextReminder: string
+  todayDrugs: number
+  recentInteraction: string
+  completionRate: number
+  taskRisk: string
+}
+
+export interface Drug {
+  name: string
+  dose: string
+  frequency: string
+  time: string
+  guide: string
+}
+
+export interface Plan {
+  id: number
+  patientId: number
+  title: string
+  code: string
+  period: string
+  status: string
+  dispatchStatus: string
+  dispatchType: StatusType
+  generatedTasks: string
+  source: string
+  drugs: Drug[]
+}
+
+export interface Task {
+  id: number
+  time: string
+  period: string
+  drug: string
+  dose: string
+  source: string
+  status: string
+  statusType: StatusType
+  suggestion: string
+}
+
+export interface Device {
+  id: number
+  sn: string
+  patient: string
+  status: string
+  statusType: StatusType
+  battery: string
+  wifi: string
+  firmware: string
+  bindDate: string
+}
+
+export interface Message {
+  id: number
+  title: string
+  content: string
+  patient: string
+  receiver: string
+  channel: string
+  status: string
+  statusType: StatusType
+  createTime: string
+}
+
+export interface Conversation {
+  id: number
+  time: string
+  type: string
+  status: string
+  statusType: StatusType
+  patientText?: string
+  deviceText?: string
+  note?: string
+}
+
+export const patients: Patient[] = [
+  {
+    id: 1,
+    name: '王秀兰',
+    gender: '女',
+    age: 72,
+    recordNo: 'MR-001',
+    phone: '138****0921',
+    diseases: ['高血压', '糖尿病'],
+    deviceNo: 'PBX-202605-018',
+    deviceStatus: '在线',
+    deviceStatusType: 'success',
+    consent: '已同意',
+    child: '女儿 王敏 137****8091',
+    nextReminder: '20:30',
+    todayDrugs: 2,
+    recentInteraction: '05/20 14:08',
+    completionRate: 58,
+    taskRisk: '漏服 2 次'
+  },
+  {
+    id: 2,
+    name: '张建国',
+    gender: '男',
+    age: 69,
+    recordNo: 'MR-002',
+    phone: '139****2206',
+    diseases: ['冠心病', '高血压'],
+    deviceNo: 'PBX-202605-006',
+    deviceStatus: '离线',
+    deviceStatusType: 'danger',
+    consent: '已同意',
+    child: '儿子 张磊 136****7760',
+    nextReminder: '21:00',
+    todayDrugs: 2,
+    recentInteraction: '05/20 09:42',
+    completionRate: 74,
+    taskRisk: '设备异常'
+  },
+  {
+    id: 3,
+    name: '李桂芳',
+    gender: '女',
+    age: 76,
+    recordNo: 'MR-003',
+    phone: '136****5108',
+    diseases: ['高血脂', '骨质疏松'],
+    deviceNo: 'PBX-202605-011',
+    deviceStatus: '在线',
+    deviceStatusType: 'success',
+    consent: '已同意',
+    child: '待绑定',
+    nextReminder: '20:30',
+    todayDrugs: 1,
+    recentInteraction: '05/19 20:12',
+    completionRate: 91,
+    taskRisk: '正常'
+  },
+  {
+    id: 4,
+    name: '陈德明',
+    gender: '男',
+    age: 81,
+    recordNo: 'MR-004',
+    phone: '135****3378',
+    diseases: ['帕金森'],
+    deviceNo: '未绑定',
+    deviceStatus: '未绑定',
+    deviceStatusType: 'warning',
+    consent: '未同意',
+    child: '未绑定',
+    nextReminder: '-',
+    todayDrugs: 0,
+    recentInteraction: '05/18 08:10',
+    completionRate: 0,
+    taskRisk: '无计划'
+  },
+  {
+    id: 5,
+    name: '赵春梅',
+    gender: '女',
+    age: 74,
+    recordNo: 'MR-005',
+    phone: '137****5520',
+    diseases: ['高血压'],
+    deviceNo: 'PBX-202605-029',
+    deviceStatus: '在线',
+    deviceStatusType: 'success',
+    consent: '已同意',
+    child: '儿子 赵磊 139****8852',
+    nextReminder: '07:30',
+    todayDrugs: 1,
+    recentInteraction: '05/17 19:30',
+    completionRate: 88,
+    taskRisk: '正常'
+  }
+]
+
+export const plans: Plan[] = [
+  {
+    id: 1,
+    patientId: 1,
+    title: '高血压日常用药 A',
+    code: 'PLAN-20260520-001',
+    period: '2026-05-20 至 2026-06-18',
+    status: '已生效',
+    dispatchStatus: '已下发',
+    dispatchType: 'success',
+    generatedTasks: '已生成 60 条',
+    source: '社区复诊处方',
+    drugs: [
+      {
+        name: '硝苯地平控释片',
+        dose: '1片/次',
+        frequency: '每日一次',
+        time: '早餐后',
+        guide: '固定时间服用，注意血压监测。'
+      },
+      {
+        name: '二甲双胍片',
+        dose: '1片/次',
+        frequency: '每日两次',
+        time: '早餐后/晚餐后',
+        guide: '餐后服用，关注胃肠道反应。'
+      }
+    ]
+  },
+  {
+    id: 2,
+    patientId: 2,
+    title: '冠心病复诊调整',
+    code: 'PLAN-20260520-002',
+    period: '2026-05-18 至 2026-06-16',
+    status: '已生效',
+    dispatchStatus: '药盒离线',
+    dispatchType: 'danger',
+    generatedTasks: '已生成 58 条',
+    source: '复诊调整',
+    drugs: [
+      {
+        name: '阿司匹林肠溶片',
+        dose: '1片/次',
+        frequency: '每日一次',
+        time: '早餐后',
+        guide: '如出现黑便或出血倾向需及时联系医药师。'
+      },
+      {
+        name: '瑞舒伐他汀片',
+        dose: '1片/次',
+        frequency: '每日一次',
+        time: '睡前',
+        guide: '关注肌肉酸痛等不适。'
+      }
+    ]
+  },
+  {
+    id: 3,
+    patientId: 3,
+    title: '高血脂稳定期',
+    code: 'PLAN-20260519-008',
+    period: '2026-05-19 至 2026-06-02',
+    status: '已生效',
+    dispatchStatus: '已下发',
+    dispatchType: 'success',
+    generatedTasks: '已生成 30 条',
+    source: '门诊处方',
+    drugs: [
+      {
+        name: '阿托伐他汀钙片',
+        dose: '1片/次',
+        frequency: '每日一次',
+        time: '睡前',
+        guide: '避免大量饮用葡萄柚汁。'
+      }
+    ]
+  },
+  {
+    id: 4,
+    patientId: 4,
+    title: '帕金森初始方案',
+    code: '草稿',
+    period: '未设置',
+    status: '草稿',
+    dispatchStatus: '未下发',
+    dispatchType: 'info',
+    generatedTasks: '未生成',
+    source: '手动录入',
+    drugs: []
+  }
+]
+
+export const tasks: Task[] = [
+  {
+    id: 1,
+    time: '08:00',
+    period: '早餐后',
+    drug: '硝苯地平控释片',
+    dose: '1片/次',
+    source: '无记录',
+    status: '未打卡',
+    statusType: 'danger',
+    suggestion: '建议通知家属确认实际服药情况。'
+  },
+  {
+    id: 2,
+    time: '12:30',
+    period: '午餐后',
+    drug: '二甲双胍片',
+    dose: '1片/次',
+    source: '小程序打卡',
+    status: '已完成',
+    statusType: 'success',
+    suggestion: '患者已通过小程序完成打卡。'
+  },
+  {
+    id: 3,
+    time: '20:30',
+    period: '晚餐后',
+    drug: '二甲双胍片',
+    dose: '1片/次',
+    source: '待上报',
+    status: '待执行',
+    statusType: 'warning',
+    suggestion: '待到点提醒，可临时调整本次剂量。'
+  }
+]
+
+export const devices = [
+  {
+    id: 1,
+    sn: 'PBX-202605-018',
+    patient: '王秀兰',
+    status: '在线',
+    statusType: 'success' as StatusType,
+    battery: '84%',
+    wifi: '已连接',
+    firmware: 'v2.1.0',
+    bindDate: '2026-05-18'
+  },
+  {
+    id: 2,
+    sn: 'PBX-202605-006',
+    patient: '张建国',
+    status: '离线',
+    statusType: 'danger' as StatusType,
+    battery: '56%',
+    wifi: '未连接',
+    firmware: 'v2.1.0',
+    bindDate: '今日 08:14'
+  },
+  {
+    id: 3,
+    sn: 'PBX-202605-011',
+    patient: '李桂芳',
+    status: '在线',
+    statusType: 'success' as StatusType,
+    battery: '72%',
+    wifi: '已连接',
+    firmware: 'v2.1.0',
+    bindDate: '2026-05-19'
+  },
+  {
+    id: 4,
+    sn: 'PBX-202605-021',
+    patient: '-',
+    status: '待分配',
+    statusType: 'warning' as StatusType,
+    battery: '96%',
+    wifi: '已连接',
+    firmware: 'v2.1.3',
+    bindDate: '-'
+  },
+  {
+    id: 5,
+    sn: 'PBX-202605-029',
+    patient: '赵春梅',
+    status: '在线',
+    statusType: 'success' as StatusType,
+    battery: '100%',
+    wifi: '已连接',
+    firmware: 'v2.1.3',
+    bindDate: '2026-05-20'
+  }
+]
+
+export const messages: Message[] = [
+  {
+    id: 1,
+    title: '近期服药完成情况不佳',
+    content: '请关注老人近 3 天服药情况',
+    patient: '王秀兰',
+    receiver: '子女 王敏',
+    channel: '小程序消息中心',
+    status: '未读',
+    statusType: 'warning',
+    createTime: '今日 14:18'
+  },
+  {
+    id: 2,
+    title: '预计 5 天后需要复诊',
+    content: '阿托伐他汀即将服用完毕',
+    patient: '李桂芳',
+    receiver: '患者 / 子女',
+    channel: '小程序 + 药盒语音',
+    status: '已创建',
+    statusType: 'success',
+    createTime: '今日 10:42'
+  },
+  {
+    id: 3,
+    title: '药盒离线提醒',
+    content: '请检查家庭网络或药盒电源',
+    patient: '张建国',
+    receiver: '医药师',
+    channel: '后台消息',
+    status: '待处理',
+    statusType: 'danger',
+    createTime: '今日 09:01'
+  }
+]
+
+export const conversations: Conversation[] = [
+  {
+    id: 1,
+    time: '05/20 14:08',
+    type: '患者聊天',
+    status: '待人工跟进',
+    statusType: 'warning',
+    patientText: '降压药今天漏吃了，晚上能补吗？',
+    deviceText: '系统建议不要自行加倍补服，按原计划继续服药；如出现头晕、胸闷等异常，应联系医药师。',
+    note: '命中高血压用药问答库，建议医药师复核答复并同步一次子女关注提醒。'
+  },
+  {
+    id: 2,
+    time: '05/20 08:00',
+    type: '小智提醒',
+    status: '未响应',
+    statusType: 'danger',
+    deviceText: '现在是早餐后服药时间，请确认是否已服用硝苯地平控释片。',
+    note: '提醒周期内未收到确认或留言，建议关注设备在线状态和患者实际服药情况。'
+  },
+  {
+    id: 3,
+    time: '05/19 20:00',
+    type: '患者聊天',
+    status: '已归档',
+    statusType: 'success',
+    patientText: '已经吃过了。',
+    deviceText: '晚餐后服药提醒已播报，请确认二甲双胍片是否已服用。'
+  }
+]

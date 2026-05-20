@@ -1,0 +1,3253 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>智慧药盒医药师后台</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --panel-soft: #f8fafc;
+      --text: #142033;
+      --muted: #64748b;
+      --line: #d8e1ed;
+      --line-strong: #c6d3e2;
+      --brand: #2563eb;
+      --brand-strong: #1d4ed8;
+      --brand-soft: #eaf2ff;
+      --green: #0f8a5f;
+      --green-soft: #e8f7f1;
+      --amber: #a16207;
+      --amber-soft: #fff7df;
+      --red: #b42318;
+      --red-soft: #fff0ee;
+      --blue-soft: #eef5ff;
+      --shadow: 0 14px 36px rgba(15, 23, 42, .08);
+      --radius: 8px;
+      --sidebar: #111827;
+      --sidebar-soft: #1f2937;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.45;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 252px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: var(--sidebar);
+      color: #dbeafe;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .brand {
+      height: 64px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #2563eb;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .brand h1 {
+      margin: 0;
+      color: #fff;
+      font-size: 16px;
+      line-height: 1.25;
+    }
+
+    .brand p {
+      margin: 2px 0 0;
+      color: #9fb4d3;
+      font-size: 12px;
+    }
+
+    .nav {
+      padding: 14px 10px;
+      flex: 1;
+      overflow: auto;
+    }
+
+    .nav-section {
+      padding: 12px 10px 8px;
+      color: #8fa4c1;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .nav-item {
+      width: 100%;
+      min-height: 40px;
+      margin: 2px 0;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: #c7d2e3;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-align: left;
+    }
+
+    .nav-item span:first-child {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .nav-item svg {
+      flex: 0 0 18px;
+      color: #93a8c4;
+    }
+
+    .nav-item.active,
+    .nav-item:hover {
+      background: var(--sidebar-soft);
+      color: #fff;
+    }
+
+    .nav-item.active svg,
+    .nav-item:hover svg {
+      color: #8bb6ff;
+    }
+
+    .nav-badge {
+      min-width: 22px;
+      height: 20px;
+      padding: 0 7px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, .28);
+      color: #dbeafe;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sidebar-footer {
+      padding: 12px 16px 16px;
+      border-top: 1px solid rgba(255, 255, 255, .08);
+      color: #93a8c4;
+      font-size: 12px;
+    }
+
+    .workspace {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      height: 64px;
+      padding: 0 24px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .page-title {
+      min-width: 0;
+    }
+
+    .page-title h2 {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.25;
+    }
+
+    .page-title p {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search {
+      width: 280px;
+      height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel-soft);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 10px;
+      color: var(--muted);
+    }
+
+    .search input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      min-width: 0;
+    }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-left: 10px;
+      border-left: 1px solid var(--line);
+      white-space: nowrap;
+    }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--brand-soft);
+      color: var(--brand);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+    }
+
+    .content {
+      padding: 20px 24px 32px;
+      min-width: 0;
+    }
+
+    .focus-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 10px 12px;
+      margin-bottom: 16px;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      background: #eff6ff;
+      color: #1e40af;
+      font-size: 13px;
+    }
+
+    body.focus-mode .focus-banner {
+      display: flex;
+    }
+
+    body.focus-mode .nav-item:not(.active) {
+      opacity: .45;
+      pointer-events: none;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .section-head h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .section-head p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .card,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 7px 22px rgba(15, 23, 42, .04);
+    }
+
+    .panel {
+      padding: 16px;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .stat {
+      padding: 15px;
+      min-height: 116px;
+    }
+
+    .stat-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .icon-box {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: var(--blue-soft);
+      color: var(--brand);
+    }
+
+    .icon-box.warn {
+      color: var(--amber);
+      background: var(--amber-soft);
+    }
+
+    .icon-box.danger {
+      color: var(--red);
+      background: var(--red-soft);
+    }
+
+    .icon-box.ok {
+      color: var(--green);
+      background: var(--green-soft);
+    }
+
+    .stat-value {
+      margin: 14px 0 4px;
+      font-size: 28px;
+      line-height: 1;
+      font-weight: 800;
+    }
+
+    .stat-note {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(360px, .8fr);
+      gap: 14px;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .device-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .device-summary-card {
+      min-height: 110px;
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      background: linear-gradient(145deg, #fff, #f1f6fd);
+    }
+
+    .device-summary-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background: var(--brand-soft);
+      color: var(--brand);
+      flex: 0 0 auto;
+    }
+
+    .device-summary-icon.ok {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .device-summary-icon.danger {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .device-summary-icon.neutral {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+
+    .device-summary-card strong {
+      display: block;
+      font-size: 34px;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .device-summary-card span {
+      color: #64748b;
+      font-weight: 700;
+    }
+
+    .device-card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .device-card {
+      padding: 18px;
+      background: linear-gradient(145deg, #fff, #f3f7fc);
+      min-height: 304px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .device-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .device-kicker {
+      color: #7184aa;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+
+    .device-sn {
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 20px;
+      font-weight: 800;
+      color: #172554;
+      word-break: break-word;
+    }
+
+    .device-info {
+      padding: 14px;
+      border: 1px solid #e8eef7;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .68);
+      display: grid;
+      gap: 9px;
+    }
+
+    .device-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      color: #7184aa;
+      font-size: 13px;
+    }
+
+    .device-row strong {
+      color: #172554;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .device-row svg {
+      width: 16px;
+      height: 16px;
+      margin-right: 5px;
+      vertical-align: -3px;
+    }
+
+    .device-actions {
+      margin-top: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .patient-workbench {
+      display: grid;
+      grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .patient-index {
+      padding: 14px;
+      position: sticky;
+      top: 14px;
+      max-height: calc(100vh - 116px);
+      overflow: auto;
+    }
+
+    .patient-index h3,
+    .detail-title h3 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.25;
+    }
+
+    .patient-search {
+      margin: 12px 0;
+      position: relative;
+    }
+
+    .patient-search svg {
+      width: 17px;
+      height: 17px;
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #64748b;
+    }
+
+    .patient-search .input {
+      padding-left: 38px;
+      min-height: 42px;
+    }
+
+    .patient-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .patient-option {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 12px;
+      text-align: left;
+      display: grid;
+      gap: 9px;
+      color: var(--text);
+    }
+
+    .patient-option.active {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: #fff;
+      box-shadow: 0 12px 24px rgba(37, 99, 235, .18);
+    }
+
+    .patient-option:not(.active):hover {
+      border-color: #bfdbfe;
+      background: #f8fbff;
+    }
+
+    .patient-line {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .patient-name {
+      font-size: 17px;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    .patient-meta {
+      color: #64748b;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .patient-option.active .patient-meta,
+    .patient-option.active .patient-sub {
+      color: #dbeafe;
+    }
+
+    .patient-sub {
+      color: #475569;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .patient-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .patient-option.active .tag,
+    .patient-option.active .status {
+      background: rgba(255, 255, 255, .18);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, .22);
+    }
+
+    .patient-detail {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .detail-hero {
+      padding: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      background: linear-gradient(145deg, #fff, #f3f8ff);
+    }
+
+    .detail-title p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .detail-actions {
+      display: inline-flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .detail-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1px;
+      overflow: hidden;
+    }
+
+    .metric-block {
+      min-height: 92px;
+      padding: 18px;
+      background: linear-gradient(145deg, #fff, #f8fbff);
+      text-align: center;
+      display: grid;
+      place-items: center;
+    }
+
+    .metric-block strong {
+      display: block;
+      color: #172554;
+      font-size: 28px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .metric-block span {
+      color: #7184aa;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .detail-toolbar {
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .segmented,
+    .pill-tabs {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .segmented .btn.active,
+    .pill-tabs .btn.active {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: #fff;
+    }
+
+    .date-switcher {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      color: #172554;
+      font-weight: 900;
+    }
+
+    .date-switcher .btn {
+      min-height: 30px;
+      width: 30px;
+      padding: 0;
+    }
+
+    .detail-section {
+      padding: 18px;
+    }
+
+    .detail-section-title {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .detail-section-title h4 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.25;
+    }
+
+    .detail-section-title p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .plan-detail-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .plan-detail-head {
+      padding: 14px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfdff;
+    }
+
+    .plan-detail-head strong {
+      display: block;
+      font-size: 15px;
+      color: #172554;
+      margin-bottom: 3px;
+    }
+
+    .plan-detail-head span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .plan-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      padding: 14px;
+    }
+
+    .plan-drug {
+      min-height: 112px;
+      padding: 13px;
+      border: 1px solid #e8eef7;
+      border-radius: 8px;
+      background: linear-gradient(145deg, #fff, #f8fbff);
+      display: grid;
+      gap: 8px;
+    }
+
+    .plan-drug strong {
+      font-size: 14px;
+      color: #172554;
+    }
+
+    .plan-drug p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .record-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .record-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-top: 1px solid var(--line);
+      color: #475569;
+      font-size: 13px;
+    }
+
+    .task-timeline {
+      display: grid;
+      gap: 12px;
+    }
+
+    .task-item {
+      display: grid;
+      grid-template-columns: 126px minmax(0, 1fr) minmax(150px, .32fr);
+      gap: 14px;
+      align-items: stretch;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .task-time {
+      border-radius: 8px;
+      background: #f8fbff;
+      border: 1px solid #e8eef7;
+      padding: 12px;
+      display: grid;
+      align-content: center;
+      gap: 6px;
+      color: #7184aa;
+      font-size: 12px;
+    }
+
+    .task-time strong {
+      color: #172554;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .task-main {
+      min-width: 0;
+      display: grid;
+      align-content: center;
+      gap: 8px;
+    }
+
+    .task-main strong {
+      color: #172554;
+      font-size: 16px;
+    }
+
+    .task-main p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .task-actions {
+      display: grid;
+      align-content: center;
+      justify-items: end;
+      gap: 10px;
+    }
+
+    .metric-block.icon-metric {
+      grid-template-columns: 42px minmax(0, 1fr);
+      place-items: center start;
+      text-align: left;
+      gap: 12px;
+    }
+
+    .metric-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: var(--brand-soft);
+      color: var(--brand);
+    }
+
+    .metric-icon.ok {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .metric-icon.warn {
+      background: var(--amber-soft);
+      color: var(--amber);
+    }
+
+    .metric-icon.neutral {
+      background: #eef2ff;
+      color: #6366f1;
+    }
+
+    .metric-icon svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .conversation-timeline {
+      display: grid;
+      gap: 12px;
+    }
+
+    .conversation-item {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: linear-gradient(145deg, #fff, #f8fbff);
+      display: grid;
+      gap: 12px;
+    }
+
+    .conversation-item-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      color: #7184aa;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .conversation-flow {
+      display: grid;
+      gap: 10px;
+    }
+
+    .conversation-bubble {
+      max-width: 82%;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid #e8eef7;
+      color: #172554;
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .conversation-bubble.device {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+    }
+
+    .conversation-bubble.patient {
+      justify-self: end;
+      background: #f8fafc;
+      color: #334155;
+    }
+
+    .conversation-note {
+      padding: 11px 12px;
+      border-radius: 8px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .switch {
+      width: 44px;
+      height: 24px;
+      border-radius: 999px;
+      background: #93c5fd;
+      padding: 3px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .switch::before {
+      content: "";
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, .2);
+    }
+
+    .hint-line {
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fbff;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .chart {
+      height: 210px;
+      padding: 18px 18px 12px;
+      display: flex;
+      align-items: end;
+      gap: 12px;
+      border-top: 1px solid var(--line);
+      margin-top: 12px;
+    }
+
+    .bar {
+      flex: 1;
+      min-width: 26px;
+      border-radius: 6px 6px 0 0;
+      background: #93c5fd;
+      position: relative;
+    }
+
+    .bar.miss {
+      background: #fca5a5;
+    }
+
+    .bar span {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .field {
+      min-width: 150px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .input,
+    .select,
+    textarea {
+      width: 100%;
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--text);
+      outline: 0;
+      padding: 7px 10px;
+    }
+
+    textarea {
+      min-height: 76px;
+      resize: vertical;
+    }
+
+    .input:focus,
+    .select:focus,
+    textarea:focus {
+      border-color: #93c5fd;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, .10);
+    }
+
+    .table-card {
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    tbody tr:hover {
+      background: #f9fbff;
+    }
+
+    .row-title {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .row-title strong {
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .row-title span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag,
+    .status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 22px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #eef2f7;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status.ok {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .status.warn {
+      background: var(--amber-soft);
+      color: var(--amber);
+    }
+
+    .status.danger {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .status.brand {
+      background: var(--brand-soft);
+      color: var(--brand-strong);
+    }
+
+    .progress {
+      width: 110px;
+      height: 8px;
+      border-radius: 999px;
+      background: #e5eaf1;
+      overflow: hidden;
+    }
+
+    .progress > i {
+      display: block;
+      height: 100%;
+      border-radius: 999px;
+      background: var(--brand);
+    }
+
+    .progress > i.warn {
+      background: var(--amber);
+    }
+
+    .progress > i.danger {
+      background: var(--red);
+    }
+
+    .table-actions {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    .btn {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--text);
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-weight: 700;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      border-color: var(--line-strong);
+      background: #f8fafc;
+    }
+
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: .45;
+      background: #f8fafc;
+    }
+
+    .btn.primary {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: #fff;
+    }
+
+    .btn.primary:hover {
+      background: var(--brand-strong);
+    }
+
+    .btn.ghost {
+      border-color: transparent;
+      background: transparent;
+      color: var(--brand);
+    }
+
+    .btn.danger {
+      color: var(--red);
+      border-color: #fecaca;
+      background: #fff;
+    }
+
+    .btn.icon {
+      width: 34px;
+      min-height: 34px;
+      padding: 0;
+    }
+
+    .btn svg,
+    .icon-box svg,
+    .search svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(330px, .44fr);
+      gap: 14px;
+    }
+
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .event {
+      display: grid;
+      grid-template-columns: 10px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      margin-top: 5px;
+      border-radius: 50%;
+      background: var(--brand);
+    }
+
+    .dot.warn {
+      background: var(--amber);
+    }
+
+    .dot.danger {
+      background: var(--red);
+    }
+
+    .event strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .event span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .drawer-mask,
+    .modal-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, .42);
+      z-index: 60;
+      display: none;
+    }
+
+    .drawer-mask.open,
+    .modal-mask.open {
+      display: block;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: min(720px, 100vw);
+      height: 100vh;
+      background: #fff;
+      box-shadow: var(--shadow);
+      z-index: 70;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(102%);
+      transition: transform .18s ease;
+    }
+
+    .drawer.onboarding {
+      top: 24px;
+      right: 24px;
+      width: min(1180px, calc(100vw - 48px));
+      height: calc(100vh - 48px);
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    .drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-head {
+      height: 64px;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .drawer-head h3 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .drawer-head p {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .drawer-body {
+      padding: 18px;
+      overflow: auto;
+      flex: 1;
+    }
+
+    .drawer-foot {
+      padding: 14px 18px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .form-grid .wide {
+      grid-column: 1 / -1;
+    }
+
+    .form-section {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      margin-bottom: 14px;
+      background: #fbfdff;
+    }
+
+    .form-section h4 {
+      margin: 0 0 12px;
+      font-size: 14px;
+    }
+
+    .stepper {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .step {
+      min-height: 62px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--muted);
+    }
+
+    .step.active {
+      border-color: #93c5fd;
+      background: var(--brand-soft);
+      color: var(--brand-strong);
+    }
+
+    .step strong {
+      display: block;
+      color: var(--text);
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    .step span {
+      display: block;
+      font-size: 12px;
+    }
+
+    .onboarding-shell {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .onboarding-page {
+      max-width: 1220px;
+      margin: 0 auto;
+    }
+
+    .onboarding-page-actions {
+      padding: 14px 0 0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .onboarding-hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(145deg, #fff, #f2f7ff);
+    }
+
+    .onboarding-hero h4 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .onboarding-hero p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .progress-pill {
+      min-width: 138px;
+      min-height: 42px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .82);
+      color: #64748b;
+      display: inline-flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .progress-pill strong {
+      color: #172554;
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .onboarding-stepper {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #f8fbff;
+    }
+
+    .onboarding-step-card {
+      min-height: 72px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .72);
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 12px;
+      text-align: left;
+    }
+
+    .onboarding-step-card:hover {
+      border-color: #bfdbfe;
+    }
+
+    .step-number {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #fff;
+      color: #64748b;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      font-weight: 900;
+      flex: 0 0 auto;
+      border: 1px solid #e2e8f0;
+    }
+
+    .onboarding-step-card strong {
+      display: block;
+      color: #172554;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    .onboarding-step-card span:last-child {
+      display: block;
+      font-size: 12px;
+    }
+
+    .onboarding-step-card.active {
+      background: var(--brand);
+      color: #dbeafe;
+      box-shadow: 0 12px 24px rgba(37, 99, 235, .24);
+    }
+
+    .onboarding-step-card.active strong {
+      color: #fff;
+    }
+
+    .onboarding-step-card.active .step-number {
+      color: var(--brand);
+      border-color: rgba(255, 255, 255, .82);
+    }
+
+    .onboarding-step-card.done {
+      border-color: #bbf7d0;
+      background: #f0fdf4;
+    }
+
+    .onboarding-panel {
+      display: none;
+      min-height: 360px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(145deg, #fff, #f6faff);
+    }
+
+    .onboarding-panel.active {
+      display: block;
+    }
+
+    .onboarding-panel h4 {
+      margin-top: 0;
+      font-size: 18px;
+    }
+
+    .onboarding-panel > p {
+      color: var(--muted);
+      margin-top: -4px;
+      margin-bottom: 18px;
+    }
+
+    .onboarding-two-col {
+      display: grid;
+      grid-template-columns: minmax(260px, .55fr) minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .onboarding-visual {
+      min-height: 260px;
+      border: 1px solid #e8eef7;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .72);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: #64748b;
+      padding: 20px;
+    }
+
+    .onboarding-visual svg {
+      width: 96px;
+      height: 96px;
+      color: #93c5fd;
+      margin-bottom: 14px;
+    }
+
+    .upload-box {
+      border: 1px dashed var(--line-strong);
+      border-radius: 8px;
+      background: #fff;
+      min-height: 110px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      padding: 12px;
+    }
+
+    .med-row {
+      display: grid;
+      grid-template-columns: minmax(110px, 1.2fr) 90px 90px 110px 120px 34px;
+      gap: 8px;
+      align-items: end;
+      margin-bottom: 8px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      width: min(420px, calc(100vw - 44px));
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: #0f172a;
+      color: #fff;
+      box-shadow: var(--shadow);
+      z-index: 90;
+      display: none;
+      font-size: 13px;
+    }
+
+    .toast.show {
+      display: block;
+    }
+
+    .empty {
+      min-height: 180px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .empty strong {
+      display: block;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .pagination {
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 1100px) {
+      .app {
+        grid-template-columns: 76px minmax(0, 1fr);
+      }
+
+      .brand {
+        justify-content: center;
+        padding: 14px 10px;
+      }
+
+      .brand h1,
+      .brand p,
+      .nav-section,
+      .nav-label,
+      .nav-badge,
+      .sidebar-footer {
+        display: none;
+      }
+
+      .nav-item {
+        justify-content: center;
+        padding: 0;
+      }
+
+      .stat-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .device-summary-grid,
+      .device-card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .dashboard-grid,
+      .split {
+        grid-template-columns: 1fr;
+      }
+
+      .detail-summary,
+      .plan-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .task-item {
+        grid-template-columns: 112px minmax(0, 1fr);
+      }
+
+      .task-actions {
+        grid-column: 1 / -1;
+        grid-template-columns: repeat(2, max-content);
+        justify-content: end;
+        justify-items: end;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .topbar {
+        height: auto;
+        min-height: 64px;
+        align-items: flex-start;
+        padding: 12px 14px;
+        flex-direction: column;
+      }
+
+      .top-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .search {
+        width: 100%;
+      }
+
+      .content {
+        padding: 14px;
+      }
+
+      .stat-grid,
+      .mini-grid,
+      .form-grid,
+      .stepper,
+      .onboarding-stepper,
+      .onboarding-two-col,
+      .device-summary-grid,
+      .device-card-grid,
+      .patient-workbench,
+      .detail-summary,
+      .plan-grid,
+      .task-item {
+        grid-template-columns: 1fr;
+      }
+
+      .patient-index {
+        position: static;
+        max-height: none;
+      }
+
+      .detail-hero,
+      .detail-section-title,
+      .detail-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .detail-actions {
+        justify-content: stretch;
+      }
+
+      .detail-actions .btn {
+        flex: 1;
+      }
+
+      .task-actions {
+        grid-template-columns: 1fr;
+        justify-content: stretch;
+        justify-items: stretch;
+      }
+
+      .med-row {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        min-width: 900px;
+      }
+
+      .table-card {
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">药</div>
+        <div>
+          <h1>智慧药盒后台</h1>
+          <p>医药师工作台</p>
+        </div>
+      </div>
+      <nav class="nav" aria-label="主导航">
+        <div class="nav-section">业务管理</div>
+        <button class="nav-item active" data-route="dashboard" title="医药师工作台">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span class="nav-label">医药师工作台</span></span>
+        </button>
+        <button class="nav-item" data-route="patients" title="患者管理">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-label">患者管理</span></span>
+          <span class="nav-badge">24</span>
+        </button>
+        <button class="nav-item" data-route="plans" title="用药计划">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2v20"/><path d="M14 2v20"/><path d="M4 7h16"/><path d="M4 17h16"/><rect x="4" y="3" width="16" height="18" rx="2"/></svg><span class="nav-label">用药计划</span></span>
+          <span class="nav-badge">38</span>
+        </button>
+        <button class="nav-item" data-route="tasks" title="服药任务">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="nav-label">服药任务</span></span>
+          <span class="nav-badge">12</span>
+        </button>
+        <button class="nav-item" data-route="devices" title="设备管理">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M9 4v16"/><path d="M15 4v16"/></svg><span class="nav-label">设备管理</span></span>
+          <span class="nav-badge">18</span>
+        </button>
+        <button class="nav-item" data-route="messages" title="提醒消息">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="nav-label">提醒消息</span></span>
+          <span class="nav-badge">6</span>
+        </button>
+        <div class="nav-section">问答管理</div>
+        <button class="nav-item" data-route="conversations" title="对话记录">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M8 9h8"/><path d="M8 13h5"/></svg><span class="nav-label">对话记录</span></span>
+          <span class="nav-badge">31</span>
+        </button>
+        <div class="nav-section">系统管理</div>
+        <button class="nav-item" data-route="settings" title="系统设置">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.51a2 2 0 0 1 1-1.72l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg><span class="nav-label">系统设置</span></span>
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        服务范围：汉阳区五里墩社区<br />
+        接口模式：业务接口
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <header class="topbar">
+        <div class="page-title">
+          <h2 id="pageTitle">医药师工作台</h2>
+          <p id="pageSubtitle">查看患者服药风险、药盒状态和待处理提醒</p>
+        </div>
+        <div class="top-actions">
+          <label class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input id="globalSearch" placeholder="搜索患者、药盒 SN、手机号" />
+          </label>
+          <button class="btn icon" title="刷新" data-action="refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M16 8h5V3"/></svg></button>
+          <div class="user-chip">
+            <div class="avatar">医</div>
+            <div>
+              <strong style="display:block;font-size:13px;">医药师账号</strong>
+              <span style="display:block;color:var(--muted);font-size:12px;">武汉服务团队</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="focus-banner">
+          <span id="focusText">当前为专注模式，仅展示当前功能点。</span>
+          <button class="btn" data-action="exit-focus">退出专注模式</button>
+        </div>
+
+        <section class="page active" id="page-dashboard" data-title="医药师工作台" data-subtitle="查看患者服药风险、药盒状态和待处理提醒">
+          <div class="stat-grid">
+            <div class="card stat">
+              <div class="stat-top"><span>管理患者</span><span class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span></div>
+              <div class="stat-value">24</div>
+              <div class="stat-note">本周新增 3 人</div>
+            </div>
+            <div class="card stat">
+              <div class="stat-top"><span>绑定药盒</span><span class="icon-box ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg></span></div>
+              <div class="stat-value">18</div>
+              <div class="stat-note">在线 15 台，离线 3 台</div>
+            </div>
+            <div class="card stat">
+              <div class="stat-top"><span>今日任务</span><span class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span></div>
+              <div class="stat-value">86</div>
+              <div class="stat-note">已完成 71 次</div>
+            </div>
+            <div class="card stat">
+              <div class="stat-top"><span>今日漏服</span><span class="icon-box danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span></div>
+              <div class="stat-value">8</div>
+              <div class="stat-note">连续漏服 2 人</div>
+            </div>
+            <div class="card stat">
+              <div class="stat-top"><span>待复诊</span><span class="icon-box warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg></span></div>
+              <div class="stat-value">5</div>
+              <div class="stat-note">7 天内到期</div>
+            </div>
+          </div>
+
+          <div class="dashboard-grid">
+            <div class="panel">
+              <div class="section-head">
+                <div>
+                  <h3>近 7 天服药完成趋势</h3>
+                  <p>蓝色为完成任务，红色为漏服任务</p>
+                </div>
+                <button class="btn" data-route-jump="tasks">查看任务</button>
+              </div>
+              <div class="chart" aria-label="近 7 天服药完成趋势">
+                <div class="bar" style="height:72%"><span>周四 71</span></div>
+                <div class="bar miss" style="height:16%"><span>8</span></div>
+                <div class="bar" style="height:80%"><span>周五 79</span></div>
+                <div class="bar miss" style="height:10%"><span>5</span></div>
+                <div class="bar" style="height:68%"><span>周六 67</span></div>
+                <div class="bar miss" style="height:20%"><span>10</span></div>
+                <div class="bar" style="height:86%"><span>今日 71</span></div>
+                <div class="bar miss" style="height:16%"><span>8</span></div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="section-head">
+                <div>
+                  <h3>待处理风险</h3>
+                  <p>按处理优先级排序</p>
+                </div>
+                <button class="btn primary" data-drawer="message">创建提醒</button>
+              </div>
+              <div class="timeline">
+                <div class="event"><span class="dot danger"></span><div><strong>王秀兰连续 2 次漏服降压药</strong><span>建议通知子女，并在下次复诊核对用药依从性</span></div></div>
+                <div class="event"><span class="dot warn"></span><div><strong>张建国药盒离线 6 小时</strong><span>最近一次上报：今日 08:14</span></div></div>
+                <div class="event"><span class="dot warn"></span><div><strong>李桂芳 5 天后预计用完阿托伐他汀</strong><span>可创建复诊提醒并下发至药盒</span></div></div>
+                <div class="event"><span class="dot"></span><div><strong>陈德明新计划待下发</strong><span>药盒在线，等待确认用药计划</span></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="split" style="margin-top:14px;">
+            <div class="panel">
+              <div class="section-head">
+                <div>
+                  <h3>今日重点患者</h3>
+                  <p>根据漏服、离线和复诊规则自动聚合</p>
+                </div>
+                <button class="btn primary" data-route-jump="patient-create">新增患者建档</button>
+              </div>
+              <div class="table-card">
+                <table>
+                  <thead><tr><th>患者</th><th>疾病</th><th>完成率</th><th>药盒</th><th>操作</th></tr></thead>
+                  <tbody>
+                    <tr><td><div class="row-title"><strong>王秀兰</strong><span>女 72 岁 138****0921</span></div></td><td><div class="tag-list"><span class="tag">高血压</span><span class="tag">糖尿病</span></div></td><td><div class="progress"><i class="danger" style="width:58%"></i></div></td><td><span class="status ok">在线</span></td><td><button class="btn ghost" data-route-jump="tasks">查看任务</button></td></tr>
+                    <tr><td><div class="row-title"><strong>张建国</strong><span>男 69 岁 139****2206</span></div></td><td><div class="tag-list"><span class="tag">冠心病</span></div></td><td><div class="progress"><i class="warn" style="width:74%"></i></div></td><td><span class="status danger">离线</span></td><td><button class="btn ghost" data-route-jump="devices">查看设备</button></td></tr>
+                    <tr><td><div class="row-title"><strong>李桂芳</strong><span>女 76 岁 136****5108</span></div></td><td><div class="tag-list"><span class="tag">高血脂</span><span class="tag">骨质疏松</span></div></td><td><div class="progress"><i style="width:91%"></i></div></td><td><span class="status ok">在线</span></td><td><button class="btn ghost" data-drawer="message">复诊提醒</button></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="section-head">
+                <div>
+                  <h3>快速操作</h3>
+                  <p>常用业务入口</p>
+                </div>
+              </div>
+              <div class="mini-grid">
+                <button class="btn primary" data-route-jump="patient-create">新增患者建档</button>
+                <button class="btn" data-drawer="plan">创建用药计划</button>
+                <button class="btn" data-drawer="device">绑定药盒</button>
+                <button class="btn" data-drawer="message">创建提醒</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-patients" data-title="患者管理" data-subtitle="维护患者基本信息、疾病信息、子女绑定和知情同意状态">
+          <div class="section-head">
+            <div>
+              <h3>患者列表</h3>
+              <p>当前以医药师手动维护为主，身份证号为选填字段</p>
+            </div>
+            <button class="btn primary" data-route-jump="patient-create">新增患者建档</button>
+          </div>
+          <div class="filters">
+            <div class="field"><label>关键词</label><input class="input" value="王" /></div>
+            <div class="field"><label>药盒状态</label><select class="select"><option>全部</option><option>已绑定</option><option>未绑定</option><option>离线</option></select></div>
+            <div class="field"><label>知情同意</label><select class="select"><option>全部</option><option>已同意</option><option>未同意</option></select></div>
+            <button class="btn primary">查询</button>
+            <button class="btn">重置</button>
+          </div>
+          <div class="card table-card">
+            <table>
+              <thead><tr><th>患者</th><th>基础疾病</th><th>实名/同意</th><th>药盒</th><th>子女绑定</th><th>最近任务</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr><td><div class="row-title"><strong>王秀兰</strong><span>女 72 岁 138****0921</span></div></td><td><div class="tag-list"><span class="tag">高血压</span><span class="tag">糖尿病</span></div></td><td><span class="status brand">已登记</span> <span class="status ok">已同意</span></td><td><span class="status ok">PBX-202605-018</span></td><td>女儿 王敏 137****8091</td><td><span class="status danger">漏服 2 次</span></td><td><span class="table-actions"><button class="btn ghost" data-drawer="patientEdit">编辑</button><button class="btn ghost" data-route-jump="plans">计划</button><button class="btn ghost" data-drawer="message">提醒</button></span></td></tr>
+                <tr><td><div class="row-title"><strong>张建国</strong><span>男 69 岁 139****2206</span></div></td><td><div class="tag-list"><span class="tag">冠心病</span><span class="tag">高血压</span></div></td><td><span class="status brand">已登记</span> <span class="status ok">已同意</span></td><td><span class="status danger">PBX-202605-006 离线</span></td><td>儿子 张磊 136****7760</td><td><span class="status warn">待确认</span></td><td><span class="table-actions"><button class="btn ghost" data-drawer="patientEdit">编辑</button><button class="btn ghost" data-route-jump="devices">药盒</button><button class="btn ghost" data-drawer="message">提醒</button></span></td></tr>
+                <tr><td><div class="row-title"><strong>李桂芳</strong><span>女 76 岁 136****5108</span></div></td><td><div class="tag-list"><span class="tag">高血脂</span><span class="tag">骨质疏松</span></div></td><td><span class="status brand">已登记</span> <span class="status ok">已同意</span></td><td><span class="status ok">PBX-202605-011</span></td><td><span class="status warn">待绑定</span></td><td><span class="status ok">正常</span></td><td><span class="table-actions"><button class="btn ghost" data-drawer="patientEdit">编辑</button><button class="btn ghost" data-drawer="device">绑定</button><button class="btn ghost" data-drawer="message">复诊</button></span></td></tr>
+                <tr><td><div class="row-title"><strong>陈德明</strong><span>男 81 岁 135****3378</span></div></td><td><div class="tag-list"><span class="tag">帕金森</span></div></td><td><span class="status warn">未实名</span> <span class="status warn">未同意</span></td><td><span class="status">未绑定</span></td><td><span class="status">未绑定</span></td><td><span class="status">无计划</span></td><td><span class="table-actions"><button class="btn ghost" data-drawer="patientEdit">编辑</button><button class="btn ghost" data-drawer="plan">建计划</button><button class="btn ghost" data-drawer="device">绑定</button></span></td></tr>
+              </tbody>
+            </table>
+            <div class="pagination"><span>共 24 条，当前显示 1-4 条</span><span><button class="btn">上一页</button> <button class="btn">下一页</button></span></div>
+          </div>
+        </section>
+
+        <section class="page" id="page-patient-create" data-title="新增患者建档" data-subtitle="按步骤完成患者信息、用药计划、设备绑定和任务生成">
+          <div class="onboarding-page">
+            <div class="onboarding-shell" data-onboarding>
+              <div class="onboarding-hero">
+                <div>
+                  <h4>患者建档绑定流程</h4>
+                  <p>按步骤完成患者档案、诊疗信息、用药计划、设备绑定和任务生成。</p>
+                </div>
+                <div class="progress-pill">当前进度 <strong data-progress-count>1/5</strong></div>
+              </div>
+
+              <div class="onboarding-stepper">
+                <button class="onboarding-step-card active" data-step-target="1"><span class="step-number">1</span><span><strong>患者信息</strong><span>建立基础档案</span></span></button>
+                <button class="onboarding-step-card" data-step-target="2"><span class="step-number">2</span><span><strong>诊疗信息</strong><span>疾病和联系人</span></span></button>
+                <button class="onboarding-step-card" data-step-target="3"><span class="step-number">3</span><span><strong>用药计划</strong><span>药品和处方</span></span></button>
+                <button class="onboarding-step-card" data-step-target="4"><span class="step-number">4</span><span><strong>设备绑定</strong><span>药盒和小程序</span></span></button>
+                <button class="onboarding-step-card" data-step-target="5"><span class="step-number">5</span><span><strong>确认建档</strong><span>生成服药任务</span></span></button>
+              </div>
+
+              <section class="onboarding-panel active" data-step-panel="1">
+                <h4>添加患者信息</h4>
+                <p>先建立患者基础档案，身份证号为选填，用于后续系统对接。</p>
+                <div class="onboarding-two-col">
+                  <div class="onboarding-visual">
+                    <div>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg>
+                      <strong>患者基础档案</strong><br />
+                      <span>姓名、手机号、年龄和地址用于后续任务和提醒关联。</span>
+                    </div>
+                  </div>
+                  <div class="form-grid">
+                    <div class="field"><label>患者姓名</label><input class="input" value="陈德明" /></div>
+                    <div class="field"><label>手机号</label><input class="input" value="135****3378" /></div>
+                    <div class="field"><label>性别</label><select class="select"><option>男</option><option>女</option></select></div>
+                    <div class="field"><label>年龄</label><input class="input" value="81" /></div>
+                    <div class="field"><label>身份证号</label><input class="input" placeholder="选填" /></div>
+                    <div class="field"><label>档案编号</label><input class="input" value="MR-004" /></div>
+                    <div class="field wide"><label>居住地址</label><input class="input" value="武汉市汉阳区五里墩社区" /></div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="onboarding-panel" data-step-panel="2">
+                <h4>补充诊疗信息和联系人</h4>
+                <p>记录基础疾病、诊疗备注和家庭联系人，便于后续提醒和随访。</p>
+                <div class="form-grid">
+                  <div class="field wide"><label>基础疾病</label><input class="input" value="帕金森，高血压" /></div>
+                  <div class="field"><label>主治医药师</label><input class="input" value="医药师账号" /></div>
+                  <div class="field"><label>复诊周期</label><select class="select"><option>30 天</option><option>60 天</option><option>90 天</option></select></div>
+                  <div class="field"><label>家属姓名</label><input class="input" value="陈女士" /></div>
+                  <div class="field"><label>家属手机号</label><input class="input" value="136****2281" /></div>
+                  <div class="field wide"><label>诊疗备注</label><textarea>行动不便，需要家属协助确认每日服药情况。</textarea></div>
+                </div>
+              </section>
+
+              <section class="onboarding-panel" data-step-panel="3">
+                <h4>添加用药计划</h4>
+                <p>首次建档时同步创建用药计划；后续复诊仍可在独立的用药计划模块维护。</p>
+                <div class="form-grid">
+                  <div class="field"><label>计划名称</label><input class="input" value="首次用药计划" /></div>
+                  <div class="field"><label>开始日期</label><input class="input" value="2026-05-20" /></div>
+                  <div class="field"><label>处方来源</label><select class="select"><option>手动录入</option><option>处方照片</option><option>HIS 截图</option></select></div>
+                  <div class="field"><label>复诊提醒</label><select class="select"><option>自动推算</option><option>手动设置</option><option>不提醒</option></select></div>
+                  <div class="field wide"><label>药品明细</label><textarea>左旋多巴片，1片，每日三次，早餐后/午餐后/晚餐后；苯磺酸氨氯地平片，1片，每日一次，早餐后。</textarea></div>
+                  <div class="field wide"><label>处方附件</label><div class="upload-box"><div><strong>上传处方照片 / HIS 截图</strong><br /><span>可先留空，后续在用药计划中补充。</span></div></div></div>
+                </div>
+              </section>
+
+              <section class="onboarding-panel" data-step-panel="4">
+                <h4>绑定药盒和小程序</h4>
+                <p>选择待绑定设备并生成小程序绑定入口，知情同意由患者或家属在小程序端确认。</p>
+                <div class="onboarding-two-col">
+                  <div class="onboarding-visual">
+                    <div>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M9 4v16"/><path d="M15 4v16"/></svg>
+                      <strong>绑定药盒设备</strong><br />
+                      <span>后台只维护绑定关系，配网由小程序端引导完成。</span>
+                    </div>
+                  </div>
+                  <div class="form-grid">
+                    <div class="field"><label>药盒设备</label><select class="select"><option>PBX-202605-021 待分配</option><option>PBX-202605-018 王秀兰</option></select></div>
+                    <div class="field"><label>绑定方式</label><select class="select"><option>后台选择设备</option><option>患者小程序扫码</option></select></div>
+                    <div class="field"><label>小程序绑定</label><select class="select"><option>发送给患者</option><option>发送给家属</option></select></div>
+                    <div class="field"><label>知情同意</label><input class="input" value="等待小程序端确认" /></div>
+                    <div class="field wide"><label>下发说明</label><textarea>保存建档后，下发用药计划到药盒；如设备未联网，系统保留待下发记录。</textarea></div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="onboarding-panel" data-step-panel="5">
+                <h4>确认建档并生成服药任务</h4>
+                <p>确认后保存患者档案、用药计划和设备绑定关系，并生成服药任务。</p>
+                <div class="mini-grid">
+                  <div><span class="status brand">患者信息完整</span> 基础信息和诊疗信息已填写</div>
+                  <div><span class="status brand">计划待生效</span> 保存后生成每日服药任务</div>
+                  <div><span class="status warn">知情同意待确认</span> 等待小程序端确认</div>
+                  <div><span class="status ok">药盒可绑定</span> 保存后下发用药计划</div>
+                </div>
+              </section>
+            </div>
+            <div class="onboarding-page-actions">
+              <button class="btn" data-route-jump="patients">取消</button>
+              <button class="btn" data-action="onboarding-prev">上一步</button>
+              <button class="btn primary" data-action="onboarding-next">下一步</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-plans" data-title="用药计划" data-subtitle="先选择患者，再维护该患者的当前方案、历史方案和下发状态">
+          <div class="section-head">
+            <div>
+              <h3>患者用药计划</h3>
+              <p>左侧选择患者，右侧维护当前计划、处方附件、药品明细和药盒下发记录</p>
+            </div>
+            <button class="btn primary" data-drawer="plan">创建用药计划</button>
+          </div>
+
+          <div class="patient-workbench">
+            <aside class="card patient-index">
+              <h3>选择患者</h3>
+              <div class="patient-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input class="input" placeholder="搜索姓名、处方编号、设备号..." />
+              </div>
+              <div class="patient-list">
+                <button class="patient-option active" type="button">
+                  <div class="patient-line">
+                    <div><div class="patient-name">王秀兰</div><div class="patient-meta">女 · 72岁 · MR-001</div></div>
+                    <span class="status ok">在线</span>
+                  </div>
+                  <div class="patient-sub">高血压、糖尿病 · PBX-202605-018</div>
+                  <div class="patient-chip-row"><span class="tag">当前计划 1 个</span><span class="tag">今日药品 2 种</span></div>
+                </button>
+                <button class="patient-option" type="button">
+                  <div class="patient-line">
+                    <div><div class="patient-name">张建国</div><div class="patient-meta">男 · 69岁 · MR-002</div></div>
+                    <span class="status danger">离线</span>
+                  </div>
+                  <div class="patient-sub">冠心病、高血压 · PBX-202605-006</div>
+                  <div class="patient-chip-row"><span class="tag">当前计划 1 个</span><span class="tag">待下发</span></div>
+                </button>
+                <button class="patient-option" type="button">
+                  <div class="patient-line">
+                    <div><div class="patient-name">李桂芳</div><div class="patient-meta">女 · 76岁 · MR-003</div></div>
+                    <span class="status ok">在线</span>
+                  </div>
+                  <div class="patient-sub">高血脂、骨质疏松 · PBX-202605-011</div>
+                  <div class="patient-chip-row"><span class="tag">当前计划 1 个</span><span class="tag">复诊提醒</span></div>
+                </button>
+                <button class="patient-option" type="button">
+                  <div class="patient-line">
+                    <div><div class="patient-name">陈德明</div><div class="patient-meta">男 · 81岁 · MR-004</div></div>
+                    <span class="status warn">未绑定</span>
+                  </div>
+                  <div class="patient-sub">帕金森 · 等待小程序确认知情同意</div>
+                  <div class="patient-chip-row"><span class="tag">草稿计划</span><span class="tag">需绑定药盒</span></div>
+                </button>
+              </div>
+            </aside>
+
+            <div class="patient-detail">
+              <div class="card detail-hero">
+                <div class="detail-title">
+                  <h3>王秀兰 · 用药计划</h3>
+                  <p>当前计划已生效，药盒在线，可继续调整剂量、提醒时间和处方附件。</p>
+                </div>
+                <div class="detail-actions">
+                  <button class="btn">查看患者档案</button>
+                  <button class="btn primary" data-drawer="plan">保存计划调整</button>
+                </div>
+              </div>
+
+              <div class="card detail-summary">
+                <div class="metric-block"><div><strong>1 个</strong><span>当前计划</span></div></div>
+                <div class="metric-block"><div><strong>2 种</strong><span>用药品种</span></div></div>
+                <div class="metric-block"><div><strong>60 条</strong><span>已生成任务</span></div></div>
+                <div class="metric-block"><div><strong>已下发</strong><span>药盒状态</span></div></div>
+              </div>
+
+              <div class="card detail-toolbar">
+                <div class="segmented">
+                  <button class="btn active">当前方案</button>
+                  <button class="btn">历史方案</button>
+                  <button class="btn">处方附件</button>
+                </div>
+                <div class="detail-actions">
+                  <button class="btn">复制为新方案</button>
+                  <button class="btn danger">停用计划</button>
+                </div>
+              </div>
+
+              <div class="card detail-section">
+                <div class="detail-section-title">
+                  <div>
+                    <h4>高血压日常用药 A</h4>
+                    <p>PLAN-20260520-001 · 周期 2026-05-20 至 2026-06-18 · 处方来源：社区复诊处方</p>
+                  </div>
+                  <span class="status ok">已生效</span>
+                </div>
+
+                <div class="plan-detail-card">
+                  <div class="plan-detail-head">
+                    <div><strong>药品明细</strong><span>系统按时间段生成每日服药任务，医药师可临时调整当日剂量。</span></div>
+                    <button class="btn ghost" data-drawer="plan">编辑药品</button>
+                  </div>
+                  <div class="plan-grid">
+                    <div class="plan-drug">
+                      <strong>硝苯地平控释片</strong>
+                      <div class="patient-chip-row"><span class="tag">早餐后</span><span class="tag">1片/次</span><span class="tag">每日一次</span></div>
+                      <p>用药指导：固定时间服用，注意血压监测；如出现头晕或心悸需联系医药师。</p>
+                    </div>
+                    <div class="plan-drug">
+                      <strong>二甲双胍片</strong>
+                      <div class="patient-chip-row"><span class="tag">早餐后</span><span class="tag">晚餐后</span><span class="tag">1片/次</span></div>
+                      <p>用药指导：餐后服用，关注胃肠道反应；低血糖症状需及时上报。</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="record-list">
+                  <div class="record-item"><span>任务生成</span><strong>已生成 2026-05-20 至 2026-06-18 的服药任务</strong></div>
+                  <div class="record-item"><span>药盒下发</span><strong>2026-05-20 09:15 下发成功，设备 PBX-202605-018 已确认</strong></div>
+                  <div class="record-item"><span>处方附件</span><strong>社区门诊处方照片 1 张，HIS 截图 1 张</strong></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-tasks" data-title="服药任务" data-subtitle="先选择患者，再处理该患者当天服药执行、异常提醒和临时调整">
+          <div class="section-head">
+            <div>
+              <h3>患者服药任务</h3>
+              <p>左侧选择患者，右侧处理今日执行、异常提醒、打卡来源和临时剂量调整</p>
+            </div>
+            <button class="btn" data-action="export">导出日报</button>
+          </div>
+
+          <div class="patient-workbench">
+            <aside class="card patient-index">
+              <h3>选择患者</h3>
+              <div class="patient-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input class="input" placeholder="搜索姓名、处方编号、设备号..." />
+              </div>
+              <div class="patient-list">
+                <button class="patient-option active" type="button">
+                  <div class="patient-line">
+                    <div><div class="patient-name">王秀兰</div><div class="patient-meta">女 · 72岁 · MR-001</div></div>
+                    <span class="status ok">在线</span>
+                  </div>
+                  <div class="patient-sub">今日药品 2 种 · 下一提醒 20:30</div>
+                  <div class="patient-chip-row"><span class="tag">待执行 1 条</span><span class="tag">异常 1 条</span></div>
+                </button>
+                <button class="patient-option" type="button">
+                  <div class="patient-line">
+                    <div><div class="patient-name">张建国</div><div class="patient-meta">男 · 69岁 · MR-002</div></div>
+                    <span class="status danger">离线</span>
+                  </div>
+                  <div class="patient-sub">今日药品 2 种 · 药盒 08:14 后未上报</div>
+                  <div class="patient-chip-row"><span class="tag">待执行 1 条</span><span class="tag">设备异常</span></div>
+                </button>
+                <button class="patient-option" type="button">
+                  <div class="patient-line">
+                    <div><div class="patient-name">李桂芳</div><div class="patient-meta">女 · 76岁 · MR-003</div></div>
+                    <span class="status ok">在线</span>
+                  </div>
+                  <div class="patient-sub">今日药品 1 种 · 下一提醒 20:30</div>
+                  <div class="patient-chip-row"><span class="tag">待执行 1 条</span><span class="tag">正常</span></div>
+                </button>
+                <button class="patient-option" type="button">
+                  <div class="patient-line">
+                    <div><div class="patient-name">陈德明</div><div class="patient-meta">男 · 81岁 · MR-004</div></div>
+                    <span class="status warn">无计划</span>
+                  </div>
+                  <div class="patient-sub">草稿计划未生效，暂未生成今日任务</div>
+                  <div class="patient-chip-row"><span class="tag">待完善计划</span><span class="tag">待绑定药盒</span></div>
+                </button>
+              </div>
+            </aside>
+
+            <div class="patient-detail">
+              <div class="card detail-hero">
+                <div class="detail-title">
+                  <h3>王秀兰 · 今日提醒计划</h3>
+                  <p>可继续处理今日执行、异常提醒和临时调整；长期处方变更请进入用药计划。</p>
+                </div>
+                <div class="detail-actions">
+                  <button class="btn" data-route-jump="plans">查看计划</button>
+                  <button class="btn primary">保存今日调整</button>
+                </div>
+              </div>
+
+              <div class="card detail-summary">
+                <div class="metric-block"><div><strong>1 条</strong><span>待执行</span></div></div>
+                <div class="metric-block"><div><strong>1 条</strong><span>已完成</span></div></div>
+                <div class="metric-block"><div><strong>1 条</strong><span>异常 / 未打卡</span></div></div>
+                <div class="metric-block"><div><strong>20:30</strong><span>下一提醒</span></div></div>
+              </div>
+
+              <div class="card detail-toolbar">
+                <div class="segmented">
+                  <button class="btn active">今日任务</button>
+                  <button class="btn">整体方案</button>
+                  <button class="btn">异常记录</button>
+                </div>
+                <div class="date-switcher">
+                  <button class="btn icon" title="前一天"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+                  <span>2026-05-20 今天 周三</span>
+                  <button class="btn icon" title="后一天"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+                </div>
+              </div>
+
+              <div class="card detail-section">
+                <div class="detail-section-title">
+                  <div>
+                    <h4>今日提醒时间表</h4>
+                    <p>任务由生效用药计划生成；本页只处理当天执行和临时调整。</p>
+                  </div>
+                  <span class="status warn">异常 1 条</span>
+                </div>
+                <div class="pill-tabs" style="margin-bottom:14px;">
+                  <button class="btn active">全部用药</button>
+                  <button class="btn">硝苯地平控释片</button>
+                  <button class="btn">二甲双胍片</button>
+                </div>
+
+                <div class="task-timeline">
+                  <div class="task-item">
+                    <div class="task-time"><span>系统建议时间</span><strong>08:00</strong><span>早餐后</span></div>
+                    <div class="task-main">
+                      <strong>硝苯地平控释片</strong>
+                      <div class="patient-chip-row"><span class="tag">1片/次</span><span class="tag">每日一次</span><span class="tag">药盒格口 1</span></div>
+                      <p>未收到小程序打卡或药盒开关记录，建议通知家属确认实际服药情况。</p>
+                    </div>
+                    <div class="task-actions">
+                      <button class="btn ghost" data-drawer="message">通知子女</button>
+                      <span class="status danger">未打卡</span>
+                    </div>
+                  </div>
+
+                  <div class="task-item">
+                    <div class="task-time"><span>系统建议时间</span><strong>12:30</strong><span>午餐后</span></div>
+                    <div class="task-main">
+                      <strong>二甲双胍片</strong>
+                      <div class="patient-chip-row"><span class="tag">1片/次</span><span class="tag">小程序打卡</span><span class="tag">患者确认</span></div>
+                      <p>患者已通过小程序完成打卡，任务状态已同步至后台。</p>
+                    </div>
+                    <div class="task-actions">
+                      <span class="switch" aria-label="提醒已开启"></span>
+                      <span class="status ok">已完成</span>
+                    </div>
+                  </div>
+
+                  <div class="task-item">
+                    <div class="task-time"><span>系统建议时间</span><strong>20:30</strong><span>晚餐后</span></div>
+                    <div class="task-main">
+                      <strong>二甲双胍片</strong>
+                      <div class="patient-chip-row"><span class="tag">1片/次</span><span class="tag">每日两次</span><span class="tag">药盒格口 2</span></div>
+                      <p>待到点提醒，医药师可根据今日情况临时关闭或修改本次提醒。</p>
+                    </div>
+                    <div class="task-actions">
+                      <button class="btn ghost">修改剂量</button>
+                      <span class="status warn">待执行</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="hint-line">今日临时调整只影响 2026-05-20 的任务；需要长期变更时，请在用药计划中修改当前方案并重新下发药盒。</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-devices" data-title="设备管理" data-subtitle="维护药盒设备绑定关系、在线状态、开关记录和计划下发记录">
+          <div class="section-head">
+            <div>
+              <h3>设备管理</h3>
+              <p>后台不承接 WiFi 输入，只维护绑定关系、设备状态和计划下发记录</p>
+            </div>
+            <button class="btn primary" data-drawer="device">绑定药盒</button>
+          </div>
+          <div class="filters">
+            <div class="field"><label>设备 SN</label><input class="input" placeholder="PBX-202605" /></div>
+            <div class="field"><label>在线状态</label><select class="select"><option>全部</option><option>在线</option><option>离线</option></select></div>
+            <div class="field"><label>绑定状态</label><select class="select"><option>全部</option><option>已绑定</option><option>未绑定</option></select></div>
+            <button class="btn primary">查询</button>
+          </div>
+
+          <div class="device-summary-grid">
+            <div class="card device-summary-card">
+              <div class="device-summary-icon ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></div>
+              <div><strong style="color: var(--green);">15</strong><span>在线设备</span></div>
+            </div>
+            <div class="card device-summary-card">
+              <div class="device-summary-icon danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4"/><path d="M12 16h.01"/><circle cx="12" cy="12" r="10"/></svg></div>
+              <div><strong style="color: var(--red);">3</strong><span>离线设备</span></div>
+            </div>
+            <div class="card device-summary-card">
+              <div class="device-summary-icon neutral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 1 1 5.83 1c0 2-3 2-3 4"/><path d="M12 17h.01"/></svg></div>
+              <div><strong style="color: #64748b;">1</strong><span>待分配设备</span></div>
+            </div>
+          </div>
+
+          <div class="device-card-grid">
+            <div class="card device-card">
+              <div class="device-card-head">
+                <div><div class="device-kicker">DEVICE</div><div class="device-sn">PBX-202605-018</div></div>
+                <span class="status ok">在线</span>
+              </div>
+              <div class="device-info">
+                <div class="device-row"><span>绑定患者</span><strong>王秀兰</strong></div>
+                <div class="device-row"><span>电量</span><strong><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2"/><path d="M6 11v2"/><path d="M10 11v2"/><path d="M14 11v2"/></svg>84%</strong></div>
+                <div class="device-row"><span>WiFi 状态</span><strong><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13a10 10 0 0 1 14 0"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M12 20h.01"/></svg>已连接</strong></div>
+                <div class="device-row"><span>固件版本</span><strong>v2.1.0</strong></div>
+                <div class="device-row"><span>绑定日期</span><strong>2026-05-18</strong></div>
+              </div>
+              <div class="device-actions">
+                <button class="btn">开关记录</button>
+                <button class="btn danger">解绑设备</button>
+              </div>
+            </div>
+
+            <div class="card device-card">
+              <div class="device-card-head">
+                <div><div class="device-kicker">DEVICE</div><div class="device-sn">PBX-202605-006</div></div>
+                <span class="status danger">离线</span>
+              </div>
+              <div class="device-info">
+                <div class="device-row"><span>绑定患者</span><strong>张建国</strong></div>
+                <div class="device-row"><span>电量</span><strong>56%</strong></div>
+                <div class="device-row"><span>WiFi 状态</span><strong>未连接</strong></div>
+                <div class="device-row"><span>固件版本</span><strong>v2.1.0</strong></div>
+                <div class="device-row"><span>最近上报</span><strong>今日 08:14</strong></div>
+              </div>
+              <div class="device-actions">
+                <button class="btn">下发重试</button>
+                <button class="btn danger">解绑设备</button>
+              </div>
+            </div>
+
+            <div class="card device-card">
+              <div class="device-card-head">
+                <div><div class="device-kicker">DEVICE</div><div class="device-sn">PBX-202605-011</div></div>
+                <span class="status ok">在线</span>
+              </div>
+              <div class="device-info">
+                <div class="device-row"><span>绑定患者</span><strong>李桂芳</strong></div>
+                <div class="device-row"><span>电量</span><strong>72%</strong></div>
+                <div class="device-row"><span>WiFi 状态</span><strong>已连接</strong></div>
+                <div class="device-row"><span>固件版本</span><strong>v2.1.0</strong></div>
+                <div class="device-row"><span>绑定日期</span><strong>2026-05-19</strong></div>
+              </div>
+              <div class="device-actions">
+                <button class="btn">开关记录</button>
+                <button class="btn danger">解绑设备</button>
+              </div>
+            </div>
+
+            <div class="card device-card">
+              <div class="device-card-head">
+                <div><div class="device-kicker">DEVICE</div><div class="device-sn">PBX-202605-021</div></div>
+                <span class="status brand">待分配</span>
+              </div>
+              <div class="device-info">
+                <div class="device-row"><span>绑定患者</span><strong>-</strong></div>
+                <div class="device-row"><span>电量</span><strong>96%</strong></div>
+                <div class="device-row"><span>WiFi 状态</span><strong>已连接</strong></div>
+                <div class="device-row"><span>固件版本</span><strong>v2.1.3</strong></div>
+                <div class="device-row"><span>入库日期</span><strong>2026-05-20</strong></div>
+              </div>
+              <div class="device-actions">
+                <button class="btn primary" data-drawer="device">绑定患者</button>
+                <button class="btn">详情</button>
+              </div>
+            </div>
+
+            <div class="card device-card">
+              <div class="device-card-head">
+                <div><div class="device-kicker">DEVICE</div><div class="device-sn">PBX-202605-024</div></div>
+                <span class="status ok">在线</span>
+              </div>
+              <div class="device-info">
+                <div class="device-row"><span>绑定患者</span><strong>陈德明</strong></div>
+                <div class="device-row"><span>电量</span><strong style="color: var(--red);">18%</strong></div>
+                <div class="device-row"><span>WiFi 状态</span><strong>已连接</strong></div>
+                <div class="device-row"><span>固件版本</span><strong>v2.0.8</strong></div>
+                <div class="device-row"><span>绑定日期</span><strong>2026-05-20</strong></div>
+              </div>
+              <div class="device-actions">
+                <button class="btn">开关记录</button>
+                <button class="btn danger">解绑设备</button>
+              </div>
+            </div>
+
+            <div class="card device-card">
+              <div class="device-card-head">
+                <div><div class="device-kicker">DEVICE</div><div class="device-sn">PBX-202605-029</div></div>
+                <span class="status ok">在线</span>
+              </div>
+              <div class="device-info">
+                <div class="device-row"><span>绑定患者</span><strong>赵春梅</strong></div>
+                <div class="device-row"><span>电量</span><strong>100%</strong></div>
+                <div class="device-row"><span>WiFi 状态</span><strong>已连接</strong></div>
+                <div class="device-row"><span>固件版本</span><strong>v2.1.3</strong></div>
+                <div class="device-row"><span>绑定日期</span><strong>2026-05-20</strong></div>
+              </div>
+              <div class="device-actions">
+                <button class="btn">开关记录</button>
+                <button class="btn danger">解绑设备</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-messages" data-title="提醒消息" data-subtitle="创建复诊提醒、子女提醒和系统提醒，当前以小程序消息中心为主">
+          <div class="section-head">
+            <div>
+              <h3>提醒消息</h3>
+              <p>短信、公众号和 APP push 作为后续通知渠道扩展</p>
+            </div>
+            <button class="btn primary" data-drawer="message">创建提醒</button>
+          </div>
+          <div class="filters">
+            <div class="field"><label>提醒类型</label><select class="select"><option>全部</option><option>复诊提醒</option><option>子女提醒</option><option>系统提醒</option></select></div>
+            <div class="field"><label>状态</label><select class="select"><option>全部</option><option>未读</option><option>已读</option><option>待发送</option></select></div>
+            <div class="field"><label>患者</label><input class="input" placeholder="姓名" /></div>
+            <button class="btn primary">查询</button>
+          </div>
+          <div class="card table-card">
+            <table>
+              <thead><tr><th>消息</th><th>患者</th><th>接收方</th><th>渠道</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr><td><div class="row-title"><strong>近期服药完成情况不佳</strong><span>请关注老人近 3 天服药情况</span></div></td><td>王秀兰</td><td>子女 王敏</td><td>小程序消息中心</td><td><span class="status warn">未读</span></td><td>今日 14:18</td><td><button class="btn ghost">查看</button></td></tr>
+                <tr><td><div class="row-title"><strong>预计 5 天后需要复诊</strong><span>阿托伐他汀即将服用完毕</span></div></td><td>李桂芳</td><td>患者 / 子女</td><td>小程序 + 药盒语音</td><td><span class="status ok">已创建</span></td><td>今日 10:42</td><td><button class="btn ghost">查看</button></td></tr>
+                <tr><td><div class="row-title"><strong>药盒离线提醒</strong><span>请检查家庭网络或药盒电源</span></div></td><td>张建国</td><td>医药师</td><td>后台消息</td><td><span class="status danger">待处理</span></td><td>今日 09:01</td><td><button class="btn ghost" data-route-jump="devices">处理</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="page" id="page-conversations" data-title="对话记录" data-subtitle="先选择患者，再查看患者与小智设备的提醒、聊天和未响应记录">
+          <div class="patient-workbench">
+            <aside class="card patient-index">
+              <h3>选择患者</h3>
+              <div class="patient-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input class="input" placeholder="搜索姓名、处方编号、设备号..." />
+              </div>
+              <div class="patient-list">
+                <button class="patient-option active" type="button">
+                  <div class="patient-line">
+                    <div><div class="patient-name">王秀兰</div><div class="patient-meta">女 · 72岁 · MR-001</div></div>
+                    <span class="status ok">在线</span>
+                  </div>
+                  <div class="patient-sub">最近互动：05/20 14:08</div>
+                  <div class="patient-chip-row"><span class="tag">近7天 3 条</span><span class="tag">待跟进 1 项</span></div>
+                </button>
+                <button class="patient-option" type="button">
+                  <div class="patient-line">
+                    <div><div class="patient-name">李桂芳</div><div class="patient-meta">女 · 76岁 · MR-003</div></div>
+                    <span class="status ok">在线</span>
+                  </div>
+                  <div class="patient-sub">最近互动：05/19 20:12</div>
+                  <div class="patient-chip-row"><span class="tag">近7天 2 条</span><span class="tag">已归档</span></div>
+                </button>
+                <button class="patient-option" type="button">
+                  <div class="patient-line">
+                    <div><div class="patient-name">张建国</div><div class="patient-meta">男 · 69岁 · MR-002</div></div>
+                    <span class="status danger">离线</span>
+                  </div>
+                  <div class="patient-sub">最近互动：05/20 09:42</div>
+                  <div class="patient-chip-row"><span class="tag">转人工</span><span class="tag">设备离线</span></div>
+                </button>
+                <button class="patient-option" type="button">
+                  <div class="patient-line">
+                    <div><div class="patient-name">陈德明</div><div class="patient-meta">男 · 81岁 · MR-004</div></div>
+                    <span class="status warn">未绑定</span>
+                  </div>
+                  <div class="patient-sub">最近互动：05/18 08:10</div>
+                  <div class="patient-chip-row"><span class="tag">小程序咨询</span><span class="tag">待建计划</span></div>
+                </button>
+                <button class="patient-option" type="button">
+                  <div class="patient-line">
+                    <div><div class="patient-name">赵春梅</div><div class="patient-meta">女 · 74岁 · MR-005</div></div>
+                    <span class="status ok">在线</span>
+                  </div>
+                  <div class="patient-sub">最近互动：05/17 19:30</div>
+                  <div class="patient-chip-row"><span class="tag">近7天 1 条</span><span class="tag">正常</span></div>
+                </button>
+              </div>
+            </aside>
+
+            <div class="patient-detail">
+              <div class="card detail-hero">
+                <div class="detail-title">
+                  <h3>王秀兰 的对话记录</h3>
+                  <p>患者与小智设备的提醒、患者聊天、未响应记录统一按时间回看。</p>
+                </div>
+                <div class="detail-actions">
+                  <button class="btn" data-route-jump="devices"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>设备摘要</button>
+                  <button class="btn primary" data-action="export-conversations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15l3 3 3-3"/></svg>导出记录</button>
+                </div>
+              </div>
+
+              <div class="card detail-summary">
+                <div class="metric-block icon-metric">
+                  <span class="metric-icon neutral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
+                  <div><strong>3 条</strong><span>近7天互动</span></div>
+                </div>
+                <div class="metric-block icon-metric">
+                  <span class="metric-icon ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22"/><path d="M8 5a4 4 0 0 0 8 0"/><path d="M5 10a7 7 0 0 0 14 0"/></svg></span>
+                  <div><strong>1 次</strong><span>患者响应</span></div>
+                </div>
+                <div class="metric-block icon-metric">
+                  <span class="metric-icon warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+                  <div><strong>1 项</strong><span>待人工跟进</span></div>
+                </div>
+                <div class="metric-block icon-metric">
+                  <span class="metric-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+                  <div><strong>05/20 14:08</strong><span>最近一次互动</span></div>
+                </div>
+              </div>
+
+              <div class="card detail-section">
+                <div class="detail-section-title">
+                  <div>
+                    <h4>对话时间线</h4>
+                    <p>按时间回看患者与小智设备的提醒、患者聊天及未响应记录。</p>
+                  </div>
+                  <span class="status brand">最近 3 条</span>
+                </div>
+                <div class="pill-tabs" style="margin-bottom:14px;">
+                  <button class="btn active">全部 3</button>
+                  <button class="btn">小智提醒 1</button>
+                  <button class="btn">患者聊天 2</button>
+                  <button class="btn">未响应 1</button>
+                </div>
+
+                <div class="conversation-timeline">
+                  <div class="conversation-item">
+                    <div class="conversation-item-head">
+                      <span>05/20 14:08</span>
+                      <span class="status warn">待人工跟进</span>
+                    </div>
+                    <div class="conversation-flow">
+                      <div class="conversation-bubble patient">降压药今天漏吃了，晚上能补吗？</div>
+                      <div class="conversation-bubble device">系统建议不要自行加倍补服，按原计划继续服药；如出现头晕、胸闷等异常，应联系医药师。</div>
+                      <div class="conversation-note">命中高血压用药问答库，建议医药师复核答复并同步一次子女关注提醒。</div>
+                    </div>
+                  </div>
+
+                  <div class="conversation-item">
+                    <div class="conversation-item-head">
+                      <span>05/20 08:00</span>
+                      <span class="status danger">未响应</span>
+                    </div>
+                    <div class="conversation-flow">
+                      <div class="conversation-bubble device">现在是早餐后服药时间，请确认是否已服用硝苯地平控释片。</div>
+                      <div class="conversation-note">提醒周期内未收到确认或留言，建议关注设备在线状态和患者实际服药情况。</div>
+                    </div>
+                  </div>
+
+                  <div class="conversation-item">
+                    <div class="conversation-item-head">
+                      <span>05/19 20:00</span>
+                      <span class="status ok">已归档</span>
+                    </div>
+                    <div class="conversation-flow">
+                      <div class="conversation-bubble device">晚餐后服药提醒已播报，请确认二甲双胍片是否已服用。</div>
+                      <div class="conversation-bubble patient">已经吃过了。</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-settings" data-title="系统设置" data-subtitle="维护知情同意书内容和业务基础配置">
+          <div class="section-head">
+            <div>
+              <h3>知情同意书设置</h3>
+              <p>患者或家属在小程序端阅读并确认，后台负责维护内容、版本和启用状态</p>
+            </div>
+            <button class="btn primary">发布新版本</button>
+          </div>
+          <div class="split">
+            <div class="panel">
+              <div class="form-grid">
+                <div class="field"><label>协议名称</label><input class="input" value="智慧药盒服务知情同意书" /></div>
+                <div class="field"><label>当前版本</label><input class="input" value="V2026.05" /></div>
+                <div class="field"><label>启用状态</label><select class="select"><option>启用</option><option>停用</option></select></div>
+                <div class="field"><label>适用端</label><select class="select"><option>小程序患者端 / 子女端</option><option>小程序患者端</option><option>小程序子女端</option></select></div>
+                <div class="field wide"><label>协议摘要</label><textarea>本服务用于协助患者进行用药计划提醒、服药任务记录、药盒设备绑定、用药相关问答和必要的信息上报。患者或家属确认后，系统可保存与服务相关的必要信息。</textarea></div>
+                <div class="field wide"><label>协议正文</label><textarea style="min-height:220px;">一、服务目的：智慧药盒用于辅助用药提醒和用药管理，不替代医生诊疗意见。
+二、信息采集：系统将采集患者基础信息、用药计划、药盒设备状态、服药任务记录和语音问答记录。
+三、风险提示：如出现胸闷、严重不适、疑似不良反应等情况，请及时联系医药师或前往医疗机构。
+四、授权确认：患者或家属点击同意后，表示已阅读并理解上述内容。</textarea></div>
+              </div>
+              <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px;">
+                <button class="btn">保存草稿</button>
+                <button class="btn primary">保存并启用</button>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="section-head">
+                <div>
+                  <h3>小程序展示预览</h3>
+                  <p>用于确认患者端阅读效果</p>
+                </div>
+              </div>
+              <div style="border:1px solid var(--line); border-radius:14px; padding:16px; background:#fff; max-width:360px;">
+                <h3 style="margin-top:0;">智慧药盒服务知情同意书</h3>
+                <p style="color:var(--muted); font-size:13px;">版本 V2026.05</p>
+                <p>本服务用于协助患者进行用药提醒、服药记录和药盒设备管理，不替代医生诊疗意见。</p>
+                <p>如出现胸闷、严重不适、疑似不良反应等情况，请及时联系医药师或前往医疗机构。</p>
+                <label style="display:flex; gap:8px; align-items:flex-start; margin:14px 0;"><input type="checkbox" checked /> <span>我已阅读并同意上述内容</span></label>
+                <button class="btn primary" style="width:100%;">确认并继续</button>
+              </div>
+              <div class="timeline" style="margin-top:16px;">
+                <div class="event"><span class="dot"></span><div><strong>V2026.05 已启用</strong><span>适用于所有小程序绑定流程</span></div></div>
+                <div class="event"><span class="dot warn"></span><div><strong>V2026.04 已归档</strong><span>保留历史确认记录，不再新签署</span></div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </section>
+  </div>
+
+  <div class="drawer-mask" id="drawerMask"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">
+      <div>
+        <h3 id="drawerTitle">编辑患者档案</h3>
+        <p id="drawerSubtitle">维护患者基础信息、诊疗信息、联系人和知情同意状态</p>
+      </div>
+      <button class="btn icon" data-action="close-drawer" title="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+    <div class="drawer-foot" id="drawerFoot">
+      <button class="btn" data-action="close-drawer">取消</button>
+      <button class="btn primary" data-action="save-drawer">保存</button>
+    </div>
+  </aside>
+
+  <div class="toast" id="toast">已保存</div>
+
+  <template id="tpl-patient">
+    <div class="onboarding-shell" data-onboarding>
+      <div class="onboarding-hero">
+        <div>
+          <h4>患者建档绑定流程</h4>
+          <p>按步骤完成患者档案、诊疗信息、用药计划、设备绑定和任务生成。</p>
+        </div>
+        <div class="progress-pill">当前进度 <strong data-progress-count>1/5</strong></div>
+      </div>
+
+      <div class="onboarding-stepper">
+        <button class="onboarding-step-card active" data-step-target="1"><span class="step-number">1</span><span><strong>患者信息</strong><span>建立基础档案</span></span></button>
+        <button class="onboarding-step-card" data-step-target="2"><span class="step-number">2</span><span><strong>诊疗信息</strong><span>疾病和联系人</span></span></button>
+        <button class="onboarding-step-card" data-step-target="3"><span class="step-number">3</span><span><strong>用药计划</strong><span>药品和处方</span></span></button>
+        <button class="onboarding-step-card" data-step-target="4"><span class="step-number">4</span><span><strong>设备绑定</strong><span>药盒和小程序</span></span></button>
+        <button class="onboarding-step-card" data-step-target="5"><span class="step-number">5</span><span><strong>确认建档</strong><span>生成服药任务</span></span></button>
+      </div>
+
+      <section class="onboarding-panel active" data-step-panel="1">
+        <h4>添加患者信息</h4>
+        <p>先建立患者基础档案，身份证号为选填，用于后续系统对接。</p>
+        <div class="onboarding-two-col">
+          <div class="onboarding-visual">
+            <div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg>
+              <strong>患者基础档案</strong><br />
+              <span>姓名、手机号、年龄和地址用于后续任务和提醒关联。</span>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="field"><label>患者姓名</label><input class="input" value="陈德明" /></div>
+            <div class="field"><label>手机号</label><input class="input" value="13500003378" /></div>
+            <div class="field"><label>性别</label><select class="select"><option>男</option><option>女</option></select></div>
+            <div class="field"><label>年龄</label><input class="input" value="81" /></div>
+            <div class="field"><label>身份证号</label><input class="input" placeholder="选填，用于后续医院系统对接" /></div>
+            <div class="field"><label>实名状态</label><select class="select"><option>未实名</option><option>已登记</option><option>已核验</option></select></div>
+            <div class="field wide"><label>家庭地址</label><input class="input" value="武汉市汉阳区五里墩社区" /></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="onboarding-panel" data-step-panel="2">
+        <h4>补充诊疗信息和联系人</h4>
+        <p>记录基础疾病、诊疗备注和家庭联系人，便于后续提醒和随访。</p>
+        <div class="form-grid">
+          <div class="field wide"><label>基础疾病</label><input class="input" value="帕金森，高血压" /></div>
+          <div class="field"><label>子女姓名</label><input class="input" placeholder="选填" /></div>
+          <div class="field"><label>子女手机号</label><input class="input" placeholder="选填" /></div>
+          <div class="field"><label>关系</label><select class="select"><option>子女</option><option>配偶</option><option>其他家属</option></select></div>
+          <div class="field wide"><label>诊疗备注</label><textarea>家庭医生团队管理患者，需观察长期用药依从性。</textarea></div>
+        </div>
+      </section>
+
+      <section class="onboarding-panel" data-step-panel="3">
+        <h4>添加用药计划</h4>
+        <p>首次建档时同步创建用药计划；后续复诊仍可在独立的用药计划模块维护。</p>
+        <div class="form-grid">
+          <div class="field"><label>计划名称</label><input class="input" value="首次用药计划" /></div>
+          <div class="field"><label>开始日期</label><input class="input" value="2026-05-20" /></div>
+          <div class="field"><label>处方来源</label><select class="select"><option>手动录入</option><option>处方照片</option><option>HIS 截图</option></select></div>
+          <div class="field"><label>复诊提醒</label><select class="select"><option>自动推算</option><option>手动设置</option><option>不提醒</option></select></div>
+          <div class="field wide"><label>药品明细</label><textarea>硝苯地平控释片，1片，每日一次，早餐后；二甲双胍片，1片，每日两次，早餐后/晚餐后。</textarea></div>
+          <div class="field wide"><label>处方附件</label><div class="upload-box"><div><strong>上传处方照片 / HIS 截图</strong><br /><span>可先留空，后续在用药计划中补充。</span></div></div></div>
+        </div>
+      </section>
+
+      <section class="onboarding-panel" data-step-panel="4">
+        <h4>绑定药盒和小程序</h4>
+        <p>选择待绑定设备并生成小程序绑定入口，知情同意由患者或家属在小程序端确认。</p>
+        <div class="onboarding-two-col">
+          <div class="onboarding-visual">
+            <div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M9 4v16"/><path d="M15 4v16"/></svg>
+              <strong>绑定药盒设备</strong><br />
+              <span>后台只维护绑定关系，配网由小程序端引导完成。</span>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="field"><label>药盒 SN</label><select class="select"><option>PBX-202605-021</option><option>PBX-202605-018</option><option>暂不绑定</option></select></div>
+            <div class="field"><label>小程序绑定</label><select class="select"><option>生成绑定二维码</option><option>稍后绑定</option></select></div>
+            <div class="field"><label>知情同意状态</label><input class="input" value="待患者在小程序确认" readonly /></div>
+            <div class="field"><label>协议版本</label><input class="input" value="智慧药盒知情同意书 V2026.05" readonly /></div>
+            <div class="field wide"><label>说明</label><textarea>知情同意由患者或家属在小程序端阅读并点击确认。后台仅配置协议内容、查看确认状态，不代替患者确认。</textarea></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="onboarding-panel" data-step-panel="5">
+        <h4>确认建档并生成服药任务</h4>
+        <p>确认后保存患者档案、用药计划和设备绑定关系，并生成服药任务。</p>
+        <div class="mini-grid">
+          <div><span class="status brand">患者信息完整</span> 基础信息和诊疗信息已填写</div>
+          <div><span class="status brand">计划待生效</span> 保存后生成每日服药任务</div>
+          <div><span class="status warn">知情同意待确认</span> 等待小程序端确认</div>
+          <div><span class="status ok">药盒可绑定</span> 保存后下发用药计划</div>
+        </div>
+      </section>
+    </div>
+  </template>
+
+  <template id="tpl-patient-edit">
+    <div class="form-section">
+      <h4>患者基础信息</h4>
+      <div class="form-grid">
+        <div class="field"><label>患者姓名</label><input class="input" value="王秀兰" /></div>
+        <div class="field"><label>手机号</label><input class="input" value="138****0921" /></div>
+        <div class="field"><label>性别</label><select class="select"><option>女</option><option>男</option></select></div>
+        <div class="field"><label>年龄</label><input class="input" value="72" /></div>
+        <div class="field"><label>档案编号</label><input class="input" value="MR-001" /></div>
+        <div class="field"><label>实名状态</label><select class="select"><option>已登记</option><option>已核验</option><option>未实名</option></select></div>
+        <div class="field wide"><label>居住地址</label><input class="input" value="武汉市汉阳区五里墩社区" /></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <h4>诊疗与联系人</h4>
+      <div class="form-grid">
+        <div class="field wide"><label>基础疾病</label><input class="input" value="高血压，糖尿病" /></div>
+        <div class="field"><label>家属姓名</label><input class="input" value="王敏" /></div>
+        <div class="field"><label>家属手机号</label><input class="input" value="137****8091" /></div>
+        <div class="field"><label>知情同意</label><input class="input" value="已在小程序确认" readonly /></div>
+        <div class="field"><label>协议版本</label><input class="input" value="智慧药盒知情同意书 V2026.05" readonly /></div>
+        <div class="field wide"><label>诊疗备注</label><textarea>近期有漏服记录，下次复诊需核对用药依从性。</textarea></div>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-plan">
+    <div class="form-section">
+      <h4>计划信息</h4>
+      <div class="form-grid">
+        <div class="field"><label>患者</label><select class="select"><option>王秀兰</option><option>张建国</option><option>李桂芳</option><option>陈德明</option></select></div>
+        <div class="field"><label>计划名称</label><input class="input" value="复诊后用药计划" /></div>
+        <div class="field"><label>开始日期</label><input class="input" value="2026-05-20" /></div>
+        <div class="field"><label>结束日期</label><input class="input" value="2026-06-18" /></div>
+        <div class="field"><label>计划状态</label><select class="select"><option>草稿</option><option>已生效</option></select></div>
+        <div class="field"><label>复诊提醒</label><select class="select"><option>自动推算</option><option>手动设置</option><option>不提醒</option></select></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <h4>处方附件</h4>
+      <div class="upload-box">
+        <div>
+          <strong>上传处方照片 / HIS 截图</strong><br />
+          <span>当前作为附件留存，不强制 OCR 识别</span>
+        </div>
+      </div>
+    </div>
+    <div class="form-section">
+      <h4>药品明细</h4>
+      <div class="med-row">
+        <div class="field"><label>药品</label><input class="input" value="硝苯地平控释片" /></div>
+        <div class="field"><label>剂量</label><input class="input" value="1 片" /></div>
+        <div class="field"><label>频次</label><select class="select"><option>每日一次</option><option>每日两次</option><option>每日三次</option></select></div>
+        <div class="field"><label>时段</label><select class="select"><option>早餐后</option><option>午餐后</option><option>晚餐后</option><option>睡前</option></select></div>
+        <div class="field"><label>疗程</label><input class="input" value="30 天" /></div>
+        <button class="btn icon danger" title="删除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+      </div>
+      <div class="med-row">
+        <div class="field"><label>药品</label><input class="input" value="二甲双胍片" /></div>
+        <div class="field"><label>剂量</label><input class="input" value="1 片" /></div>
+        <div class="field"><label>频次</label><select class="select"><option>每日两次</option><option>每日一次</option><option>每日三次</option></select></div>
+        <div class="field"><label>时段</label><select class="select"><option>早餐后/午餐后</option><option>晚餐后</option><option>睡前</option></select></div>
+        <div class="field"><label>疗程</label><input class="input" value="30 天" /></div>
+        <button class="btn icon danger" title="删除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+      </div>
+      <button class="btn">添加药品</button>
+    </div>
+  </template>
+
+  <template id="tpl-device">
+    <div class="form-section">
+      <h4>绑定药盒</h4>
+      <div class="form-grid">
+        <div class="field"><label>患者</label><select class="select"><option>陈德明</option><option>王秀兰</option><option>张建国</option><option>李桂芳</option></select></div>
+        <div class="field"><label>药盒 SN</label><select class="select"><option>PBX-202605-021</option><option>PBX-202605-018</option><option>PBX-202605-011</option></select></div>
+        <div class="field"><label>绑定方式</label><select class="select"><option>后台手动绑定</option><option>小程序扫码绑定</option></select></div>
+        <div class="field"><label>小程序状态</label><select class="select"><option>待绑定</option><option>已绑定</option></select></div>
+        <div class="field wide"><label>配网说明</label><textarea>后台仅维护绑定关系。WiFi 配网由小程序引导完成，药盒进入配网模式后用户输入家庭 WiFi 与密码。</textarea></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <h4>当前设备状态</h4>
+      <div class="mini-grid">
+        <div><span class="status ok">在线</span> 最近上报：今日 14:33</div>
+        <div><span class="status ok">电量 96%</span> 备用药盒</div>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-message">
+    <div class="form-section">
+      <h4>提醒内容</h4>
+      <div class="form-grid">
+        <div class="field"><label>提醒类型</label><select class="select"><option>子女提醒</option><option>复诊提醒</option><option>系统提醒</option></select></div>
+        <div class="field"><label>患者</label><select class="select"><option>王秀兰</option><option>张建国</option><option>李桂芳</option><option>陈德明</option></select></div>
+        <div class="field"><label>接收方</label><select class="select"><option>患者子女</option><option>患者本人</option><option>患者与子女</option><option>医药师</option></select></div>
+        <div class="field"><label>渠道</label><select class="select"><option>小程序消息中心</option><option>小程序 + 药盒语音</option><option>后台消息</option></select></div>
+        <div class="field"><label>提醒时间</label><input class="input" value="2026-05-20 18:00" /></div>
+        <div class="field"><label>优先级</label><select class="select"><option>普通</option><option>重要</option><option>紧急</option></select></div>
+        <div class="field wide"><label>消息标题</label><input class="input" value="近期服药完成情况不佳" /></div>
+        <div class="field wide"><label>消息正文</label><textarea>系统显示老人近 3 天有漏服记录，请关注服药情况并协助确认药盒是否正常使用。</textarea></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <h4>发送限制</h4>
+      <p style="margin:0;color:var(--muted);font-size:13px;">当前消息进入小程序消息中心；短信、公众号和 APP push 可作为后续通知渠道扩展。</p>
+    </div>
+  </template>
+
+  <template id="tpl-conversation">
+    <div class="form-section">
+      <h4>对话详情</h4>
+      <div class="form-grid">
+        <div class="field"><label>患者</label><input class="input" value="王秀兰" /></div>
+        <div class="field"><label>药盒 SN</label><input class="input" value="PBX-202605-018" /></div>
+        <div class="field"><label>对话时间</label><input class="input" value="2026-05-20 14:08" /></div>
+        <div class="field"><label>处理状态</label><select class="select"><option>待复核</option><option>已答复</option><option>转人工</option></select></div>
+        <div class="field wide"><label>患者提问</label><textarea>降压药今天漏吃了，晚上能补吗？</textarea></div>
+        <div class="field wide"><label>系统答复摘要</label><textarea>系统建议不要自行加倍补服，并提示按原计划继续服药；如出现头晕、胸闷等异常应联系医药师。</textarea></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <h4>知识库与风险判断</h4>
+      <div class="form-grid">
+        <div class="field"><label>命中知识库</label><input class="input" value="高血压用药问答库" /></div>
+        <div class="field"><label>问题类型</label><select class="select"><option>服药方法</option><option>药品相互作用</option><option>不良反应</option><option>复诊咨询</option></select></div>
+        <div class="field"><label>风险等级</label><select class="select"><option>普通</option><option>需复核</option><option>高风险转人工</option></select></div>
+        <div class="field"><label>是否生成提醒</label><select class="select"><option>否</option><option>生成子女提醒</option><option>生成复诊提醒</option></select></div>
+        <div class="field wide"><label>医药师复核意见</label><textarea>确认答复方向正确，建议同步生成一次子女关注提醒。</textarea></div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    const pages = {
+      dashboard: { title: '医药师工作台', subtitle: '查看患者服药风险、药盒状态和待处理提醒' },
+      patients: { title: '患者管理', subtitle: '维护患者基本信息、疾病信息、子女绑定和知情同意状态' },
+      'patient-create': { title: '新增患者建档', subtitle: '按步骤完成患者信息、用药计划、设备绑定和任务生成' },
+      plans: { title: '用药计划', subtitle: '先选择患者，再维护当前方案、历史方案和下发状态' },
+      tasks: { title: '服药任务', subtitle: '先选择患者，再处理当天服药执行、异常提醒和临时调整' },
+      devices: { title: '设备管理', subtitle: '维护药盒设备绑定关系、在线状态、开关记录和计划下发记录' },
+      messages: { title: '提醒消息', subtitle: '创建复诊提醒、子女提醒和系统提醒，当前以小程序消息中心为主' },
+      conversations: { title: '对话记录', subtitle: '先选择患者，再查看患者与小智设备的提醒、聊天和未响应记录' },
+      settings: { title: '系统设置', subtitle: '维护知情同意书内容和业务基础配置' }
+    };
+
+    const focusMap = {
+      dashboard: 'dashboard',
+      patient: 'patients',
+      'patient-create': 'patient-create',
+      patientCreate: 'patient-create',
+      patients: 'patients',
+      plan: 'plans',
+      plans: 'plans',
+      task: 'tasks',
+      tasks: 'tasks',
+      device: 'devices',
+      devices: 'devices',
+      message: 'messages',
+      messages: 'messages',
+      conversation: 'conversations',
+      conversations: 'conversations',
+      settings: 'settings'
+    };
+
+    const drawerConfig = {
+      patientEdit: {
+        title: '编辑患者档案',
+        subtitle: '维护患者基础信息、诊疗信息、联系人和知情同意状态',
+        template: 'tpl-patient-edit'
+      },
+      plan: {
+        title: '创建用药计划',
+        subtitle: '录入处方来源、药品明细，并生成服药任务',
+        template: 'tpl-plan'
+      },
+      device: {
+        title: '绑定药盒',
+        subtitle: '维护患者与药盒的绑定关系',
+        template: 'tpl-device'
+      },
+      message: {
+        title: '创建提醒',
+        subtitle: '创建复诊提醒、子女提醒或系统提醒',
+        template: 'tpl-message'
+      },
+      conversation: {
+        title: '对话记录详情',
+        subtitle: '查看患者语音提问、系统答复、知识库命中和复核意见',
+        template: 'tpl-conversation'
+      }
+    };
+
+    const $ = (selector, root = document) => root.querySelector(selector);
+    const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+    let onboardingStep = 1;
+
+    function routeTo(route, replaceHash = false) {
+      const target = pages[route] ? route : 'dashboard';
+      $$('.page').forEach(page => page.classList.remove('active'));
+      $('#page-' + target).classList.add('active');
+      const activeNav = target === 'patient-create' ? 'patients' : target;
+      $$('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.route === activeNav));
+      $('#pageTitle').textContent = pages[target].title;
+      $('#pageSubtitle').textContent = pages[target].subtitle;
+      if (target === 'patient-create') setOnboardingStep(1);
+      if (!replaceHash) {
+        history.replaceState(null, '', '#' + target);
+      }
+    }
+
+    function currentRouteFromUrl() {
+      const params = new URLSearchParams(location.search);
+      const focus = params.get('focus');
+      if (focus && focusMap[focus]) return focusMap[focus];
+      const hash = location.hash.replace('#', '');
+      return pages[hash] ? hash : 'dashboard';
+    }
+
+    function setupFocusMode() {
+      const params = new URLSearchParams(location.search);
+      const focus = params.get('focus');
+      if (!focus) return;
+      document.body.classList.add('focus-mode');
+      $('#focusText').textContent = `当前为专注模式：${focus}。仅展示对应后台功能点，适合嵌入 PRD 切片。`;
+    }
+
+    function openDrawer(type) {
+      const config = drawerConfig[type] || drawerConfig.plan;
+      $('#drawer').classList.remove('onboarding');
+      $('#drawerTitle').textContent = config.title;
+      $('#drawerSubtitle').textContent = config.subtitle;
+      $('#drawerBody').innerHTML = $('#' + config.template).innerHTML;
+      $('#drawerFoot').innerHTML = '<button class="btn" data-action="close-drawer">取消</button><button class="btn primary" data-action="save-drawer">保存</button>';
+      $('#drawerMask').classList.add('open');
+      $('#drawer').classList.add('open');
+    }
+
+    function closeDrawer() {
+      $('#drawerMask').classList.remove('open');
+      $('#drawer').classList.remove('open');
+      $('#drawer').classList.remove('onboarding');
+    }
+
+    function setOnboardingStep(step) {
+      onboardingStep = Math.max(1, Math.min(5, Number(step) || 1));
+      $$('[data-step-panel]').forEach(panel => {
+        panel.classList.toggle('active', Number(panel.dataset.stepPanel) === onboardingStep);
+      });
+      $$('[data-step-target]').forEach(item => {
+        const itemStep = Number(item.dataset.stepTarget);
+        item.classList.toggle('active', itemStep === onboardingStep);
+        item.classList.toggle('done', itemStep < onboardingStep);
+      });
+      const progress = $('[data-progress-count]');
+      if (progress) progress.textContent = `${onboardingStep}/5`;
+      const prev = $('[data-action="onboarding-prev"]');
+      const next = $('[data-action="onboarding-next"]');
+      if (prev) prev.disabled = onboardingStep === 1;
+      if (next) next.textContent = onboardingStep === 5 ? '完成建档' : '下一步';
+    }
+
+    function toast(message) {
+      const node = $('#toast');
+      node.textContent = message;
+      node.classList.add('show');
+      setTimeout(() => node.classList.remove('show'), 2200);
+    }
+
+    document.addEventListener('click', event => {
+      const nav = event.target.closest('[data-route]');
+      if (nav) {
+        routeTo(nav.dataset.route);
+        return;
+      }
+
+      const jump = event.target.closest('[data-route-jump]');
+      if (jump) {
+        routeTo(jump.dataset.routeJump);
+        return;
+      }
+
+      const drawer = event.target.closest('[data-drawer]');
+      if (drawer) {
+        openDrawer(drawer.dataset.drawer);
+        return;
+      }
+
+      const stepTarget = event.target.closest('[data-step-target]');
+      if (stepTarget) {
+        setOnboardingStep(stepTarget.dataset.stepTarget);
+        return;
+      }
+
+      const action = event.target.closest('[data-action]');
+      if (!action) return;
+
+      const type = action.dataset.action;
+      if (type === 'close-drawer') closeDrawer();
+      if (type === 'save-drawer') {
+        closeDrawer();
+        toast('已保存，系统将同步业务接口。');
+      }
+      if (type === 'onboarding-prev') setOnboardingStep(onboardingStep - 1);
+      if (type === 'onboarding-next') {
+        if (onboardingStep < 5) {
+          setOnboardingStep(onboardingStep + 1);
+        } else {
+          if ($('#drawer').classList.contains('open')) {
+            closeDrawer();
+          } else {
+            routeTo('patients');
+          }
+          toast('已完成患者建档，系统将生成服药任务。');
+        }
+      }
+      if (type === 'refresh') toast('已刷新数据。');
+      if (type === 'export') toast('已生成今日服药任务日报。');
+      if (type === 'export-conversations') toast('已导出当前患者对话记录。');
+      if (type === 'exit-focus') {
+        history.replaceState(null, '', location.pathname + '#dashboard');
+        document.body.classList.remove('focus-mode');
+        routeTo('dashboard', true);
+      }
+    });
+
+    $('#drawerMask').addEventListener('click', closeDrawer);
+    window.addEventListener('hashchange', () => routeTo(currentRouteFromUrl(), true));
+
+    setupFocusMode();
+    routeTo(currentRouteFromUrl(), true);
+  </script>
+</body>
+</html>

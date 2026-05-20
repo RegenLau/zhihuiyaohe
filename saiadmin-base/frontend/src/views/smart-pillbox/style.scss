@@ -1,0 +1,170 @@
+.pillbox-page {
+  .page-header {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+
+    h2,
+    h3 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--art-text-gray-900);
+    }
+
+    p {
+      margin: 6px 0 0;
+      color: var(--art-text-gray-500);
+      font-size: 13px;
+    }
+  }
+
+  .stat-card {
+    min-height: 116px;
+
+    :deep(.el-card__body) {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+  }
+
+  .stat-value {
+    margin-top: 12px;
+    font-size: 28px;
+    line-height: 1;
+    font-weight: 800;
+  }
+
+  .muted {
+    color: var(--art-text-gray-500);
+  }
+
+  .patient-layout {
+    display: grid;
+    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+
+  .patient-list-card {
+    position: sticky;
+    top: 0;
+
+    :deep(.el-card__body) {
+      padding: 14px;
+    }
+  }
+
+  .patient-option {
+    width: 100%;
+    margin-top: 10px;
+    padding: 14px;
+    text-align: left;
+    cursor: pointer;
+    border: 1px solid var(--el-border-color-light);
+    border-radius: 8px;
+    background: var(--el-bg-color);
+    transition: all 0.2s;
+
+    &:hover,
+    &.is-active {
+      border-color: var(--el-color-primary);
+      background: var(--el-color-primary-light-9);
+    }
+  }
+
+  .detail-stack {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .detail-hero {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .summary-item {
+    padding: 16px;
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 8px;
+    background: var(--el-bg-color);
+  }
+
+  .summary-number {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--el-color-primary);
+    font-size: 24px;
+    font-weight: 800;
+  }
+
+  .chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .timeline-card {
+    padding: 14px;
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 8px;
+    background: var(--el-bg-color);
+  }
+
+  .conversation-flow {
+    display: grid;
+    gap: 10px;
+  }
+
+  .bubble {
+    max-width: 84%;
+    padding: 12px 14px;
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 8px;
+    background: var(--el-fill-color-light);
+
+    &.right {
+      justify-self: end;
+      background: var(--el-color-primary-light-9);
+    }
+  }
+}
+
+@media (max-width: 1100px) {
+  .pillbox-page {
+    .patient-layout,
+    .summary-grid,
+    .card-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .patient-list-card {
+      position: static;
+    }
+
+    .detail-hero,
+    .page-header {
+      flex-direction: column;
+    }
+  }
+}
