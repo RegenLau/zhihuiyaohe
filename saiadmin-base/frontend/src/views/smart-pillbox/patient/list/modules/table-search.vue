@@ -21,14 +21,6 @@
         </ElSelect>
       </ElFormItem>
     </ElCol>
-    <ElCol :xs="24" :sm="12" :md="8" :lg="6">
-      <ElFormItem label="知情同意" prop="consent">
-        <ElSelect v-model="formData.consent" placeholder="全部" clearable>
-          <ElOption label="已同意" value="已同意" />
-          <ElOption label="未同意" value="未同意" />
-        </ElSelect>
-      </ElFormItem>
-    </ElCol>
   </SaSearchBar>
 </template>
 

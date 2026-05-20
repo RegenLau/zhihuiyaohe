@@ -5,13 +5,12 @@
         <h2>新增患者建档</h2>
         <p>按步骤完成患者信息、用药计划、设备绑定和任务生成</p>
       </div>
-      <ElTag type="primary" size="large">当前进度 {{ activeStep + 1 }}/5</ElTag>
+      <ElTag type="primary" size="large">当前进度 {{ activeStep + 1 }}/4</ElTag>
     </div>
 
     <ElCard shadow="never">
       <ElSteps :active="activeStep" finish-status="success" align-center>
         <ElStep title="患者信息" description="建立基础档案" />
-        <ElStep title="诊疗信息" description="疾病和联系人" />
         <ElStep title="用药计划" description="药品和处方" />
         <ElStep title="设备绑定" description="药盒和小程序" />
         <ElStep title="确认建档" description="生成服药任务" />
@@ -22,7 +21,7 @@
       <ElForm ref="formRef" :model="form" :rules="rules" label-width="110px">
         <template v-if="activeStep === 0">
           <h3 class="form-step-title">添加患者信息</h3>
-          <p class="muted mb-4">先建立患者基础档案，身份证号为选填，用于后续系统对接。</p>
+          <p class="muted mb-4">先建立患者基础档案，并记录基础疾病和复诊周期。</p>
           <ElRow :gutter="16">
             <ElCol :xs="24" :md="12"
               ><ElFormItem label="患者姓名" prop="name"
@@ -40,38 +39,17 @@
               </ElFormItem>
             </ElCol>
             <ElCol :xs="24" :md="12"
-              ><ElFormItem label="年龄" prop="age"
-                ><ElInputNumber v-model="form.age" :min="1" /></ElFormItem
+              ><ElFormItem label="出生年月日" prop="birthDate"
+                ><ElDatePicker
+                  v-model="form.birthDate"
+                  type="date"
+                  value-format="YYYY-MM-DD"
+                  placeholder="请选择出生年月日"
+                  :disabled-date="disableFutureDate" /></ElFormItem
             ></ElCol>
-            <ElCol :xs="24" :md="12"
-              ><ElFormItem label="档案编号" prop="recordNo"
-                ><ElInput v-model="form.recordNo" placeholder="请输入档案编号" /></ElFormItem
-            ></ElCol>
-            <ElCol :xs="24" :md="12"
-              ><ElFormItem label="身份证号"><ElInput placeholder="选填" /></ElFormItem
-            ></ElCol>
-            <ElCol :span="24"
-              ><ElFormItem label="居住地址"
-                ><ElInput v-model="form.address" placeholder="请输入居住地址" /></ElFormItem
-            ></ElCol>
-          </ElRow>
-        </template>
-
-        <template v-if="activeStep === 1">
-          <h3 class="form-step-title">补充诊疗信息和联系人</h3>
-          <p class="muted mb-4">记录基础疾病、诊疗备注和家庭联系人，便于后续提醒和随访。</p>
-          <ElRow :gutter="16">
             <ElCol :span="24"
               ><ElFormItem label="基础疾病" prop="diseases"
                 ><ElInput v-model="form.diseases" placeholder="多个疾病用逗号分隔" /></ElFormItem
-            ></ElCol>
-            <ElCol :xs="24" :md="12"
-              ><ElFormItem label="家属姓名" prop="familyName"
-                ><ElInput v-model="form.familyName" placeholder="请输入家属姓名" /></ElFormItem
-            ></ElCol>
-            <ElCol :xs="24" :md="12"
-              ><ElFormItem label="家属手机号" prop="familyPhone"
-                ><ElInput v-model="form.familyPhone" placeholder="请输入家属手机号" /></ElFormItem
             ></ElCol>
             <ElCol :xs="24" :md="12"
               ><ElFormItem label="复诊周期"
@@ -80,18 +58,10 @@
                     label="60 天"
                     value="60 天" /></ElSelect></ElFormItem
             ></ElCol>
-            <ElCol :span="24"
-              ><ElFormItem label="诊疗备注"
-                ><ElInput
-                  v-model="form.remark"
-                  type="textarea"
-                  :rows="4"
-                  placeholder="请输入诊疗备注" /></ElFormItem
-            ></ElCol>
           </ElRow>
         </template>
 
-        <template v-if="activeStep === 2">
+        <template v-if="activeStep === 1">
           <h3 class="form-step-title">添加用药计划</h3>
           <p class="muted mb-4"
             >首次建档时同步创建用药计划；后续复诊仍可在独立的用药计划模块维护。</p
@@ -144,7 +114,7 @@
           </ElRow>
         </template>
 
-        <template v-if="activeStep === 3">
+        <template v-if="activeStep === 2">
           <h3 class="form-step-title">绑定药盒和小程序</h3>
           <p class="muted mb-4"
             >选择待绑定设备并生成小程序绑定入口，知情同意由患者或家属在小程序端确认。</p
@@ -185,7 +155,7 @@
           </ElRow>
         </template>
 
-        <template v-if="activeStep === 4">
+        <template v-if="activeStep === 3">
           <h3 class="form-step-title">确认建档并生成服药任务</h3>
           <p class="muted mb-4">确认后保存患者档案、用药计划和设备绑定关系，并生成服药任务。</p>
           <ElDescriptions :column="2" border>
@@ -210,9 +180,9 @@
         </ElButton>
         <ElButton type="primary" @click="handleNext">
           <template #icon
-            ><ArtSvgIcon :icon="activeStep === 4 ? 'ri:check-line' : 'ri:arrow-right-line'"
+            ><ArtSvgIcon :icon="activeStep === 3 ? 'ri:check-line' : 'ri:arrow-right-line'"
           /></template>
-          {{ activeStep === 4 ? '完成建档' : '下一步' }}
+          {{ activeStep === 3 ? '完成建档' : '下一步' }}
         </ElButton>
       </div>
     </ElCard>
@@ -233,14 +203,9 @@
     name: '',
     phone: '',
     gender: '男',
-    age: undefined as number | undefined,
-    recordNo: '',
-    address: '',
+    birthDate: '',
     diseases: '',
-    familyName: '',
-    familyPhone: '',
     reviewCycle: '30 天',
-    remark: '',
     planName: '',
     startDate: '',
     source: '手动录入',
@@ -255,11 +220,8 @@
     name: [{ required: true, message: '请输入患者姓名', trigger: 'blur' }],
     phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }],
     gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
-    age: [{ required: true, message: '请输入年龄', trigger: 'change' }],
-    recordNo: [{ required: true, message: '请输入档案编号', trigger: 'blur' }],
+    birthDate: [{ required: true, message: '请选择出生年月日', trigger: 'change' }],
     diseases: [{ required: true, message: '请输入基础疾病', trigger: 'blur' }],
-    familyName: [{ required: true, message: '请输入家属姓名', trigger: 'blur' }],
-    familyPhone: [{ required: true, message: '请输入家属手机号', trigger: 'blur' }],
     planName: [{ required: true, message: '请输入计划名称', trigger: 'blur' }],
     startDate: [{ required: true, message: '请选择开始日期', trigger: 'change' }],
     source: [{ required: true, message: '请选择处方来源', trigger: 'change' }],
@@ -267,9 +229,44 @@
     device: [{ required: true, message: '请选择药盒设备', trigger: 'change' }]
   }
 
+  const disableFutureDate = (date: Date) => date.getTime() > Date.now()
+
+  const calculateAge = (birthDate: string) => {
+    const birthday = new Date(`${birthDate}T00:00:00`)
+    if (Number.isNaN(birthday.getTime())) return 0
+
+    const today = new Date()
+    let age = today.getFullYear() - birthday.getFullYear()
+    const hasBirthdayPassed =
+      today.getMonth() > birthday.getMonth() ||
+      (today.getMonth() === birthday.getMonth() && today.getDate() >= birthday.getDate())
+
+    if (!hasBirthdayPassed) {
+      age -= 1
+    }
+
+    return Math.max(age, 0)
+  }
+
+  const generatePatientNo = () => {
+    const now = new Date()
+    const date = [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, '0'),
+      String(now.getDate()).padStart(2, '0')
+    ].join('')
+    const time = [
+      String(now.getHours()).padStart(2, '0'),
+      String(now.getMinutes()).padStart(2, '0'),
+      String(now.getSeconds()).padStart(2, '0')
+    ].join('')
+
+    return `PAT-${date}-${time}`
+  }
+
   const handleNext = async () => {
     await formRef.value?.validate()
-    if (activeStep.value < 4) {
+    if (activeStep.value < 3) {
       activeStep.value += 1
       return
     }
@@ -277,8 +274,9 @@
       name: form.name,
       phone: form.phone,
       gender: form.gender,
-      age: form.age || 0,
-      recordNo: form.recordNo,
+      birthDate: form.birthDate,
+      age: calculateAge(form.birthDate),
+      recordNo: generatePatientNo(),
       diseases: form.diseases
         .split(/[，,]/)
         .map((item) => item.trim())
@@ -287,7 +285,7 @@
       deviceStatus: form.device === '暂不绑定' ? '未绑定' : '在线',
       deviceStatusType: form.device === '暂不绑定' ? 'warning' : 'success',
       consent: '未同意',
-      child: `${form.familyName} ${form.familyPhone}`,
+      child: '待绑定',
       nextReminder: '待生成',
       todayDrugs: 0,
       recentInteraction: '-',

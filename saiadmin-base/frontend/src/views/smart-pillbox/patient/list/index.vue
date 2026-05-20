@@ -3,7 +3,7 @@
     <div class="page-header">
       <div>
         <h2>患者管理</h2>
-        <p>维护患者基本信息、疾病信息、子女绑定和知情同意状态</p>
+        <p>维护患者基本信息、疾病信息、子女绑定和药盒状态</p>
       </div>
     </div>
 
@@ -49,14 +49,6 @@
             <ElTag v-for="disease in row.diseases" :key="disease" effect="plain">
               {{ disease }}
             </ElTag>
-          </ElSpace>
-        </template>
-        <template #consent="{ row }">
-          <ElSpace>
-            <ElTag type="primary">已登记</ElTag>
-            <ElTag :type="row.consent === '已同意' ? 'success' : 'warning'">{{
-              row.consent
-            }}</ElTag>
           </ElSpace>
         </template>
         <template #deviceStatus="{ row }">
@@ -115,7 +107,7 @@
 
   const router = useRouter()
   const showSearchBar = ref(true)
-  const searchForm = ref({ keyword: '', deviceStatus: '', consent: '' })
+  const searchForm = ref({ keyword: '', deviceStatus: '' })
 
   const { dialogType, dialogVisible, dialogData, showDialog } = useSaiAdmin()
 
@@ -138,7 +130,6 @@
       columnsFactory: () => [
         { prop: 'patient', label: '患者', useSlot: true, minWidth: 160 },
         { prop: 'diseases', label: '基础疾病', useSlot: true, minWidth: 160 },
-        { prop: 'consent', label: '实名/同意', useSlot: true, minWidth: 160 },
         { prop: 'deviceStatus', label: '药盒', useSlot: true, minWidth: 170 },
         { prop: 'child', label: '子女绑定', minWidth: 180, showOverflowTooltip: true },
         { prop: 'taskRisk', label: '最近任务', useSlot: true, width: 120 },
@@ -153,7 +144,7 @@
   }
 
   const handleReset = async () => {
-    searchForm.value = { keyword: '', deviceStatus: '', consent: '' }
+    searchForm.value = { keyword: '', deviceStatus: '' }
     await resetSearchParams()
     getData()
   }

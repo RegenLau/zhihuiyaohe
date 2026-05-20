@@ -135,12 +135,11 @@ app.get('/app/smart-pillbox/admin/doctor/dashboard/read', (req, res) => {
 })
 
 app.get('/app/smart-pillbox/admin/doctor/patient/list', (req, res) => {
-  const { keyword, deviceStatus, consent } = req.query
+  const { keyword, deviceStatus } = req.query
   const records = patients.filter((item) => {
     const keywordMatched = includesKeyword(keyword, [item.name, item.phone, item.recordNo])
     const deviceMatched = !deviceStatus || item.deviceStatus === deviceStatus
-    const consentMatched = !consent || item.consent === consent
-    return keywordMatched && deviceMatched && consentMatched
+    return keywordMatched && deviceMatched
   })
   res.json(ok(paginate(records, req.query)))
 })

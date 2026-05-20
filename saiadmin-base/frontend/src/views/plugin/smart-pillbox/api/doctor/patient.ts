@@ -5,7 +5,6 @@ const baseUrl = '/app/smart-pillbox/admin/doctor/patient'
 
 export interface PatientListParams extends SmartPillboxListParams {
   deviceStatus?: string
-  consent?: string
 }
 
 export default {

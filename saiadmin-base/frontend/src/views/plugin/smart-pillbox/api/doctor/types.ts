@@ -11,6 +11,7 @@ export interface Patient {
   name: string
   gender: string
   age: number
+  birthDate?: string
   recordNo: string
   phone: string
   diseases: string[]
@@ -116,12 +117,51 @@ export interface RiskItem {
   timestamp: string
   title: string
   note: string
+  patient?: string
+  source?: string
+  level?: string
+  action?: string
+  route?: string
+  icon?: string
+}
+
+export interface DashboardProgressItem {
+  label: string
+  value: string
+  percent: number
+  note: string
+  route: string
+}
+
+export interface DashboardQuickAction {
+  label: string
+  icon: string
+  route: string
+  tone: 'primary' | 'success' | 'warning' | 'info'
+}
+
+export interface DashboardWeeklyBar {
+  label: string
+  value: number
+  count: string
+  active?: boolean
+}
+
+export interface DashboardSidePanel {
+  metrics: DashboardProgressItem[]
+  actions: DashboardQuickAction[]
+  weeklyBars: DashboardWeeklyBar[]
+  weeklySummary: {
+    value: string
+    note: string
+  }
 }
 
 export interface DashboardData {
   statCards: DashboardStatCard[]
   trendBars: TrendBar[]
   risks: RiskItem[]
+  sidePanel: DashboardSidePanel
 }
 
 export interface AgreementSettings {

@@ -196,6 +196,380 @@
     }
   }
 
+  .dashboard-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 360px);
+    gap: var(--pillbox-gap);
+    align-items: start;
+  }
+
+  .dashboard-main {
+    display: grid;
+    gap: var(--pillbox-gap);
+    min-width: 0;
+  }
+
+  .dashboard-insight-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--pillbox-gap);
+    min-width: 0;
+  }
+
+  .risk-board-card {
+    :deep(.el-card__body) {
+      padding-top: 16px;
+    }
+  }
+
+  .risk-board {
+    display: grid;
+    gap: var(--pillbox-gap-sm);
+  }
+
+  .risk-board-item {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    gap: var(--pillbox-gap-sm);
+    align-items: center;
+    padding: 14px;
+    background: var(--pillbox-surface);
+    border: 1px solid var(--pillbox-border);
+    border-radius: var(--pillbox-card-radius);
+
+    &.is-danger {
+      background: linear-gradient(90deg, var(--el-color-danger-light-9), var(--pillbox-surface));
+      border-color: var(--el-color-danger-light-7);
+
+      .risk-board-icon {
+        color: var(--el-color-danger);
+        background: var(--el-color-danger-light-9);
+        border-color: var(--el-color-danger-light-7);
+      }
+    }
+
+    &.is-warning {
+      background: linear-gradient(90deg, var(--el-color-warning-light-9), var(--pillbox-surface));
+      border-color: var(--el-color-warning-light-7);
+
+      .risk-board-icon {
+        color: var(--el-color-warning);
+        background: var(--el-color-warning-light-9);
+        border-color: var(--el-color-warning-light-7);
+      }
+    }
+
+    &.is-primary {
+      background: linear-gradient(90deg, var(--el-color-primary-light-9), var(--pillbox-surface));
+      border-color: var(--el-color-primary-light-7);
+
+      .risk-board-icon {
+        color: var(--el-color-primary);
+        background: var(--el-color-primary-light-9);
+        border-color: var(--el-color-primary-light-7);
+      }
+    }
+  }
+
+  .risk-board-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    color: var(--pillbox-text-regular);
+    background: var(--pillbox-surface-soft);
+    border: 1px solid var(--pillbox-border);
+    border-radius: var(--pillbox-card-radius);
+  }
+
+  .risk-board-content {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .risk-board-title {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+
+    b {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--pillbox-text-strong);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .risk-board-note {
+    overflow: hidden;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--pillbox-text-muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .risk-board-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--pillbox-text-muted);
+
+    span {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+      min-width: 0;
+    }
+  }
+
+  .dashboard-side {
+    position: sticky;
+    top: var(--pillbox-gap);
+    display: grid;
+    gap: var(--pillbox-gap);
+    min-width: 0;
+  }
+
+  .side-card {
+    overflow: hidden;
+
+    :deep(.el-card__header) {
+      padding: 20px 20px 12px;
+      border-bottom: 0;
+    }
+
+    :deep(.el-card__body) {
+      padding: 0 20px 20px;
+    }
+  }
+
+  .side-card-header {
+    display: flex;
+    gap: var(--pillbox-gap-sm);
+    align-items: center;
+    justify-content: space-between;
+
+    :deep(.el-button) {
+      gap: 2px;
+      padding: 0;
+    }
+  }
+
+  .side-card-body {
+    display: grid;
+    gap: 18px;
+  }
+
+  .progress-metric-stack {
+    display: grid;
+    gap: 16px;
+  }
+
+  .progress-metric {
+    display: grid;
+    gap: 8px;
+    width: 100%;
+    padding: 0;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+
+    :deep(.el-progress-bar__outer) {
+      background-color: var(--el-color-primary-light-9);
+    }
+
+    :deep(.el-progress-bar__inner) {
+      background: linear-gradient(90deg, var(--el-color-primary), var(--el-color-success));
+    }
+  }
+
+  .progress-metric-top {
+    display: flex;
+    gap: var(--pillbox-gap-sm);
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--pillbox-text-regular);
+
+    b {
+      font-size: 18px;
+      color: var(--pillbox-text-strong);
+    }
+  }
+
+  .side-action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .side-action {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    height: 44px;
+    padding: 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-radius: var(--pillbox-card-radius);
+    transition:
+      border-color 0.2s,
+      transform 0.2s,
+      background 0.2s;
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+
+    &.is-primary {
+      color: var(--el-color-primary);
+      background: var(--el-color-primary-light-9);
+      border-color: var(--el-color-primary-light-7);
+    }
+
+    &.is-success {
+      color: var(--el-color-success);
+      background: var(--el-color-success-light-9);
+      border-color: var(--el-color-success-light-7);
+    }
+
+    &.is-warning {
+      color: var(--el-color-warning);
+      background: var(--el-color-warning-light-9);
+      border-color: var(--el-color-warning-light-7);
+    }
+
+    &.is-info {
+      color: var(--pillbox-text-regular);
+      background: var(--pillbox-surface-soft);
+      border-color: var(--pillbox-border);
+    }
+  }
+
+  .period-chip {
+    min-width: 58px;
+    padding: 0 10px;
+    color: var(--el-color-success);
+    background: var(--el-color-success-light-9);
+    border-color: var(--el-color-success-light-8);
+  }
+
+  .weekly-chart {
+    position: relative;
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .weekly-scale {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 178px;
+    padding: 2px 0 44px;
+    font-size: 11px;
+    color: var(--pillbox-text-muted);
+  }
+
+  .weekly-bars {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .weekly-bar-item {
+    display: grid;
+    grid-template-rows: 178px 18px 18px;
+    align-items: end;
+    min-width: 0;
+    text-align: center;
+
+    &.is-active {
+      .weekly-bar {
+        width: 18px;
+        background: linear-gradient(180deg, var(--el-color-primary), var(--el-color-success));
+        box-shadow: 0 8px 18px rgb(64 158 255 / 22%);
+      }
+
+      .weekly-label,
+      .weekly-count {
+        color: var(--el-color-primary);
+      }
+    }
+  }
+
+  .weekly-bar-track {
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    height: 178px;
+    padding-top: 8px;
+    background: linear-gradient(180deg, var(--el-color-primary-light-9), transparent);
+    border-radius: var(--pillbox-card-radius);
+  }
+
+  .weekly-bar {
+    width: 14px;
+    height: var(--bar-value);
+    min-height: 18px;
+    background: linear-gradient(180deg, var(--el-color-primary-light-5), var(--el-color-success));
+    border-radius: 999px 999px 4px 4px;
+  }
+
+  .weekly-label,
+  .weekly-count {
+    overflow: hidden;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--pillbox-text-muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .weekly-summary {
+    display: grid;
+    grid-column: 1 / -1;
+    gap: 2px;
+    padding: 12px;
+    margin-top: 12px;
+    background: var(--el-color-primary-light-9);
+    border: 1px solid var(--el-color-primary-light-8);
+    border-radius: var(--pillbox-card-radius);
+
+    b {
+      font-size: 20px;
+      line-height: 1.2;
+      color: var(--pillbox-text-strong);
+    }
+
+    span {
+      font-size: 12px;
+      color: var(--pillbox-text-muted);
+    }
+  }
+
   .task-time {
     margin-top: 8px;
     font-size: 20px;
@@ -284,10 +658,17 @@
 
 @media (width <= 1100px) {
   .pillbox-page {
+    .dashboard-layout,
     .patient-layout,
     .summary-grid,
-    .card-grid {
+    .card-grid,
+    .dashboard-insight-grid {
       grid-template-columns: 1fr;
+    }
+
+    .dashboard-side {
+      position: static;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .patient-list-card {
@@ -297,6 +678,31 @@
     .detail-hero,
     .page-header {
       flex-direction: column;
+    }
+  }
+}
+
+@media (width <= 1400px) and (width > 1100px) {
+  .pillbox-page {
+    .dashboard-insight-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (width <= 760px) {
+  .pillbox-page {
+    .dashboard-side,
+    .side-action-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .weekly-chart {
+      grid-template-columns: 24px minmax(0, 1fr);
+    }
+
+    .weekly-bars {
+      gap: 6px;
     }
   }
 }

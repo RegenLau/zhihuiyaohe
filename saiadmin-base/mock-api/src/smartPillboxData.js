@@ -372,7 +372,6 @@ export const agreement = {
 export const dashboard = {
   statCards: [
     { label: '管理患者', value: '24', note: '本周新增 3 人', icon: 'ri:user-heart-line' },
-    { label: '绑定药盒', value: '18', note: '在线 15 台，离线 3 台', icon: 'ri:medicine-bottle-line' },
     { label: '今日任务', value: '86', note: '已完成 71 次', icon: 'ri:checkbox-circle-line' },
     { label: '今日漏服', value: '8', note: '连续漏服 2 人', icon: 'ri:alarm-warning-line' },
     { label: '待复诊', value: '5', note: '7 天内到期', icon: 'ri:calendar-check-line' }
@@ -391,19 +390,101 @@ export const dashboard = {
       type: 'danger',
       timestamp: '今日 14:18',
       title: '王秀兰连续 2 次漏服降压药',
-      note: '建议通知子女，并在下次复诊核对用药依从性'
+      note: '建议通知子女，并在下次复诊核对用药依从性',
+      patient: '王秀兰 女 72 岁',
+      source: '连续漏服',
+      level: '高风险',
+      action: '联系家属',
+      route: '/doctor/messages',
+      icon: 'ri:alarm-warning-line'
     },
     {
       type: 'warning',
       timestamp: '今日 09:01',
       title: '张建国药盒离线 6 小时',
-      note: '最近一次上报：今日 08:14'
+      note: '最近一次上报：今日 08:14',
+      patient: '张建国 男 69 岁',
+      source: '设备离线',
+      level: '中风险',
+      action: '查看设备',
+      route: '/doctor/devices',
+      icon: 'ri:wifi-off-line'
     },
     {
       type: 'primary',
       timestamp: '今日 10:42',
       title: '李桂芳 5 天后预计用完阿托伐他汀',
-      note: '可创建复诊提醒并下发至药盒'
+      note: '可创建复诊提醒并下发至药盒',
+      patient: '李桂芳 女 76 岁',
+      source: '复诊补药',
+      level: '待确认',
+      action: '创建提醒',
+      route: '/doctor/messages',
+      icon: 'ri:calendar-check-line'
     }
-  ]
+  ],
+  sidePanel: {
+    metrics: [
+      {
+        label: '任务完成',
+        value: '71/86',
+        percent: 83,
+        note: '今日服药任务',
+        route: '/doctor/tasks'
+      },
+      {
+        label: '风险跟进',
+        value: '5/8',
+        percent: 62,
+        note: '已处理高风险项',
+        route: '/doctor/messages'
+      },
+      {
+        label: '药盒在线',
+        value: '15/18',
+        percent: 83,
+        note: '绑定设备在线率',
+        route: '/doctor/devices'
+      }
+    ],
+    actions: [
+      {
+        label: '新增建档',
+        icon: 'ri:user-add-line',
+        route: '/doctor/patient-create',
+        tone: 'primary'
+      },
+      {
+        label: '创建计划',
+        icon: 'ri:calendar-check-line',
+        route: '/doctor/plans',
+        tone: 'success'
+      },
+      {
+        label: '设备管理',
+        icon: 'ri:medicine-bottle-line',
+        route: '/doctor/devices',
+        tone: 'warning'
+      },
+      {
+        label: '提醒消息',
+        icon: 'ri:notification-3-line',
+        route: '/doctor/messages',
+        tone: 'info'
+      }
+    ],
+    weeklyBars: [
+      { label: '周四', value: 72, count: '68 次' },
+      { label: '周五', value: 80, count: '74 次' },
+      { label: '周六', value: 68, count: '61 次' },
+      { label: '周日', value: 76, count: '70 次' },
+      { label: '周一', value: 82, count: '77 次' },
+      { label: '周二', value: 78, count: '73 次' },
+      { label: '今日', value: 86, count: '71 次', active: true }
+    ],
+    weeklySummary: {
+      value: '86%',
+      note: '今日完成率，已完成 71 次'
+    }
+  }
 }
