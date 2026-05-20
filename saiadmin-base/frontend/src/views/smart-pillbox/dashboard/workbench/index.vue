@@ -2,7 +2,7 @@
   <div class="pillbox-page page-content">
     <div class="page-header">
       <div>
-        <h2>医药师工作台</h2>
+        <h2>工作台</h2>
         <p>查看患者服药风险、药盒状态和待处理提醒</p>
       </div>
       <ElSpace wrap>

@@ -42,7 +42,7 @@ export const smartPillboxRoutes: AppRouteRecord[] = [
   createSmartPillboxRoute({
     path: '/doctor/dashboard',
     name: 'SmartPillboxWorkbench',
-    title: '医药师工作台',
+    title: '工作台',
     icon: 'ri:stethoscope-line',
     component: '/smart-pillbox/dashboard/workbench'
   }),
