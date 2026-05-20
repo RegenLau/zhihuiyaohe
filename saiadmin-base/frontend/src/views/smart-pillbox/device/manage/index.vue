@@ -25,7 +25,7 @@
       >
         <template #left>
           <ElButton type="primary" @click="showDialog('add')">
-            <template #icon><ArtSvgIcon icon="ri:link" /></template>
+            <template #icon><ArtSvgIcon icon="ri:link-m" /></template>
             绑定药盒
           </ElButton>
         </template>
@@ -135,7 +135,7 @@
   const unbindDevice = async (row: Record<string, any>) => {
     await deviceApi.update({ ...row, patient: '-', status: '待分配', statusType: 'warning' })
     ElMessage.success('设备已解绑')
-    refreshRemove()
+    refreshUpdate()
   }
 </script>
 

@@ -89,6 +89,72 @@
     gap: 12px;
     align-items: flex-start;
     justify-content: space-between;
+
+    h3 {
+      margin: 0;
+      color: var(--art-text-gray-900);
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+  }
+
+  .form-step-title {
+    margin: 0;
+    color: var(--art-text-gray-900);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .panel-header {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .chart-bars {
+    display: flex;
+    height: 224px;
+    gap: 12px;
+    align-items: flex-end;
+  }
+
+  .chart-bar-item {
+    flex: 1;
+    text-align: center;
+  }
+
+  .chart-bar-stack {
+    display: flex;
+    height: 168px;
+    gap: 4px;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .chart-bar {
+    width: 20px;
+    border-radius: 6px 6px 0 0;
+
+    &.is-done {
+      height: var(--done-height);
+      background: var(--el-color-primary);
+    }
+
+    &.is-miss {
+      height: var(--miss-height);
+      background: var(--el-color-danger);
+    }
+  }
+
+  .task-time {
+    margin-top: 8px;
+    color: var(--art-text-gray-900);
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.2;
   }
 
   .summary-grid {

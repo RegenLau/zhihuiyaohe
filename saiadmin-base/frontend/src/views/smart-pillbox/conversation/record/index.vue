@@ -37,7 +37,7 @@
         <ElCard shadow="never">
           <div class="detail-hero">
             <div>
-              <h2>{{ currentPatient.name }} 的对话记录</h2>
+              <h3>{{ currentPatient.name }} 的对话记录</h3>
               <p class="muted mt-1">患者与小智设备的提醒、患者聊天、未响应记录统一按时间回看。</p>
             </div>
             <ElSpace wrap>
@@ -70,8 +70,9 @@
               <ElTag type="primary">最近 {{ conversations.length }} 条</ElTag>
             </div>
           </template>
-          <ElSegmented v-model="conversationFilter" :options="['全部 3', '小智提醒 1', '患者聊天 2', '未响应 1']" class="mb-4" />
-          <div class="detail-stack">
+          <ElSegmented v-model="conversationFilter" :options="conversationFilterOptions" class="mb-4" />
+          <ElEmpty v-if="conversations.length === 0" description="当前筛选条件下暂无对话记录" />
+          <div v-else class="detail-stack">
             <div v-for="item in conversations" :key="item.id" class="timeline-card">
               <div class="flex justify-between items-center mb-3">
                 <b>{{ item.time }}</b>
@@ -101,7 +102,8 @@
   const router = useRouter()
   const keyword = ref('')
   const selectedPatientId = ref(1)
-  const conversationFilter = ref('全部 3')
+  const conversationFilter = ref('全部')
+  const conversationFilterOptions = ['全部', '小智提醒', '患者聊天', '未响应']
   const patients = ref<Patient[]>([])
   const conversations = ref<Conversation[]>([])
   const patientLoading = ref(false)
@@ -136,12 +138,12 @@
   const respondedCount = computed(() => conversations.value.filter((item) => item.patientText).length)
   const pendingCount = computed(() => conversations.value.filter((item) => item.status.includes('待')).length)
   const conversationType = computed(() => {
-    if (conversationFilter.value.includes('小智提醒')) return '小智提醒'
-    if (conversationFilter.value.includes('患者聊天')) return '患者聊天'
+    if (conversationFilter.value === '小智提醒') return '小智提醒'
+    if (conversationFilter.value === '患者聊天') return '患者聊天'
     return ''
   })
   const conversationStatus = computed(() => {
-    if (conversationFilter.value.includes('未响应')) return '待人工跟进'
+    if (conversationFilter.value === '未响应') return '未响应'
     return ''
   })
 

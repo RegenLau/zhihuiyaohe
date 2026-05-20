@@ -44,20 +44,26 @@
         <ElCard v-loading="taskLoading" shadow="never">
           <div class="detail-hero">
             <div>
-              <h2>{{ currentPatient.name }} · 今日提醒计划</h2>
+              <h3>{{ currentPatient.name }} · 今日提醒计划</h3>
               <p class="muted mt-1">可继续处理今日执行、异常提醒和临时调整；长期处方变更请进入用药计划。</p>
             </div>
             <ElSpace wrap>
-              <ElButton @click="router.push('/doctor/plans')">查看计划</ElButton>
-              <ElButton type="primary" @click="ElMessage.success('今日调整已保存')">保存今日调整</ElButton>
+              <ElButton @click="router.push('/doctor/plans')">
+                <template #icon><ArtSvgIcon icon="ri:calendar-check-line" /></template>
+                查看计划
+              </ElButton>
+              <ElButton type="primary" @click="saveDailyAdjustment">
+                <template #icon><ArtSvgIcon icon="ri:save-3-line" /></template>
+                保存今日调整
+              </ElButton>
             </ElSpace>
           </div>
         </ElCard>
 
         <div class="summary-grid">
-          <div class="summary-item"><span class="summary-number">1 条</span><span class="muted">待执行</span></div>
-          <div class="summary-item"><span class="summary-number">1 条</span><span class="muted">已完成</span></div>
-          <div class="summary-item"><span class="summary-number">1 条</span><span class="muted">异常 / 未打卡</span></div>
+          <div class="summary-item"><span class="summary-number">{{ taskSummary.pending }} 条</span><span class="muted">待执行</span></div>
+          <div class="summary-item"><span class="summary-number">{{ taskSummary.done }} 条</span><span class="muted">已完成</span></div>
+          <div class="summary-item"><span class="summary-number">{{ taskSummary.risk }} 条</span><span class="muted">异常 / 未打卡</span></div>
           <div class="summary-item"><span class="summary-number">{{ currentPatient.nextReminder }}</span><span class="muted">下一提醒</span></div>
         </div>
 
@@ -75,16 +81,17 @@
                 <b>今日提醒时间表</b>
                 <div class="muted text-sm mt-1">任务由生效用药计划生成；本页只处理当天执行和临时调整。</div>
               </div>
-              <ElTag type="warning">异常 1 条</ElTag>
+              <ElTag type="warning">异常 {{ taskSummary.risk }} 条</ElTag>
             </div>
           </template>
           <ElSegmented v-model="drugFilter" :options="['全部用药', '硝苯地平控释片', '二甲双胍片']" class="mb-4" />
-          <div class="detail-stack">
-            <div v-for="task in taskRecords" :key="task.id" class="timeline-card">
+          <ElEmpty v-if="displayedTasks.length === 0" description="当前筛选条件下暂无服药任务" />
+          <div v-else class="detail-stack">
+            <div v-for="task in displayedTasks" :key="task.id" class="timeline-card">
               <ElRow :gutter="12" align="middle">
                 <ElCol :xs="24" :md="4">
                   <div class="muted">系统建议时间</div>
-                  <div class="stat-value !text-xl">{{ task.time }}</div>
+                  <div class="task-time">{{ task.time }}</div>
                   <div class="muted">{{ task.period }}</div>
                 </ElCol>
                 <ElCol :xs="24" :md="14">
@@ -96,14 +103,20 @@
                   <div class="muted mt-2">{{ task.suggestion }}</div>
                 </ElCol>
                 <ElCol :xs="24" :md="6" class="text-right">
-                  <ElButton v-if="task.statusType === 'danger'" type="primary" link @click="router.push('/doctor/messages')">通知子女</ElButton>
-                  <ElButton v-else-if="task.statusType === 'warning'" type="primary" link>修改剂量</ElButton>
+                  <ElButton v-if="task.statusType === 'danger'" type="primary" link @click="router.push('/doctor/messages')">
+                    <template #icon><ArtSvgIcon icon="ri:notification-3-line" /></template>
+                    通知子女
+                  </ElButton>
+                  <ElButton v-else-if="task.statusType === 'warning'" type="primary" link>
+                    <template #icon><ArtSvgIcon icon="ri:edit-line" /></template>
+                    修改剂量
+                  </ElButton>
                   <ElTag :type="task.statusType">{{ task.status }}</ElTag>
                 </ElCol>
               </ElRow>
             </div>
           </div>
-          <ElAlert class="mt-4" show-icon :closable="false" type="info" title="今日临时调整只影响 2026-05-20 的任务；需要长期变更时，请在用药计划中修改当前方案并重新下发药盒。" />
+          <ElAlert class="mt-4" show-icon :closable="false" type="info" :title="`今日临时调整只影响 ${taskDate || '所选日期'} 的任务；需要长期变更时，请在用药计划中修改当前方案并重新下发药盒。`" />
         </ElCard>
       </div>
     </div>
@@ -155,6 +168,17 @@
   const currentPatient = computed(
     () => patients.value.find((item) => item.id === selectedPatientId.value) || patients.value[0] || emptyPatient
   )
+  const taskSummary = computed(() => ({
+    pending: taskRecords.value.filter((item) => item.status === '待执行').length,
+    done: taskRecords.value.filter((item) => item.status === '已完成').length,
+    risk: taskRecords.value.filter((item) => item.statusType === 'danger').length
+  }))
+  const displayedTasks = computed(() => {
+    if (taskView.value === '异常记录') {
+      return taskRecords.value.filter((item) => item.statusType === 'danger')
+    }
+    return taskRecords.value
+  })
 
   const loadPatients = async () => {
     patientLoading.value = true
@@ -189,6 +213,10 @@
   const exportDaily = async () => {
     await taskApi.exportDaily({ patientId: selectedPatientId.value, taskDate: taskDate.value })
     ElMessage.success('已生成今日服药任务日报')
+  }
+
+  const saveDailyAdjustment = () => {
+    ElMessage.success('今日调整已保存')
   }
 
   watch([selectedPatientId, drugFilter, taskDate], () => {

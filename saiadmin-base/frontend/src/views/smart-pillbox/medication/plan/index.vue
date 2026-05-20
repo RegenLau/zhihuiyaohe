@@ -5,7 +5,7 @@
         <h2>用药计划</h2>
         <p>先选择患者，再维护当前方案、历史方案和下发状态</p>
       </div>
-      <ElButton type="primary" @click="editVisible = true">
+      <ElButton type="primary" @click="openCreateDialog">
         <template #icon><ArtSvgIcon icon="ri:add-line" /></template>
         创建用药计划
       </ElButton>
@@ -45,18 +45,24 @@
         <ElCard shadow="never">
           <div class="detail-hero">
             <div>
-              <h2>{{ currentPatient.name }} · 用药计划</h2>
-              <p class="muted mt-1">当前计划已生效，药盒在线，可继续调整剂量、提醒时间和处方附件。</p>
+              <h3>{{ currentPatient.name }} · 用药计划</h3>
+              <p class="muted mt-1">{{ planHeroNote }}</p>
             </div>
             <ElSpace wrap>
-              <ElButton @click="router.push('/doctor/patients')">查看患者档案</ElButton>
-              <ElButton type="primary" @click="savePlan">保存计划调整</ElButton>
+              <ElButton @click="router.push('/doctor/patients')">
+                <template #icon><ArtSvgIcon icon="ri:user-search-line" /></template>
+                查看患者档案
+              </ElButton>
+              <ElButton type="primary" :disabled="!currentPlan.id" @click="savePlanAdjustment">
+                <template #icon><ArtSvgIcon icon="ri:save-3-line" /></template>
+                保存计划调整
+              </ElButton>
             </ElSpace>
           </div>
         </ElCard>
 
         <div class="summary-grid">
-          <div class="summary-item"><span class="summary-number">1 个</span><span class="muted">当前计划</span></div>
+          <div class="summary-item"><span class="summary-number">{{ currentPlan.id ? '1 个' : '0 个' }}</span><span class="muted">当前计划</span></div>
           <div class="summary-item"><span class="summary-number">{{ currentPlan.drugs.length }} 种</span><span class="muted">用药品种</span></div>
           <div class="summary-item"><span class="summary-number">{{ currentPlan.generatedTasks }}</span><span class="muted">任务生成</span></div>
           <div class="summary-item"><span class="summary-number">{{ currentPlan.dispatchStatus }}</span><span class="muted">药盒状态</span></div>
@@ -66,8 +72,14 @@
           <div class="flex justify-between items-center gap-3 flex-wrap">
             <ElSegmented v-model="planView" :options="['当前方案', '历史方案', '处方附件']" />
             <ElSpace wrap>
-              <ElButton>复制为新方案</ElButton>
-              <ElButton type="danger">停用计划</ElButton>
+              <ElButton @click="openCreateDialog">
+                <template #icon><ArtSvgIcon icon="ri:file-copy-line" /></template>
+                复制为新方案
+              </ElButton>
+              <ElButton type="danger" :disabled="!currentPlan.id">
+                <template #icon><ArtSvgIcon icon="ri:stop-circle-line" /></template>
+                停用计划
+              </ElButton>
             </ElSpace>
           </div>
         </ElCard>
@@ -108,24 +120,25 @@
     </div>
 
     <ElDialog v-model="editVisible" title="创建用药计划" width="820px">
-      <ElForm label-width="100px">
+      <ElForm ref="editFormRef" :model="editForm" :rules="editRules" label-width="100px">
         <ElRow :gutter="16">
-          <ElCol :span="12"><ElFormItem label="患者"><ElInput :model-value="currentPatient.name" /></ElFormItem></ElCol>
-          <ElCol :span="12"><ElFormItem label="计划名称"><ElInput model-value="复诊后用药计划" /></ElFormItem></ElCol>
-          <ElCol :span="12"><ElFormItem label="开始日期"><ElDatePicker type="date" value-format="YYYY-MM-DD" /></ElFormItem></ElCol>
-          <ElCol :span="12"><ElFormItem label="计划状态"><ElSelect model-value="草稿"><ElOption label="草稿" value="草稿" /><ElOption label="已生效" value="已生效" /></ElSelect></ElFormItem></ElCol>
-          <ElCol :span="24"><ElFormItem label="药品明细"><ElInput type="textarea" :rows="4" model-value="硝苯地平控释片，1片，每日一次，早餐后。" /></ElFormItem></ElCol>
+          <ElCol :span="12"><ElFormItem label="患者"><ElInput :model-value="currentPatient.name" readonly /></ElFormItem></ElCol>
+          <ElCol :span="12"><ElFormItem label="计划名称" prop="title"><ElInput v-model="editForm.title" /></ElFormItem></ElCol>
+          <ElCol :span="12"><ElFormItem label="开始日期" prop="startDate"><ElDatePicker v-model="editForm.startDate" type="date" value-format="YYYY-MM-DD" /></ElFormItem></ElCol>
+          <ElCol :span="12"><ElFormItem label="计划状态" prop="status"><ElSelect v-model="editForm.status"><ElOption label="草稿" value="草稿" /><ElOption label="已生效" value="已生效" /></ElSelect></ElFormItem></ElCol>
+          <ElCol :span="24"><ElFormItem label="药品明细" prop="drugText"><ElInput v-model="editForm.drugText" type="textarea" :rows="4" /></ElFormItem></ElCol>
         </ElRow>
       </ElForm>
       <template #footer>
         <ElButton @click="editVisible = false">取消</ElButton>
-        <ElButton type="primary" @click="savePlan">保存</ElButton>
+        <ElButton type="primary" @click="saveCreatePlan">保存</ElButton>
       </template>
     </ElDialog>
   </div>
 </template>
 
 <script setup lang="ts">
+  import type { FormInstance, FormRules } from 'element-plus'
   import { ElMessage } from 'element-plus'
   import patientApi from '@/views/plugin/smart-pillbox/api/doctor/patient'
   import planApi from '@/views/plugin/smart-pillbox/api/doctor/plan'
@@ -138,6 +151,13 @@
   const selectedPatientId = ref(1)
   const planView = ref('当前方案')
   const editVisible = ref(false)
+  const editFormRef = ref<FormInstance>()
+  const editForm = reactive({
+    title: '',
+    startDate: '',
+    status: '草稿',
+    drugText: ''
+  })
   const patients = ref<Patient[]>([])
   const plans = ref<Plan[]>([])
   const patientLoading = ref(false)
@@ -184,8 +204,19 @@
     () => patients.value.find((item) => item.id === selectedPatientId.value) || patients.value[0] || emptyPatient
   )
   const currentPlan = computed(
-    () => plans.value.find((item) => item.patientId === selectedPatientId.value) || plans.value[0] || emptyPlan
+    () => plans.value.find((item) => item.patientId === selectedPatientId.value) || emptyPlan
   )
+  const planHeroNote = computed(() => {
+    if (!currentPlan.value.id) return '当前患者尚未创建用药计划，可先创建草稿并在确认后下发药盒。'
+    return `${currentPlan.value.status}，${currentPlan.value.dispatchStatus}，可继续调整剂量、提醒时间和处方附件。`
+  })
+
+  const editRules: FormRules = {
+    title: [{ required: true, message: '请输入计划名称', trigger: 'blur' }],
+    startDate: [{ required: true, message: '请选择开始日期', trigger: 'change' }],
+    status: [{ required: true, message: '请选择计划状态', trigger: 'change' }],
+    drugText: [{ required: true, message: '请输入药品明细', trigger: 'blur' }]
+  }
 
   const loadPatients = async () => {
     patientLoading.value = true
@@ -211,14 +242,60 @@
     }
   }
 
-  const savePlan = async () => {
+  const openCreateDialog = () => {
+    editForm.title = currentPlan.value.id ? `${currentPlan.value.title} 复诊调整` : '新建用药计划'
+    editForm.startDate = ''
+    editForm.status = '草稿'
+    editForm.drugText = currentPlan.value.drugs
+      .map((drug) => `${drug.name}，${drug.dose}，${drug.frequency}，${drug.time}`)
+      .join('\n')
+    editVisible.value = true
+  }
+
+  const parseDrugInput = (text: string) =>
+    text
+      .split(/\n|；|;/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const [name = '未命名药品', dose = '待设置剂量', frequency = '待设置频次', time = '待设置时间'] = line
+          .split(/[，,]/)
+          .map((item) => item.trim())
+        return {
+          name,
+          dose,
+          frequency,
+          time,
+          guide: '请按处方和医药师建议执行，异常情况及时联系医药师。'
+        }
+      })
+
+  const savePlanAdjustment = async () => {
     if (currentPlan.value.id) {
       await planApi.update(currentPlan.value)
     } else {
       await planApi.save({ ...currentPlan.value, patientId: selectedPatientId.value })
     }
-    editVisible.value = false
     ElMessage.success('用药计划已保存')
+    loadPlans()
+  }
+
+  const saveCreatePlan = async () => {
+    await editFormRef.value?.validate()
+    await planApi.save({
+      patientId: selectedPatientId.value,
+      title: editForm.title,
+      code: '草稿',
+      period: editForm.startDate ? `${editForm.startDate} 起` : '未设置',
+      status: editForm.status,
+      dispatchStatus: '未下发',
+      dispatchType: editForm.status === '已生效' ? 'success' : 'info',
+      generatedTasks: '未生成',
+      source: '手动录入',
+      drugs: parseDrugInput(editForm.drugText)
+    })
+    editVisible.value = false
+    ElMessage.success('用药计划已创建')
     loadPlans()
   }
 

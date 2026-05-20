@@ -34,19 +34,25 @@
       <ElCol :xs="24" :lg="15">
         <ElCard shadow="never">
           <template #header>
-            <div class="flex justify-between items-center">
+            <div class="panel-header">
               <div>
                 <b>近 7 天服药完成趋势</b>
                 <div class="muted text-sm mt-1">蓝色为完成任务，红色为漏服任务</div>
               </div>
-              <ElButton @click="router.push('/doctor/tasks')">查看任务</ElButton>
+              <ElButton @click="router.push('/doctor/tasks')">
+                <template #icon><ArtSvgIcon icon="ri:checkbox-circle-line" /></template>
+                查看任务
+              </ElButton>
             </div>
           </template>
-          <div class="flex items-end gap-3 h-56">
-            <div v-for="bar in trendBars" :key="bar.label" class="flex-1 text-center">
-              <div class="flex items-end justify-center gap-1 h-42">
-                <div class="w-5 rounded-t" :style="{ height: bar.done + '%', background: 'var(--el-color-primary)' }"></div>
-                <div class="w-5 rounded-t" :style="{ height: bar.miss + '%', background: 'var(--el-color-danger)' }"></div>
+          <div class="chart-bars">
+            <div v-for="bar in trendBars" :key="bar.label" class="chart-bar-item">
+              <div
+                class="chart-bar-stack"
+                :style="{ '--done-height': `${bar.done}%`, '--miss-height': `${bar.miss}%` }"
+              >
+                <div class="chart-bar is-done"></div>
+                <div class="chart-bar is-miss"></div>
               </div>
               <div class="text-xs muted mt-2">{{ bar.label }}</div>
             </div>
@@ -124,17 +130,27 @@
           <ElRow :gutter="10">
             <ElCol :span="12">
               <ElButton class="w-full" type="primary" @click="router.push('/doctor/patient-create')">
+                <template #icon><ArtSvgIcon icon="ri:user-add-line" /></template>
                 新增患者建档
               </ElButton>
             </ElCol>
             <ElCol :span="12">
-              <ElButton class="w-full" @click="router.push('/doctor/plans')">创建用药计划</ElButton>
+              <ElButton class="w-full" @click="router.push('/doctor/plans')">
+                <template #icon><ArtSvgIcon icon="ri:calendar-check-line" /></template>
+                创建用药计划
+              </ElButton>
             </ElCol>
             <ElCol :span="12" class="mt-3">
-              <ElButton class="w-full" @click="router.push('/doctor/devices')">绑定药盒</ElButton>
+              <ElButton class="w-full" @click="router.push('/doctor/devices')">
+                <template #icon><ArtSvgIcon icon="ri:medicine-bottle-line" /></template>
+                绑定药盒
+              </ElButton>
             </ElCol>
             <ElCol :span="12" class="mt-3">
-              <ElButton class="w-full" @click="router.push('/doctor/messages')">创建提醒</ElButton>
+              <ElButton class="w-full" @click="router.push('/doctor/messages')">
+                <template #icon><ArtSvgIcon icon="ri:notification-3-line" /></template>
+                创建提醒
+              </ElButton>
             </ElCol>
           </ElRow>
         </ElCard>

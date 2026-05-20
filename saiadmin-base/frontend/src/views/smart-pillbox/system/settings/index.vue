@@ -25,7 +25,7 @@
               <ElCol :span="12"><ElFormItem label="协议名称"><ElInput v-model="agreement.name" /></ElFormItem></ElCol>
               <ElCol :span="12"><ElFormItem label="当前版本"><ElInput v-model="agreement.version" /></ElFormItem></ElCol>
               <ElCol :span="12"><ElFormItem label="启用状态"><SaSwitch v-model="agreement.status" /></ElFormItem></ElCol>
-              <ElCol :span="12"><ElFormItem label="适用端"><ElInput model-value="小程序患者端 / 子女端" /></ElFormItem></ElCol>
+              <ElCol :span="12"><ElFormItem label="适用端"><ElInput model-value="小程序患者端 / 子女端" readonly /></ElFormItem></ElCol>
               <ElCol :span="24"><ElFormItem label="协议摘要"><ElInput v-model="agreement.summary" type="textarea" :rows="4" /></ElFormItem></ElCol>
               <ElCol :span="24">
                 <ElFormItem label="协议正文">
@@ -40,11 +40,14 @@
         <ElCard shadow="never">
           <template #header><b>小程序展示预览</b></template>
           <div class="phone-preview">
-            <h3>{{ agreement.name }}</h3>
+            <h3 class="form-step-title">{{ agreement.name }}</h3>
             <div class="muted mb-3">版本 {{ agreement.version }}</div>
             <p>{{ agreement.summary }}</p>
             <ElCheckbox :model-value="true">我已阅读并同意上述内容</ElCheckbox>
-            <ElButton type="primary" class="w-full mt-4">确认并继续</ElButton>
+            <ElButton type="primary" class="w-full mt-4">
+              <template #icon><ArtSvgIcon icon="ri:check-line" /></template>
+              确认并继续
+            </ElButton>
           </div>
           <ElTimeline class="mt-4">
             <ElTimelineItem type="primary" timestamp="当前启用">{{ agreement.version }} 已启用</ElTimelineItem>
