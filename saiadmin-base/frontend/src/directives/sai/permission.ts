@@ -26,7 +26,7 @@
  *
  * ## 注意事项
  *
- * - 该指令会直接移除 DOM 元素，而不是使用 v-if 隐藏
+ * - 该指令会直接移除 DOM 元素，避免使用 v-if 隐藏
  *
  * @module directives/permission
  * @author sai

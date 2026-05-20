@@ -1,95 +1,4 @@
-export type StatusType = 'success' | 'warning' | 'danger' | 'primary' | 'info'
-
-export interface Patient {
-  id: number
-  name: string
-  gender: string
-  age: number
-  recordNo: string
-  phone: string
-  diseases: string[]
-  deviceNo: string
-  deviceStatus: string
-  deviceStatusType: StatusType
-  consent: string
-  child: string
-  nextReminder: string
-  todayDrugs: number
-  recentInteraction: string
-  completionRate: number
-  taskRisk: string
-}
-
-export interface Drug {
-  name: string
-  dose: string
-  frequency: string
-  time: string
-  guide: string
-}
-
-export interface Plan {
-  id: number
-  patientId: number
-  title: string
-  code: string
-  period: string
-  status: string
-  dispatchStatus: string
-  dispatchType: StatusType
-  generatedTasks: string
-  source: string
-  drugs: Drug[]
-}
-
-export interface Task {
-  id: number
-  time: string
-  period: string
-  drug: string
-  dose: string
-  source: string
-  status: string
-  statusType: StatusType
-  suggestion: string
-}
-
-export interface Device {
-  id: number
-  sn: string
-  patient: string
-  status: string
-  statusType: StatusType
-  battery: string
-  wifi: string
-  firmware: string
-  bindDate: string
-}
-
-export interface Message {
-  id: number
-  title: string
-  content: string
-  patient: string
-  receiver: string
-  channel: string
-  status: string
-  statusType: StatusType
-  createTime: string
-}
-
-export interface Conversation {
-  id: number
-  time: string
-  type: string
-  status: string
-  statusType: StatusType
-  patientText?: string
-  deviceText?: string
-  note?: string
-}
-
-export const patients: Patient[] = [
+export const patients = [
   {
     id: 1,
     name: '王秀兰',
@@ -187,7 +96,7 @@ export const patients: Patient[] = [
   }
 ]
 
-export const plans: Plan[] = [
+export const plans = [
   {
     id: 1,
     patientId: 1,
@@ -280,9 +189,10 @@ export const plans: Plan[] = [
   }
 ]
 
-export const tasks: Task[] = [
+export const tasks = [
   {
     id: 1,
+    patientId: 1,
     time: '08:00',
     period: '早餐后',
     drug: '硝苯地平控释片',
@@ -294,6 +204,7 @@ export const tasks: Task[] = [
   },
   {
     id: 2,
+    patientId: 1,
     time: '12:30',
     period: '午餐后',
     drug: '二甲双胍片',
@@ -305,6 +216,7 @@ export const tasks: Task[] = [
   },
   {
     id: 3,
+    patientId: 1,
     time: '20:30',
     period: '晚餐后',
     drug: '二甲双胍片',
@@ -322,7 +234,7 @@ export const devices = [
     sn: 'PBX-202605-018',
     patient: '王秀兰',
     status: '在线',
-    statusType: 'success' as StatusType,
+    statusType: 'success',
     battery: '84%',
     wifi: '已连接',
     firmware: 'v2.1.0',
@@ -333,7 +245,7 @@ export const devices = [
     sn: 'PBX-202605-006',
     patient: '张建国',
     status: '离线',
-    statusType: 'danger' as StatusType,
+    statusType: 'danger',
     battery: '56%',
     wifi: '未连接',
     firmware: 'v2.1.0',
@@ -344,7 +256,7 @@ export const devices = [
     sn: 'PBX-202605-011',
     patient: '李桂芳',
     status: '在线',
-    statusType: 'success' as StatusType,
+    statusType: 'success',
     battery: '72%',
     wifi: '已连接',
     firmware: 'v2.1.0',
@@ -355,7 +267,7 @@ export const devices = [
     sn: 'PBX-202605-021',
     patient: '-',
     status: '待分配',
-    statusType: 'warning' as StatusType,
+    statusType: 'warning',
     battery: '96%',
     wifi: '已连接',
     firmware: 'v2.1.3',
@@ -366,7 +278,7 @@ export const devices = [
     sn: 'PBX-202605-029',
     patient: '赵春梅',
     status: '在线',
-    statusType: 'success' as StatusType,
+    statusType: 'success',
     battery: '100%',
     wifi: '已连接',
     firmware: 'v2.1.3',
@@ -374,7 +286,7 @@ export const devices = [
   }
 ]
 
-export const messages: Message[] = [
+export const messages = [
   {
     id: 1,
     title: '近期服药完成情况不佳',
@@ -382,6 +294,7 @@ export const messages: Message[] = [
     patient: '王秀兰',
     receiver: '子女 王敏',
     channel: '小程序消息中心',
+    type: '子女提醒',
     status: '未读',
     statusType: 'warning',
     createTime: '今日 14:18'
@@ -393,6 +306,7 @@ export const messages: Message[] = [
     patient: '李桂芳',
     receiver: '患者 / 子女',
     channel: '小程序 + 药盒语音',
+    type: '复诊提醒',
     status: '已创建',
     statusType: 'success',
     createTime: '今日 10:42'
@@ -404,15 +318,17 @@ export const messages: Message[] = [
     patient: '张建国',
     receiver: '医药师',
     channel: '后台消息',
+    type: '系统提醒',
     status: '待处理',
     statusType: 'danger',
     createTime: '今日 09:01'
   }
 ]
 
-export const conversations: Conversation[] = [
+export const conversations = [
   {
     id: 1,
+    patientId: 1,
     time: '05/20 14:08',
     type: '患者聊天',
     status: '待人工跟进',
@@ -423,6 +339,7 @@ export const conversations: Conversation[] = [
   },
   {
     id: 2,
+    patientId: 1,
     time: '05/20 08:00',
     type: '小智提醒',
     status: '未响应',
@@ -432,6 +349,7 @@ export const conversations: Conversation[] = [
   },
   {
     id: 3,
+    patientId: 1,
     time: '05/19 20:00',
     type: '患者聊天',
     status: '已归档',
@@ -440,3 +358,52 @@ export const conversations: Conversation[] = [
     deviceText: '晚餐后服药提醒已播报，请确认二甲双胍片是否已服用。'
   }
 ]
+
+export const agreement = {
+  name: '智慧药盒服务知情同意书',
+  version: 'V2026.05',
+  status: 1,
+  summary:
+    '本服务用于协助患者进行用药计划提醒、服药任务记录、药盒设备绑定、用药相关问答和必要的信息上报。',
+  content:
+    '<p>一、服务目的：智慧药盒用于辅助用药提醒和用药管理，不替代医生诊疗意见。</p><p>二、信息采集：系统将采集患者基础信息、用药计划、药盒设备状态、服药任务记录和语音问答记录。</p><p>三、风险提示：如出现胸闷、严重不适、疑似不良反应等情况，请及时联系医药师或前往医疗机构。</p><p>四、授权确认：患者或家属点击同意后，表示已阅读并理解上述内容。</p>'
+}
+
+export const dashboard = {
+  statCards: [
+    { label: '管理患者', value: '24', note: '本周新增 3 人', icon: 'ri:user-heart-line' },
+    { label: '绑定药盒', value: '18', note: '在线 15 台，离线 3 台', icon: 'ri:medicine-bottle-line' },
+    { label: '今日任务', value: '86', note: '已完成 71 次', icon: 'ri:checkbox-circle-line' },
+    { label: '今日漏服', value: '8', note: '连续漏服 2 人', icon: 'ri:alarm-warning-line' },
+    { label: '待复诊', value: '5', note: '7 天内到期', icon: 'ri:calendar-check-line' }
+  ],
+  trendBars: [
+    { label: '周四', done: 72, miss: 16 },
+    { label: '周五', done: 80, miss: 10 },
+    { label: '周六', done: 68, miss: 20 },
+    { label: '周日', done: 76, miss: 14 },
+    { label: '周一', done: 82, miss: 11 },
+    { label: '周二', done: 78, miss: 12 },
+    { label: '今日', done: 86, miss: 16 }
+  ],
+  risks: [
+    {
+      type: 'danger',
+      timestamp: '今日 14:18',
+      title: '王秀兰连续 2 次漏服降压药',
+      note: '建议通知子女，并在下次复诊核对用药依从性'
+    },
+    {
+      type: 'warning',
+      timestamp: '今日 09:01',
+      title: '张建国药盒离线 6 小时',
+      note: '最近一次上报：今日 08:14'
+    },
+    {
+      type: 'primary',
+      timestamp: '今日 10:42',
+      title: '李桂芳 5 天后预计用完阿托伐他汀',
+      note: '可创建复诊提醒并下发至药盒'
+    }
+  ]
+}

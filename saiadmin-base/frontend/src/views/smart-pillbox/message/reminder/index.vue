@@ -1,31 +1,38 @@
 <template>
-  <div class="pillbox-page">
+  <div class="pillbox-page page-content">
     <div class="page-header">
       <div>
         <h2>提醒消息</h2>
         <p>创建复诊提醒、子女提醒和系统提醒，当前以小程序消息中心为主</p>
       </div>
-      <ElButton type="primary" @click="dialogVisible = true">
-        <template #icon><ArtSvgIcon icon="ri:add-line" /></template>
-        创建提醒
-      </ElButton>
     </div>
 
-    <SaSearchBar v-model="searchForm">
-      <ElCol :span="6">
-        <ElFormItem label="提醒类型">
-          <ElSelect v-model="searchForm.type" clearable placeholder="全部">
-            <ElOption label="复诊提醒" value="复诊提醒" />
-            <ElOption label="子女提醒" value="子女提醒" />
-            <ElOption label="系统提醒" value="系统提醒" />
-          </ElSelect>
-        </ElFormItem>
-      </ElCol>
-      <ElCol :span="6"><ElFormItem label="患者"><ElInput v-model="searchForm.patient" clearable /></ElFormItem></ElCol>
-    </SaSearchBar>
+    <TableSearch v-if="showSearchBar" v-model="searchForm" @search="handleSearch" @reset="handleReset" />
 
     <ElCard class="art-table-card" shadow="never">
-      <ArtTable :data="messages" :columns="columns" :pagination="{ current: 1, size: 10, total: messages.length }">
+      <ArtTableHeader
+        v-model:columns="columns"
+        v-model:show-search-bar="showSearchBar"
+        :loading="loading"
+        @refresh="refreshData"
+      >
+        <template #left>
+          <ElButton type="primary" @click="showDialog('add')">
+            <template #icon><ArtSvgIcon icon="ri:add-line" /></template>
+            创建提醒
+          </ElButton>
+        </template>
+      </ArtTableHeader>
+
+      <ArtTable
+        :data="data"
+        :columns="columns"
+        :loading="loading"
+        :pagination="pagination"
+        @pagination:size-change="handleSizeChange"
+        @pagination:current-change="handleCurrentChange"
+        @sort-change="handleSortChange"
+      >
         <template #message="{ row }">
           <div>
             <b>{{ row.title }}</b>
@@ -33,52 +40,88 @@
           </div>
         </template>
         <template #status="{ row }"><ElTag :type="row.statusType">{{ row.status }}</ElTag></template>
-        <template #operation>
-          <SaButton type="success" icon="ri:eye-line" tool-tip="查看" />
+        <template #operation="{ row }">
+          <ElSpace>
+            <SaButton type="success" icon="ri:eye-line" tool-tip="查看" @click="viewMessage(row)" />
+            <SaButton type="secondary" tool-tip="编辑" @click="showDialog('edit', row)" />
+          </ElSpace>
         </template>
       </ArtTable>
     </ElCard>
 
-    <ElDialog v-model="dialogVisible" title="创建提醒" width="760px">
-      <ElForm label-width="100px">
-        <ElRow :gutter="16">
-          <ElCol :span="12"><ElFormItem label="提醒类型"><ElSelect model-value="子女提醒"><ElOption label="子女提醒" value="子女提醒" /><ElOption label="复诊提醒" value="复诊提醒" /></ElSelect></ElFormItem></ElCol>
-          <ElCol :span="12"><ElFormItem label="患者"><ElInput model-value="王秀兰" /></ElFormItem></ElCol>
-          <ElCol :span="12"><ElFormItem label="接收方"><ElInput model-value="子女 王敏" /></ElFormItem></ElCol>
-          <ElCol :span="12"><ElFormItem label="渠道"><ElInput model-value="小程序消息中心" /></ElFormItem></ElCol>
-          <ElCol :span="24"><ElFormItem label="消息正文"><ElInput type="textarea" :rows="4" model-value="系统显示老人近 3 天有漏服记录，请关注服药情况并协助确认药盒是否正常使用。" /></ElFormItem></ElCol>
-        </ElRow>
-      </ElForm>
-      <template #footer>
-        <ElButton @click="dialogVisible = false">取消</ElButton>
-        <ElButton type="primary" @click="saveMessage">保存</ElButton>
-      </template>
-    </ElDialog>
+    <EditDialog
+      v-model="dialogVisible"
+      :dialog-type="dialogType"
+      :initial-form-data="dialogData"
+      @success="handleEditSuccess"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-  import type { ColumnOption } from '@/types'
   import { ElMessage } from 'element-plus'
-  import { messages } from '../../data'
+  import messageApi from '@/views/plugin/smart-pillbox/api/doctor/message'
+  import { useSaiAdmin } from '@/composables/useSaiAdmin'
+  import { useTable } from '@/hooks/core/useTable'
+  import EditDialog from './modules/edit-dialog.vue'
+  import TableSearch from './modules/table-search.vue'
 
   defineOptions({ name: 'SmartPillboxReminder' })
 
-  const dialogVisible = ref(false)
+  const showSearchBar = ref(true)
   const searchForm = ref({ type: '', patient: '' })
-  const columns: ColumnOption[] = [
-    { prop: 'message', label: '消息', useSlot: true, minWidth: 220 },
-    { prop: 'patient', label: '患者', width: 120 },
-    { prop: 'receiver', label: '接收方', minWidth: 150 },
-    { prop: 'channel', label: '渠道', minWidth: 150 },
-    { prop: 'status', label: '状态', useSlot: true, width: 110 },
-    { prop: 'createTime', label: '创建时间', width: 140 },
-    { prop: 'operation', label: '操作', useSlot: true, width: 90, fixed: 'right' }
-  ]
+  const { dialogType, dialogVisible, dialogData, showDialog } = useSaiAdmin()
 
-  const saveMessage = () => {
-    dialogVisible.value = false
-    ElMessage.success('提醒消息已保存')
+  const {
+    columns,
+    data,
+    loading,
+    pagination,
+    searchParams,
+    getData,
+    resetSearchParams,
+    handleSizeChange,
+    handleCurrentChange,
+    handleSortChange,
+    refreshData,
+    refreshCreate,
+    refreshUpdate
+  } = useTable({
+    core: {
+      apiFn: messageApi.list,
+      columnsFactory: () => [
+        { prop: 'message', label: '消息', useSlot: true, minWidth: 220 },
+        { prop: 'patient', label: '患者', width: 120 },
+        { prop: 'receiver', label: '接收方', minWidth: 150 },
+        { prop: 'channel', label: '渠道', minWidth: 150 },
+        { prop: 'status', label: '状态', useSlot: true, width: 110 },
+        { prop: 'createTime', label: '创建时间', width: 140 },
+        { prop: 'operation', label: '操作', useSlot: true, width: 120, fixed: 'right' }
+      ]
+    }
+  })
+
+  const handleSearch = () => {
+    Object.assign(searchParams, searchForm.value)
+    getData()
+  }
+
+  const handleReset = async () => {
+    searchForm.value = { type: '', patient: '' }
+    await resetSearchParams()
+    getData()
+  }
+
+  const handleEditSuccess = () => {
+    if (dialogType.value === 'add') {
+      refreshCreate()
+      return
+    }
+    refreshUpdate()
+  }
+
+  const viewMessage = (row: Record<string, any>) => {
+    ElMessage.success(`${row.title} 已打开`)
   }
 </script>
 

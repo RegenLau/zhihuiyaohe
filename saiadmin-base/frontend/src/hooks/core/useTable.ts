@@ -334,7 +334,7 @@ function useTableImpl<TApiFn extends (params: any) => Promise<any>>(
           // 状态机：缓存命中，进入 success 状态
           loadingState.value = 'success'
 
-          // 缓存命中时触发专门的回调，而不是 onSuccess
+          // 缓存命中时触发专门回调，跳过 onSuccess
           if (onCacheHit) {
             onCacheHit(cachedItem.data, cachedItem.response)
           }
@@ -585,7 +585,7 @@ function useTableImpl<TApiFn extends (params: any) => Promise<any>>(
     clearCache(CacheInvalidationStrategy.CLEAR_CURRENT, '删除数据')
     await getData()
 
-    // 如果当前页为空且不是第一页，回到上一页
+      // 如果当前页为空且页码大于 1，回到上一页
     if (data.value.length === 0 && current > 1) {
       pagination.current = current - 1
       ;(searchParams as Record<string, unknown>)[pageKey] = current - 1

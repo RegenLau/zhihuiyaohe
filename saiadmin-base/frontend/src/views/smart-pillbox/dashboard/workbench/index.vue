@@ -1,5 +1,5 @@
 <template>
-  <div class="pillbox-page">
+  <div class="pillbox-page page-content">
     <div class="page-header">
       <div>
         <h2>医药师工作台</h2>
@@ -61,18 +61,10 @@
               <div class="muted text-sm mt-1">按处理优先级排序</div>
             </div>
           </template>
-          <ElTimeline>
-            <ElTimelineItem type="danger" timestamp="今日 14:18">
-              <b>王秀兰连续 2 次漏服降压药</b>
-              <div class="muted mt-1">建议通知子女，并在下次复诊核对用药依从性</div>
-            </ElTimelineItem>
-            <ElTimelineItem type="warning" timestamp="今日 09:01">
-              <b>张建国药盒离线 6 小时</b>
-              <div class="muted mt-1">最近一次上报：今日 08:14</div>
-            </ElTimelineItem>
-            <ElTimelineItem type="primary" timestamp="今日 10:42">
-              <b>李桂芳 5 天后预计用完阿托伐他汀</b>
-              <div class="muted mt-1">可创建复诊提醒并下发至药盒</div>
+          <ElTimeline v-loading="dashboardLoading">
+            <ElTimelineItem v-for="risk in risks" :key="risk.title" :type="risk.type" :timestamp="risk.timestamp">
+              <b>{{ risk.title }}</b>
+              <div class="muted mt-1">{{ risk.note }}</div>
             </ElTimelineItem>
           </ElTimeline>
         </ElCard>
@@ -88,7 +80,14 @@
               <div class="muted text-sm mt-1">根据漏服、离线和复诊规则聚合</div>
             </div>
           </template>
-          <ArtTable :data="focusPatients" :columns="columns">
+          <ArtTable
+            :data="data"
+            :columns="columns"
+            :loading="loading"
+            :pagination="pagination"
+            @pagination:size-change="handleSizeChange"
+            @pagination:current-change="handleCurrentChange"
+          >
             <template #patient="{ row }">
               <div>
                 <b>{{ row.name }}</b>
@@ -145,39 +144,54 @@
 </template>
 
 <script setup lang="ts">
-  import type { ColumnOption } from '@/types'
-  import { patients } from '../../data'
+  import dashboardApi from '@/views/plugin/smart-pillbox/api/doctor/dashboard'
+  import patientApi from '@/views/plugin/smart-pillbox/api/doctor/patient'
+  import { useTable } from '@/hooks/core/useTable'
+  import type {
+    DashboardStatCard,
+    RiskItem,
+    TrendBar
+  } from '@/views/plugin/smart-pillbox/api/doctor/types'
 
   defineOptions({ name: 'SmartPillboxWorkbench' })
 
   const router = useRouter()
-  const focusPatients = patients.slice(0, 3)
+  const dashboardLoading = ref(false)
+  const statCards = ref<DashboardStatCard[]>([])
+  const trendBars = ref<TrendBar[]>([])
+  const risks = ref<RiskItem[]>([])
 
-  const statCards = [
-    { label: '管理患者', value: '24', note: '本周新增 3 人', icon: 'ri:user-heart-line' },
-    { label: '绑定药盒', value: '18', note: '在线 15 台，离线 3 台', icon: 'ri:medicine-bottle-line' },
-    { label: '今日任务', value: '86', note: '已完成 71 次', icon: 'ri:checkbox-circle-line' },
-    { label: '今日漏服', value: '8', note: '连续漏服 2 人', icon: 'ri:alarm-warning-line' },
-    { label: '待复诊', value: '5', note: '7 天内到期', icon: 'ri:calendar-check-line' }
-  ]
+  const { columns, data, loading, pagination, handleSizeChange, handleCurrentChange } = useTable({
+    core: {
+      apiFn: patientApi.list,
+      apiParams: {
+        limit: 3
+      },
+      columnsFactory: () => [
+        { prop: 'patient', label: '患者', useSlot: true, minWidth: 160 },
+        { prop: 'diseases', label: '疾病', useSlot: true, minWidth: 160 },
+        { prop: 'completionRate', label: '完成率', useSlot: true, minWidth: 160 },
+        { prop: 'deviceStatus', label: '药盒', useSlot: true, width: 100 },
+        { prop: 'operation', label: '操作', useSlot: true, width: 80, fixed: 'right' }
+      ]
+    }
+  })
 
-  const trendBars = [
-    { label: '周四', done: 72, miss: 16 },
-    { label: '周五', done: 80, miss: 10 },
-    { label: '周六', done: 68, miss: 20 },
-    { label: '周日', done: 76, miss: 14 },
-    { label: '周一', done: 82, miss: 11 },
-    { label: '周二', done: 78, miss: 12 },
-    { label: '今日', done: 86, miss: 16 }
-  ]
+  const loadDashboard = async () => {
+    dashboardLoading.value = true
+    try {
+      const dashboardData = await dashboardApi.read()
+      statCards.value = dashboardData.statCards
+      trendBars.value = dashboardData.trendBars
+      risks.value = dashboardData.risks
+    } finally {
+      dashboardLoading.value = false
+    }
+  }
 
-  const columns: ColumnOption[] = [
-    { prop: 'patient', label: '患者', useSlot: true, minWidth: 160 },
-    { prop: 'diseases', label: '疾病', useSlot: true, minWidth: 160 },
-    { prop: 'completionRate', label: '完成率', useSlot: true, minWidth: 160 },
-    { prop: 'deviceStatus', label: '药盒', useSlot: true, width: 100 },
-    { prop: 'operation', label: '操作', useSlot: true, width: 80, fixed: 'right' }
-  ]
+  onMounted(() => {
+    loadDashboard()
+  })
 </script>
 
 <style lang="scss" scoped>

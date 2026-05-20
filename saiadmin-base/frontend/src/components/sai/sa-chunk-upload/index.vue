@@ -420,7 +420,7 @@
 
       emit('success', { url: fileUrl, hash })
 
-      // 如果不是秒传，显示普通上传成功消息
+      // 如果未命中秒传，显示普通上传成功消息
       if (uploadingFile.speed !== '秒传') {
         ElMessage.success(`${uploadingFile.name} 上传成功！`)
       }

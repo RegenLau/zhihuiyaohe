@@ -188,7 +188,7 @@
     const menuStore = useMenuStore()
     const allMenus = menuStore.menuList
 
-    // 如果不是顶部左侧菜单或双列菜单，直接返回完整菜单列表
+    // 如果布局并非顶部左侧菜单或双列菜单，直接返回完整菜单列表
     if (!isTopLeftMenu.value && !isDualMenu.value) {
       return allMenus
     }

@@ -1,5 +1,5 @@
 <template>
-  <div class="pillbox-page">
+  <div class="pillbox-page page-content">
     <div class="page-header">
       <div>
         <h2>用药计划</h2>
@@ -17,7 +17,7 @@
         <ElInput v-model="keyword" placeholder="搜索姓名、处方编号、设备号" clearable>
           <template #prefix><ArtSvgIcon icon="ri:search-line" /></template>
         </ElInput>
-        <ElScrollbar height="calc(100vh - 260px)">
+        <ElScrollbar v-loading="patientLoading" height="calc(100vh - 260px)">
           <button
             v-for="patient in patientOptions"
             :key="patient.id"
@@ -84,9 +84,9 @@
           </template>
 
           <ElEmpty v-if="currentPlan.drugs.length === 0" description="当前患者尚未完成用药计划" />
-          <ElRow v-else :gutter="12">
+          <ElRow v-else v-loading="planLoading" :gutter="12">
             <ElCol v-for="drug in currentPlan.drugs" :key="drug.name" :xs="24" :md="12">
-              <ElCard shadow="never" class="mb-3">
+              <div class="drug-card mb-3">
                 <b>{{ drug.name }}</b>
                 <div class="chip-row mt-3">
                   <ElTag>{{ drug.time }}</ElTag>
@@ -94,7 +94,7 @@
                   <ElTag>{{ drug.frequency }}</ElTag>
                 </div>
                 <div class="muted mt-3">{{ drug.guide }}</div>
-              </ElCard>
+              </div>
             </ElCol>
           </ElRow>
 
@@ -127,7 +127,9 @@
 
 <script setup lang="ts">
   import { ElMessage } from 'element-plus'
-  import { patients, plans } from '../../data'
+  import patientApi from '@/views/plugin/smart-pillbox/api/doctor/patient'
+  import planApi from '@/views/plugin/smart-pillbox/api/doctor/plan'
+  import type { Patient, Plan } from '@/views/plugin/smart-pillbox/api/doctor/types'
 
   defineOptions({ name: 'SmartPillboxPlan' })
 
@@ -136,17 +138,98 @@
   const selectedPatientId = ref(1)
   const planView = ref('当前方案')
   const editVisible = ref(false)
+  const patients = ref<Patient[]>([])
+  const plans = ref<Plan[]>([])
+  const patientLoading = ref(false)
+  const planLoading = ref(false)
+
+  const emptyPatient: Patient = {
+    id: 0,
+    name: '-',
+    gender: '-',
+    age: 0,
+    recordNo: '-',
+    phone: '-',
+    diseases: [],
+    deviceNo: '-',
+    deviceStatus: '未绑定',
+    deviceStatusType: 'info',
+    consent: '未同意',
+    child: '-',
+    nextReminder: '-',
+    todayDrugs: 0,
+    recentInteraction: '-',
+    completionRate: 0,
+    taskRisk: '-'
+  }
+
+  const emptyPlan: Plan = {
+    id: 0,
+    patientId: 0,
+    title: '尚未创建用药计划',
+    code: '草稿',
+    period: '未设置',
+    status: '草稿',
+    dispatchStatus: '未下发',
+    dispatchType: 'info',
+    generatedTasks: '未生成',
+    source: '手动录入',
+    drugs: []
+  }
 
   const patientOptions = computed(() =>
-    patients.filter((patient) => !keyword.value || patient.name.includes(keyword.value))
+    patients.value.filter((patient) => !keyword.value || patient.name.includes(keyword.value))
   )
-  const currentPatient = computed(() => patients.find((item) => item.id === selectedPatientId.value) || patients[0])
-  const currentPlan = computed(() => plans.find((item) => item.patientId === selectedPatientId.value) || plans[0])
+  const currentPatient = computed(
+    () => patients.value.find((item) => item.id === selectedPatientId.value) || patients.value[0] || emptyPatient
+  )
+  const currentPlan = computed(
+    () => plans.value.find((item) => item.patientId === selectedPatientId.value) || plans.value[0] || emptyPlan
+  )
 
-  const savePlan = () => {
+  const loadPatients = async () => {
+    patientLoading.value = true
+    try {
+      const result = await patientApi.list({ page: 1, limit: 100, keyword: keyword.value })
+      patients.value = result.records
+      if (!patients.value.some((item) => item.id === selectedPatientId.value)) {
+        selectedPatientId.value = patients.value[0]?.id || 0
+      }
+    } finally {
+      patientLoading.value = false
+    }
+  }
+
+  const loadPlans = async () => {
+    if (!selectedPatientId.value) return
+    planLoading.value = true
+    try {
+      const result = await planApi.list({ page: 1, limit: 20, patientId: selectedPatientId.value })
+      plans.value = result.records
+    } finally {
+      planLoading.value = false
+    }
+  }
+
+  const savePlan = async () => {
+    if (currentPlan.value.id) {
+      await planApi.update(currentPlan.value)
+    } else {
+      await planApi.save({ ...currentPlan.value, patientId: selectedPatientId.value })
+    }
     editVisible.value = false
     ElMessage.success('用药计划已保存')
+    loadPlans()
   }
+
+  watch(selectedPatientId, () => {
+    loadPlans()
+  })
+
+  onMounted(async () => {
+    await loadPatients()
+    await loadPlans()
+  })
 </script>
 
 <style lang="scss" scoped>

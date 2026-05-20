@@ -1,5 +1,5 @@
 <template>
-  <div class="pillbox-page">
+  <div class="pillbox-page page-content">
     <div class="page-header">
       <div>
         <h2>系统设置</h2>
@@ -13,7 +13,7 @@
 
     <ElRow :gutter="16">
       <ElCol :xs="24" :lg="15">
-        <ElCard shadow="never">
+        <ElCard v-loading="loading" shadow="never">
           <template #header>
             <div>
               <b>知情同意书设置</b>
@@ -39,13 +39,13 @@
       <ElCol :xs="24" :lg="9">
         <ElCard shadow="never">
           <template #header><b>小程序展示预览</b></template>
-          <ElCard shadow="never">
+          <div class="phone-preview">
             <h3>{{ agreement.name }}</h3>
             <div class="muted mb-3">版本 {{ agreement.version }}</div>
             <p>{{ agreement.summary }}</p>
             <ElCheckbox :model-value="true">我已阅读并同意上述内容</ElCheckbox>
             <ElButton type="primary" class="w-full mt-4">确认并继续</ElButton>
-          </ElCard>
+          </div>
           <ElTimeline class="mt-4">
             <ElTimelineItem type="primary" timestamp="当前启用">{{ agreement.version }} 已启用</ElTimelineItem>
             <ElTimelineItem type="warning" timestamp="历史版本">V2026.04 已归档</ElTimelineItem>
@@ -58,9 +58,11 @@
 
 <script setup lang="ts">
   import { ElMessage } from 'element-plus'
+  import settingsApi from '@/views/plugin/smart-pillbox/api/doctor/settings'
 
   defineOptions({ name: 'SmartPillboxSettings' })
 
+  const loading = ref(false)
   const agreement = reactive({
     name: '智慧药盒服务知情同意书',
     version: 'V2026.05',
@@ -71,11 +73,32 @@
       '<p>一、服务目的：智慧药盒用于辅助用药提醒和用药管理，不替代医生诊疗意见。</p><p>二、信息采集：系统将采集患者基础信息、用药计划、药盒设备状态、服药任务记录和语音问答记录。</p><p>三、风险提示：如出现胸闷、严重不适、疑似不良反应等情况，请及时联系医药师或前往医疗机构。</p><p>四、授权确认：患者或家属点击同意后，表示已阅读并理解上述内容。</p>'
   })
 
-  const saveSettings = () => {
+  const loadSettings = async () => {
+    loading.value = true
+    try {
+      Object.assign(agreement, await settingsApi.read())
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const saveSettings = async () => {
+    await settingsApi.update(agreement)
     ElMessage.success('知情同意书设置已保存')
   }
+
+  onMounted(() => {
+    loadSettings()
+  })
 </script>
 
 <style lang="scss" scoped>
   @use '../../style.scss';
+
+  .phone-preview {
+    padding: 16px;
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 8px;
+    background: var(--el-fill-color-light);
+  }
 </style>

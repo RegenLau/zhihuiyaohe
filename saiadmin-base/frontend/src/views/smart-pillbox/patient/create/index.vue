@@ -1,5 +1,5 @@
 <template>
-  <div class="pillbox-page">
+  <div class="pillbox-page page-content">
     <div class="page-header">
       <div>
         <h2>新增患者建档</h2>
@@ -107,6 +107,7 @@
 
 <script setup lang="ts">
   import { ElMessage } from 'element-plus'
+  import patientApi from '@/views/plugin/smart-pillbox/api/doctor/patient'
 
   defineOptions({ name: 'SmartPillboxPatientCreate' })
 
@@ -134,11 +135,32 @@
     miniProgram: '发送给家属'
   })
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (activeStep.value < 4) {
       activeStep.value += 1
       return
     }
+    await patientApi.save({
+      name: form.name,
+      phone: form.phone,
+      gender: form.gender,
+      age: form.age,
+      recordNo: form.recordNo,
+      diseases: form.diseases
+        .split(/[，,]/)
+        .map((item) => item.trim())
+        .filter(Boolean),
+      deviceNo: form.device,
+      deviceStatus: form.device === '暂不绑定' ? '未绑定' : '在线',
+      deviceStatusType: form.device === '暂不绑定' ? 'warning' : 'success',
+      consent: '未同意',
+      child: `${form.familyName} ${form.familyPhone}`,
+      nextReminder: '待生成',
+      todayDrugs: 0,
+      recentInteraction: '-',
+      completionRate: 0,
+      taskRisk: '待生成任务'
+    })
     ElMessage.success('已完成患者建档，系统将生成服药任务')
     router.push('/doctor/patients')
   }

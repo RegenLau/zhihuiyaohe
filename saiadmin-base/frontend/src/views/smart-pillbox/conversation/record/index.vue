@@ -1,5 +1,5 @@
 <template>
-  <div class="pillbox-page">
+  <div class="pillbox-page page-content">
     <div class="page-header">
       <div>
         <h2>对话记录</h2>
@@ -13,7 +13,7 @@
         <ElInput v-model="keyword" placeholder="搜索姓名、处方编号、设备号" clearable>
           <template #prefix><ArtSvgIcon icon="ri:search-line" /></template>
         </ElInput>
-        <ElScrollbar height="calc(100vh - 250px)">
+        <ElScrollbar v-loading="patientLoading" height="calc(100vh - 250px)">
           <button
             v-for="patient in patientOptions"
             :key="patient.id"
@@ -45,7 +45,7 @@
                 <template #icon><ArtSvgIcon icon="ri:computer-line" /></template>
                 设备摘要
               </ElButton>
-              <ElButton type="primary" @click="ElMessage.success('已导出当前患者对话记录')">
+              <ElButton type="primary" @click="exportConversation">
                 <template #icon><ArtSvgIcon icon="ri:file-download-line" /></template>
                 导出记录
               </ElButton>
@@ -54,13 +54,13 @@
         </ElCard>
 
         <div class="summary-grid">
-          <div class="summary-item"><span class="summary-number">3 条</span><span class="muted">近7天互动</span></div>
-          <div class="summary-item"><span class="summary-number">1 次</span><span class="muted">患者响应</span></div>
-          <div class="summary-item"><span class="summary-number">1 项</span><span class="muted">待人工跟进</span></div>
+          <div class="summary-item"><span class="summary-number">{{ conversations.length }} 条</span><span class="muted">近7天互动</span></div>
+          <div class="summary-item"><span class="summary-number">{{ respondedCount }} 次</span><span class="muted">患者响应</span></div>
+          <div class="summary-item"><span class="summary-number">{{ pendingCount }} 项</span><span class="muted">待人工跟进</span></div>
           <div class="summary-item"><span class="summary-number">{{ currentPatient.recentInteraction }}</span><span class="muted">最近一次互动</span></div>
         </div>
 
-        <ElCard shadow="never">
+        <ElCard v-loading="conversationLoading" shadow="never">
           <template #header>
             <div class="flex justify-between items-start gap-3">
               <div>
@@ -92,7 +92,9 @@
 
 <script setup lang="ts">
   import { ElMessage } from 'element-plus'
-  import { conversations, patients } from '../../data'
+  import conversationApi from '@/views/plugin/smart-pillbox/api/doctor/conversation'
+  import patientApi from '@/views/plugin/smart-pillbox/api/doctor/patient'
+  import type { Conversation, Patient } from '@/views/plugin/smart-pillbox/api/doctor/types'
 
   defineOptions({ name: 'SmartPillboxConversationRecord' })
 
@@ -100,10 +102,92 @@
   const keyword = ref('')
   const selectedPatientId = ref(1)
   const conversationFilter = ref('全部 3')
+  const patients = ref<Patient[]>([])
+  const conversations = ref<Conversation[]>([])
+  const patientLoading = ref(false)
+  const conversationLoading = ref(false)
+
+  const emptyPatient: Patient = {
+    id: 0,
+    name: '-',
+    gender: '-',
+    age: 0,
+    recordNo: '-',
+    phone: '-',
+    diseases: [],
+    deviceNo: '-',
+    deviceStatus: '未绑定',
+    deviceStatusType: 'info',
+    consent: '未同意',
+    child: '-',
+    nextReminder: '-',
+    todayDrugs: 0,
+    recentInteraction: '-',
+    completionRate: 0,
+    taskRisk: '-'
+  }
+
   const patientOptions = computed(() =>
-    patients.filter((patient) => !keyword.value || patient.name.includes(keyword.value))
+    patients.value.filter((patient) => !keyword.value || patient.name.includes(keyword.value))
   )
-  const currentPatient = computed(() => patients.find((item) => item.id === selectedPatientId.value) || patients[0])
+  const currentPatient = computed(
+    () => patients.value.find((item) => item.id === selectedPatientId.value) || patients.value[0] || emptyPatient
+  )
+  const respondedCount = computed(() => conversations.value.filter((item) => item.patientText).length)
+  const pendingCount = computed(() => conversations.value.filter((item) => item.status.includes('待')).length)
+  const conversationType = computed(() => {
+    if (conversationFilter.value.includes('小智提醒')) return '小智提醒'
+    if (conversationFilter.value.includes('患者聊天')) return '患者聊天'
+    return ''
+  })
+  const conversationStatus = computed(() => {
+    if (conversationFilter.value.includes('未响应')) return '待人工跟进'
+    return ''
+  })
+
+  const loadPatients = async () => {
+    patientLoading.value = true
+    try {
+      const result = await patientApi.list({ page: 1, limit: 100, keyword: keyword.value })
+      patients.value = result.records
+      if (!patients.value.some((item) => item.id === selectedPatientId.value)) {
+        selectedPatientId.value = patients.value[0]?.id || 0
+      }
+    } finally {
+      patientLoading.value = false
+    }
+  }
+
+  const loadConversations = async () => {
+    if (!selectedPatientId.value) return
+    conversationLoading.value = true
+    try {
+      const result = await conversationApi.list({
+        page: 1,
+        limit: 50,
+        patientId: selectedPatientId.value,
+        type: conversationType.value,
+        status: conversationStatus.value
+      })
+      conversations.value = result.records
+    } finally {
+      conversationLoading.value = false
+    }
+  }
+
+  const exportConversation = async () => {
+    await conversationApi.export({ patientId: selectedPatientId.value })
+    ElMessage.success('已导出当前患者对话记录')
+  }
+
+  watch([selectedPatientId, conversationFilter], () => {
+    loadConversations()
+  })
+
+  onMounted(async () => {
+    await loadPatients()
+    await loadConversations()
+  })
 </script>
 
 <style lang="scss" scoped>

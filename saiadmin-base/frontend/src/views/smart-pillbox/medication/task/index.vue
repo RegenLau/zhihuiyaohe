@@ -1,11 +1,11 @@
 <template>
-  <div class="pillbox-page">
+  <div class="pillbox-page page-content">
     <div class="page-header">
       <div>
         <h2>服药任务</h2>
         <p>先选择患者，再处理当天服药执行、异常提醒和临时调整</p>
       </div>
-      <ElButton @click="ElMessage.success('已生成今日服药任务日报')">
+      <ElButton @click="exportDaily">
         <template #icon><ArtSvgIcon icon="ri:download-2-line" /></template>
         导出日报
       </ElButton>
@@ -17,7 +17,7 @@
         <ElInput v-model="keyword" placeholder="搜索姓名、处方编号、设备号" clearable>
           <template #prefix><ArtSvgIcon icon="ri:search-line" /></template>
         </ElInput>
-        <ElScrollbar height="calc(100vh - 260px)">
+        <ElScrollbar v-loading="patientLoading" height="calc(100vh - 260px)">
           <button
             v-for="patient in patientOptions"
             :key="patient.id"
@@ -41,7 +41,7 @@
       </ElCard>
 
       <div class="detail-stack">
-        <ElCard shadow="never">
+        <ElCard v-loading="taskLoading" shadow="never">
           <div class="detail-hero">
             <div>
               <h2>{{ currentPatient.name }} · 今日提醒计划</h2>
@@ -80,7 +80,7 @@
           </template>
           <ElSegmented v-model="drugFilter" :options="['全部用药', '硝苯地平控释片', '二甲双胍片']" class="mb-4" />
           <div class="detail-stack">
-            <div v-for="task in tasks" :key="task.id" class="timeline-card">
+            <div v-for="task in taskRecords" :key="task.id" class="timeline-card">
               <ElRow :gutter="12" align="middle">
                 <ElCol :xs="24" :md="4">
                   <div class="muted">系统建议时间</div>
@@ -112,7 +112,9 @@
 
 <script setup lang="ts">
   import { ElMessage } from 'element-plus'
-  import { patients, tasks } from '../../data'
+  import patientApi from '@/views/plugin/smart-pillbox/api/doctor/patient'
+  import taskApi from '@/views/plugin/smart-pillbox/api/doctor/task'
+  import type { MedicationTask, Patient } from '@/views/plugin/smart-pillbox/api/doctor/types'
 
   defineOptions({ name: 'SmartPillboxTask' })
 
@@ -122,11 +124,81 @@
   const taskView = ref('今日任务')
   const drugFilter = ref('全部用药')
   const taskDate = ref('2026-05-20')
+  const patients = ref<Patient[]>([])
+  const taskRecords = ref<MedicationTask[]>([])
+  const patientLoading = ref(false)
+  const taskLoading = ref(false)
+
+  const emptyPatient: Patient = {
+    id: 0,
+    name: '-',
+    gender: '-',
+    age: 0,
+    recordNo: '-',
+    phone: '-',
+    diseases: [],
+    deviceNo: '-',
+    deviceStatus: '未绑定',
+    deviceStatusType: 'info',
+    consent: '未同意',
+    child: '-',
+    nextReminder: '-',
+    todayDrugs: 0,
+    recentInteraction: '-',
+    completionRate: 0,
+    taskRisk: '-'
+  }
 
   const patientOptions = computed(() =>
-    patients.filter((patient) => !keyword.value || patient.name.includes(keyword.value))
+    patients.value.filter((patient) => !keyword.value || patient.name.includes(keyword.value))
   )
-  const currentPatient = computed(() => patients.find((item) => item.id === selectedPatientId.value) || patients[0])
+  const currentPatient = computed(
+    () => patients.value.find((item) => item.id === selectedPatientId.value) || patients.value[0] || emptyPatient
+  )
+
+  const loadPatients = async () => {
+    patientLoading.value = true
+    try {
+      const result = await patientApi.list({ page: 1, limit: 100, keyword: keyword.value })
+      patients.value = result.records
+      if (!patients.value.some((item) => item.id === selectedPatientId.value)) {
+        selectedPatientId.value = patients.value[0]?.id || 0
+      }
+    } finally {
+      patientLoading.value = false
+    }
+  }
+
+  const loadTasks = async () => {
+    if (!selectedPatientId.value) return
+    taskLoading.value = true
+    try {
+      const result = await taskApi.list({
+        page: 1,
+        limit: 50,
+        patientId: selectedPatientId.value,
+        taskDate: taskDate.value,
+        drug: drugFilter.value
+      })
+      taskRecords.value = result.records
+    } finally {
+      taskLoading.value = false
+    }
+  }
+
+  const exportDaily = async () => {
+    await taskApi.exportDaily({ patientId: selectedPatientId.value, taskDate: taskDate.value })
+    ElMessage.success('已生成今日服药任务日报')
+  }
+
+  watch([selectedPatientId, drugFilter, taskDate], () => {
+    loadTasks()
+  })
+
+  onMounted(async () => {
+    await loadPatients()
+    await loadTasks()
+  })
 </script>
 
 <style lang="scss" scoped>

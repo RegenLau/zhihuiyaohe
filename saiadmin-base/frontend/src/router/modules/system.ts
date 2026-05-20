@@ -32,8 +32,8 @@ export const systemRoutes: AppRouteRecord = {
     },
     {
       path: 'user-center',
-      name: 'UserCenter',
-      component: '/system/user-center',
+      name: 'SystemUserCenter',
+      component: '/dashboard/user-center',
       meta: {
         title: 'menus.system.userCenter',
         isHide: true,

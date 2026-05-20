@@ -193,7 +193,7 @@ export const useUserStore = defineStore(
 
     /**
      * 检查并清理工作台标签页
-     * 如果不是同一用户登录，清空工作台标签页
+     * 如果登录用户变化，清空工作台标签页
      * 应在登录成功后调用
      */
     const checkAndClearWorktabs = () => {

@@ -25,7 +25,7 @@
  *
  * ## 注意事项
  *
- * - 该指令会直接移除 DOM 元素，而不是使用 v-if 隐藏
+ * - 该指令会直接移除 DOM 元素，避免使用 v-if 隐藏
  * - 权限列表从当前路由的 meta.authList 中获取
  *
  * @module directives/auth

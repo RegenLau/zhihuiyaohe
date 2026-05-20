@@ -23,7 +23,7 @@ export const dashboardRoutes: AppRouteRecord = {
     {
       path: 'user-center',
       name: 'UserCenter',
-      component: '/system/user-center/index.vue',
+      component: '/dashboard/user-center',
       meta: { title: 'menus.userCenter.title', isHideTab: true }
     }
   ]

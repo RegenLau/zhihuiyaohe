@@ -476,7 +476,7 @@
     // 重置表单字段（UI 层）
     formInstance.value?.resetFields()
 
-    // 恢复初始表单值，保留默认值而不是简单清空。
+    // 恢复初始表单值，保留默认值，避免简单清空。
     Object.keys(modelValue.value).forEach((key) => {
       delete modelValue.value[key]
     })
