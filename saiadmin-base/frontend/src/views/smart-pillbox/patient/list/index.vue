@@ -7,7 +7,12 @@
       </div>
     </div>
 
-    <TableSearch v-if="showSearchBar" v-model="searchForm" @search="handleSearch" @reset="handleReset" />
+    <TableSearch
+      v-if="showSearchBar"
+      v-model="searchForm"
+      @search="handleSearch"
+      @reset="handleReset"
+    />
 
     <ElCard class="art-table-card" shadow="never">
       <ArtTableHeader
@@ -49,22 +54,42 @@
         <template #consent="{ row }">
           <ElSpace>
             <ElTag type="primary">已登记</ElTag>
-            <ElTag :type="row.consent === '已同意' ? 'success' : 'warning'">{{ row.consent }}</ElTag>
+            <ElTag :type="row.consent === '已同意' ? 'success' : 'warning'">{{
+              row.consent
+            }}</ElTag>
           </ElSpace>
         </template>
         <template #deviceStatus="{ row }">
           <ElTag :type="row.deviceStatusType">{{ row.deviceNo }}</ElTag>
         </template>
         <template #taskRisk="{ row }">
-          <ElTag :type="row.taskRisk.includes('漏服') ? 'danger' : row.taskRisk === '正常' ? 'success' : 'warning'">
+          <ElTag
+            :type="
+              row.taskRisk.includes('漏服')
+                ? 'danger'
+                : row.taskRisk === '正常'
+                  ? 'success'
+                  : 'warning'
+            "
+          >
             {{ row.taskRisk }}
           </ElTag>
         </template>
         <template #operation="{ row }">
           <ElSpace>
             <SaButton type="secondary" tool-tip="编辑" @click="showDialog('edit', row)" />
-            <SaButton type="success" icon="ri:file-list-3-line" tool-tip="计划" @click="router.push('/doctor/plans')" />
-            <SaButton type="primary" icon="ri:message-2-line" tool-tip="提醒" @click="router.push('/doctor/messages')" />
+            <SaButton
+              type="success"
+              icon="ri:file-list-3-line"
+              tool-tip="计划"
+              @click="router.push('/doctor/plans')"
+            />
+            <SaButton
+              type="primary"
+              icon="ri:message-2-line"
+              tool-tip="提醒"
+              @click="router.push('/doctor/messages')"
+            />
           </ElSpace>
         </template>
       </ArtTable>
@@ -135,5 +160,5 @@
 </script>
 
 <style lang="scss" scoped>
-  @use '../../style.scss';
+  @use '../../style';
 </style>

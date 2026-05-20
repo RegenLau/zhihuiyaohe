@@ -28,7 +28,9 @@
             <div class="flex justify-between gap-3">
               <div>
                 <b>{{ patient.name }}</b>
-                <div class="muted text-xs mt-1">{{ patient.gender }} · {{ patient.age }}岁 · {{ patient.recordNo }}</div>
+                <div class="muted text-xs mt-1"
+                  >{{ patient.gender }} · {{ patient.age }}岁 · {{ patient.recordNo }}</div
+                >
               </div>
               <ElTag :type="patient.deviceStatusType">{{ patient.deviceStatus }}</ElTag>
             </div>
@@ -62,10 +64,22 @@
         </ElCard>
 
         <div class="summary-grid">
-          <div class="summary-item"><span class="summary-number">{{ currentPlan.id ? '1 个' : '0 个' }}</span><span class="muted">当前计划</span></div>
-          <div class="summary-item"><span class="summary-number">{{ currentPlan.drugs.length }} 种</span><span class="muted">用药品种</span></div>
-          <div class="summary-item"><span class="summary-number">{{ currentPlan.generatedTasks }}</span><span class="muted">任务生成</span></div>
-          <div class="summary-item"><span class="summary-number">{{ currentPlan.dispatchStatus }}</span><span class="muted">药盒状态</span></div>
+          <div class="summary-item">
+            <span class="summary-number">{{ currentPlan.id ? '1 个' : '0 个' }}</span>
+            <span class="muted">当前计划</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-number">{{ currentPlan.drugs.length }} 种</span>
+            <span class="muted">用药品种</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-number">{{ currentPlan.generatedTasks }}</span>
+            <span class="muted">任务生成</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-number">{{ currentPlan.dispatchStatus }}</span>
+            <span class="muted">药盒状态</span>
+          </div>
         </div>
 
         <ElCard shadow="never">
@@ -89,7 +103,11 @@
             <div class="flex justify-between items-start gap-3">
               <div>
                 <b>{{ currentPlan.title }}</b>
-                <div class="muted text-sm mt-1">{{ currentPlan.code }} · 周期 {{ currentPlan.period }} · 处方来源：{{ currentPlan.source }}</div>
+                <div class="muted text-sm mt-1"
+                  >{{ currentPlan.code }} · 周期 {{ currentPlan.period }} · 处方来源：{{
+                    currentPlan.source
+                  }}</div
+                >
               </div>
               <ElTag :type="currentPlan.dispatchType">{{ currentPlan.status }}</ElTag>
             </div>
@@ -112,8 +130,13 @@
 
           <ElDescriptions class="mt-4" :column="1" border>
             <ElDescriptionsItem label="任务生成">已生成当前计划周期内的服药任务</ElDescriptionsItem>
-            <ElDescriptionsItem label="药盒下发">{{ currentPlan.dispatchStatus }}，设备 {{ currentPatient.deviceNo }}</ElDescriptionsItem>
-            <ElDescriptionsItem label="处方附件">社区门诊处方照片 1 张，HIS 截图 1 张</ElDescriptionsItem>
+            <ElDescriptionsItem label="药盒下发"
+              >{{ currentPlan.dispatchStatus }}，设备
+              {{ currentPatient.deviceNo }}</ElDescriptionsItem
+            >
+            <ElDescriptionsItem label="处方附件"
+              >社区门诊处方照片 1 张，HIS 截图 1 张</ElDescriptionsItem
+            >
           </ElDescriptions>
         </ElCard>
       </div>
@@ -122,16 +145,48 @@
     <ElDialog v-model="editVisible" title="创建用药计划" width="820px">
       <ElForm ref="editFormRef" :model="editForm" :rules="editRules" label-width="100px">
         <ElRow :gutter="16">
-          <ElCol :span="12"><ElFormItem label="患者"><ElInput :model-value="currentPatient.name" readonly /></ElFormItem></ElCol>
-          <ElCol :span="12"><ElFormItem label="计划名称" prop="title"><ElInput v-model="editForm.title" /></ElFormItem></ElCol>
-          <ElCol :span="12"><ElFormItem label="开始日期" prop="startDate"><ElDatePicker v-model="editForm.startDate" type="date" value-format="YYYY-MM-DD" /></ElFormItem></ElCol>
-          <ElCol :span="12"><ElFormItem label="计划状态" prop="status"><ElSelect v-model="editForm.status"><ElOption label="草稿" value="草稿" /><ElOption label="已生效" value="已生效" /></ElSelect></ElFormItem></ElCol>
-          <ElCol :span="24"><ElFormItem label="药品明细" prop="drugText"><ElInput v-model="editForm.drugText" type="textarea" :rows="4" /></ElFormItem></ElCol>
+          <ElCol :span="12"
+            ><ElFormItem label="患者"
+              ><ElInput :model-value="currentPatient.name" readonly /></ElFormItem
+          ></ElCol>
+          <ElCol :span="12"
+            ><ElFormItem label="计划名称" prop="title"
+              ><ElInput v-model="editForm.title" placeholder="请输入计划名称" /></ElFormItem
+          ></ElCol>
+          <ElCol :span="12"
+            ><ElFormItem label="开始日期" prop="startDate"
+              ><ElDatePicker
+                v-model="editForm.startDate"
+                type="date"
+                value-format="YYYY-MM-DD"
+                placeholder="请选择开始日期" /></ElFormItem
+          ></ElCol>
+          <ElCol :span="12"
+            ><ElFormItem label="计划状态" prop="status"
+              ><ElSelect v-model="editForm.status" placeholder="请选择计划状态"
+                ><ElOption label="草稿" value="草稿" /><ElOption
+                  label="已生效"
+                  value="已生效" /></ElSelect></ElFormItem
+          ></ElCol>
+          <ElCol :span="24"
+            ><ElFormItem label="药品明细" prop="drugText"
+              ><ElInput
+                v-model="editForm.drugText"
+                type="textarea"
+                :rows="4"
+                placeholder="每行填写药品、剂量、频次、时间" /></ElFormItem
+          ></ElCol>
         </ElRow>
       </ElForm>
       <template #footer>
-        <ElButton @click="editVisible = false">取消</ElButton>
-        <ElButton type="primary" @click="saveCreatePlan">保存</ElButton>
+        <ElButton @click="editVisible = false">
+          <template #icon><ArtSvgIcon icon="ri:close-line" /></template>
+          取消
+        </ElButton>
+        <ElButton type="primary" @click="saveCreatePlan">
+          <template #icon><ArtSvgIcon icon="ri:save-3-line" /></template>
+          保存
+        </ElButton>
       </template>
     </ElDialog>
   </div>
@@ -201,7 +256,10 @@
     patients.value.filter((patient) => !keyword.value || patient.name.includes(keyword.value))
   )
   const currentPatient = computed(
-    () => patients.value.find((item) => item.id === selectedPatientId.value) || patients.value[0] || emptyPatient
+    () =>
+      patients.value.find((item) => item.id === selectedPatientId.value) ||
+      patients.value[0] ||
+      emptyPatient
   )
   const currentPlan = computed(
     () => plans.value.find((item) => item.patientId === selectedPatientId.value) || emptyPlan
@@ -258,9 +316,12 @@
       .map((line) => line.trim())
       .filter(Boolean)
       .map((line) => {
-        const [name = '未命名药品', dose = '待设置剂量', frequency = '待设置频次', time = '待设置时间'] = line
-          .split(/[，,]/)
-          .map((item) => item.trim())
+        const [
+          name = '未命名药品',
+          dose = '待设置剂量',
+          frequency = '待设置频次',
+          time = '待设置时间'
+        ] = line.split(/[，,]/).map((item) => item.trim())
         return {
           name,
           dose,
@@ -310,5 +371,5 @@
 </script>
 
 <style lang="scss" scoped>
-  @use '../../style.scss';
+  @use '../../style';
 </style>

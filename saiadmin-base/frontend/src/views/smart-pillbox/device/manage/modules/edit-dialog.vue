@@ -2,28 +2,34 @@
   <ElDialog v-model="visible" :title="dialogTitle" width="640px">
     <ElForm ref="formRef" :model="formData" :rules="rules" label-width="100px">
       <ElFormItem label="设备 SN" prop="sn">
-        <ElInput v-model="formData.sn" />
+        <ElInput v-model="formData.sn" placeholder="请输入设备 SN" />
       </ElFormItem>
       <ElFormItem label="绑定患者" prop="patient">
-        <ElInput v-model="formData.patient" />
+        <ElInput v-model="formData.patient" placeholder="请输入绑定患者姓名" />
       </ElFormItem>
       <ElFormItem label="在线状态" prop="status">
-        <ElSelect v-model="formData.status">
+        <ElSelect v-model="formData.status" placeholder="请选择在线状态">
           <ElOption label="在线" value="在线" />
           <ElOption label="离线" value="离线" />
           <ElOption label="待分配" value="待分配" />
         </ElSelect>
       </ElFormItem>
       <ElFormItem label="绑定方式">
-        <ElSelect v-model="formData.bindMode">
+        <ElSelect v-model="formData.bindMode" placeholder="请选择绑定方式">
           <ElOption label="后台选择设备" value="后台选择设备" />
           <ElOption label="患者小程序扫码" value="患者小程序扫码" />
         </ElSelect>
       </ElFormItem>
     </ElForm>
     <template #footer>
-      <ElButton @click="visible = false">取消</ElButton>
-      <ElButton type="primary" @click="handleSubmit">保存</ElButton>
+      <ElButton @click="visible = false">
+        <template #icon><ArtSvgIcon icon="ri:close-line" /></template>
+        取消
+      </ElButton>
+      <ElButton type="primary" @click="handleSubmit">
+        <template #icon><ArtSvgIcon icon="ri:save-3-line" /></template>
+        保存
+      </ElButton>
     </template>
   </ElDialog>
 </template>

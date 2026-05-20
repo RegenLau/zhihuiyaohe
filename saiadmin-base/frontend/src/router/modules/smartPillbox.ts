@@ -7,6 +7,8 @@ type SmartPillboxRouteConfig = {
   icon: string
   component: string
   keepAlive?: boolean
+  isHide?: boolean
+  activePath?: string
 }
 
 const createSmartPillboxRoute = ({
@@ -15,14 +17,18 @@ const createSmartPillboxRoute = ({
   title,
   icon,
   component,
-  keepAlive = true
+  keepAlive = true,
+  isHide = false,
+  activePath
 }: SmartPillboxRouteConfig): AppRouteRecord => ({
   path,
   name: `${name}Menu`,
   component: '/index/index',
   meta: {
     title,
-    icon
+    icon,
+    isHide,
+    activePath
   },
   children: [
     {
@@ -32,7 +38,8 @@ const createSmartPillboxRoute = ({
       meta: {
         title,
         isHide: true,
-        keepAlive
+        keepAlive,
+        activePath
       }
     }
   ]
@@ -59,43 +66,82 @@ export const smartPillboxRoutes: AppRouteRecord[] = [
     title: '新增患者建档',
     icon: 'ri:user-add-line',
     component: '/smart-pillbox/patient/create',
-    keepAlive: false
+    keepAlive: false,
+    isHide: true,
+    activePath: '/doctor/patients'
   }),
-  createSmartPillboxRoute({
-    path: '/doctor/plans',
-    name: 'SmartPillboxPlans',
-    title: '用药计划',
-    icon: 'ri:calendar-check-line',
-    component: '/smart-pillbox/medication/plan'
-  }),
-  createSmartPillboxRoute({
-    path: '/doctor/tasks',
-    name: 'SmartPillboxTasks',
-    title: '服药任务',
-    icon: 'ri:medicine-bottle-line',
-    component: '/smart-pillbox/medication/task'
-  }),
-  createSmartPillboxRoute({
-    path: '/doctor/devices',
-    name: 'SmartPillboxDevices',
-    title: '设备管理',
-    icon: 'ri:device-line',
-    component: '/smart-pillbox/device/manage'
-  }),
-  createSmartPillboxRoute({
-    path: '/doctor/messages',
-    name: 'SmartPillboxMessages',
-    title: '提醒消息',
-    icon: 'ri:notification-3-line',
-    component: '/smart-pillbox/message/reminder'
-  }),
-  createSmartPillboxRoute({
-    path: '/doctor/conversations',
-    name: 'SmartPillboxConversations',
-    title: '对话记录',
-    icon: 'ri:chat-history-line',
-    component: '/smart-pillbox/conversation/record'
-  }),
+  {
+    path: '/doctor/medication',
+    name: 'SmartPillboxMedication',
+    component: '/index/index',
+    meta: {
+      title: '用药管理',
+      icon: 'ri:medicine-bottle-line'
+    },
+    children: [
+      {
+        path: '/doctor/plans',
+        name: 'SmartPillboxPlans',
+        component: '/smart-pillbox/medication/plan',
+        meta: {
+          title: '用药计划',
+          icon: 'ri:calendar-check-line',
+          keepAlive: true
+        }
+      },
+      {
+        path: '/doctor/tasks',
+        name: 'SmartPillboxTasks',
+        component: '/smart-pillbox/medication/task',
+        meta: {
+          title: '服药任务',
+          icon: 'ri:medicine-bottle-line',
+          keepAlive: true
+        }
+      },
+      {
+        path: '/doctor/messages',
+        name: 'SmartPillboxMessages',
+        component: '/smart-pillbox/message/reminder',
+        meta: {
+          title: '提醒消息',
+          icon: 'ri:notification-3-line',
+          keepAlive: true
+        }
+      }
+    ]
+  },
+  {
+    path: '/doctor/device-records',
+    name: 'SmartPillboxDeviceRecords',
+    component: '/index/index',
+    meta: {
+      title: '设备记录',
+      icon: 'ri:device-line'
+    },
+    children: [
+      {
+        path: '/doctor/devices',
+        name: 'SmartPillboxDevices',
+        component: '/smart-pillbox/device/manage',
+        meta: {
+          title: '设备管理',
+          icon: 'ri:device-line',
+          keepAlive: true
+        }
+      },
+      {
+        path: '/doctor/conversations',
+        name: 'SmartPillboxConversations',
+        component: '/smart-pillbox/conversation/record',
+        meta: {
+          title: '对话记录',
+          icon: 'ri:chat-history-line',
+          keepAlive: true
+        }
+      }
+    ]
+  },
   createSmartPillboxRoute({
     path: '/doctor/settings',
     name: 'SmartPillboxSettings',

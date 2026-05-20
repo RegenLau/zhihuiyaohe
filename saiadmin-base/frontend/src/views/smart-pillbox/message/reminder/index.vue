@@ -7,7 +7,12 @@
       </div>
     </div>
 
-    <TableSearch v-if="showSearchBar" v-model="searchForm" @search="handleSearch" @reset="handleReset" />
+    <TableSearch
+      v-if="showSearchBar"
+      v-model="searchForm"
+      @search="handleSearch"
+      @reset="handleReset"
+    />
 
     <ElCard class="art-table-card" shadow="never">
       <ArtTableHeader
@@ -39,7 +44,9 @@
             <div class="muted text-xs">{{ row.content }}</div>
           </div>
         </template>
-        <template #status="{ row }"><ElTag :type="row.statusType">{{ row.status }}</ElTag></template>
+        <template #status="{ row }"
+          ><ElTag :type="row.statusType">{{ row.status }}</ElTag></template
+        >
         <template #operation="{ row }">
           <ElSpace>
             <SaButton type="success" icon="ri:eye-line" tool-tip="查看" @click="viewMessage(row)" />
@@ -126,5 +133,5 @@
 </script>
 
 <style lang="scss" scoped>
-  @use '../../style.scss';
+  @use '../../style';
 </style>

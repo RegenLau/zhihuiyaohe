@@ -4,34 +4,45 @@
       <ElRow :gutter="16">
         <ElCol :xs="24" :md="12">
           <ElFormItem label="患者姓名" prop="name">
-            <ElInput v-model="formData.name" />
+            <ElInput v-model="formData.name" placeholder="请输入患者姓名" />
           </ElFormItem>
         </ElCol>
         <ElCol :xs="24" :md="12">
           <ElFormItem label="手机号" prop="phone">
-            <ElInput v-model="formData.phone" />
+            <ElInput v-model="formData.phone" placeholder="请输入手机号" />
           </ElFormItem>
         </ElCol>
         <ElCol :xs="24" :md="12">
           <ElFormItem label="基础疾病" prop="diseasesText">
-            <ElInput v-model="formData.diseasesText" />
+            <ElInput v-model="formData.diseasesText" placeholder="多个疾病用逗号分隔" />
           </ElFormItem>
         </ElCol>
         <ElCol :xs="24" :md="12">
           <ElFormItem label="家属信息" prop="child">
-            <ElInput v-model="formData.child" />
+            <ElInput v-model="formData.child" placeholder="请输入家属姓名和联系方式" />
           </ElFormItem>
         </ElCol>
         <ElCol :span="24">
           <ElFormItem label="诊疗备注" prop="remark">
-            <ElInput v-model="formData.remark" type="textarea" :rows="3" />
+            <ElInput
+              v-model="formData.remark"
+              type="textarea"
+              :rows="3"
+              placeholder="请输入诊疗备注"
+            />
           </ElFormItem>
         </ElCol>
       </ElRow>
     </ElForm>
     <template #footer>
-      <ElButton @click="visible = false">取消</ElButton>
-      <ElButton type="primary" @click="handleSubmit">保存</ElButton>
+      <ElButton @click="visible = false">
+        <template #icon><ArtSvgIcon icon="ri:close-line" /></template>
+        取消
+      </ElButton>
+      <ElButton type="primary" @click="handleSubmit">
+        <template #icon><ArtSvgIcon icon="ri:save-3-line" /></template>
+        保存
+      </ElButton>
     </template>
   </ElDialog>
 </template>

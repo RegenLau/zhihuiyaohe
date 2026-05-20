@@ -9,7 +9,7 @@
   >
     <ElCol :xs="24" :sm="12" :md="8" :lg="6">
       <ElFormItem label="设备 SN" prop="sn">
-        <ElInput v-model="formData.sn" clearable />
+        <ElInput v-model="formData.sn" placeholder="请输入设备 SN" clearable />
       </ElFormItem>
     </ElCol>
     <ElCol :xs="24" :sm="12" :md="8" :lg="6">

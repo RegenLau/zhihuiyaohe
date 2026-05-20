@@ -54,10 +54,22 @@
         </ElCard>
 
         <div class="summary-grid">
-          <div class="summary-item"><span class="summary-number">{{ conversations.length }} 条</span><span class="muted">近7天互动</span></div>
-          <div class="summary-item"><span class="summary-number">{{ respondedCount }} 次</span><span class="muted">患者响应</span></div>
-          <div class="summary-item"><span class="summary-number">{{ pendingCount }} 项</span><span class="muted">待人工跟进</span></div>
-          <div class="summary-item"><span class="summary-number">{{ currentPatient.recentInteraction }}</span><span class="muted">最近一次互动</span></div>
+          <div class="summary-item">
+            <span class="summary-number">{{ conversations.length }} 条</span>
+            <span class="muted">近7天互动</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-number">{{ respondedCount }} 次</span>
+            <span class="muted">患者响应</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-number">{{ pendingCount }} 项</span>
+            <span class="muted">待人工跟进</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-number">{{ currentPatient.recentInteraction }}</span>
+            <span class="muted">最近一次互动</span>
+          </div>
         </div>
 
         <ElCard v-loading="conversationLoading" shadow="never">
@@ -65,12 +77,18 @@
             <div class="flex justify-between items-start gap-3">
               <div>
                 <b>对话时间线</b>
-                <div class="muted text-sm mt-1">按时间回看患者与小智设备的提醒、患者聊天及未响应记录。</div>
+                <div class="muted text-sm mt-1"
+                  >按时间回看患者与小智设备的提醒、患者聊天及未响应记录。</div
+                >
               </div>
               <ElTag type="primary">最近 {{ conversations.length }} 条</ElTag>
             </div>
           </template>
-          <ElSegmented v-model="conversationFilter" :options="conversationFilterOptions" class="mb-4" />
+          <ElSegmented
+            v-model="conversationFilter"
+            :options="conversationFilterOptions"
+            class="mb-4"
+          />
           <ElEmpty v-if="conversations.length === 0" description="当前筛选条件下暂无对话记录" />
           <div v-else class="detail-stack">
             <div v-for="item in conversations" :key="item.id" class="timeline-card">
@@ -81,7 +99,13 @@
               <div class="conversation-flow">
                 <div v-if="item.deviceText" class="bubble">{{ item.deviceText }}</div>
                 <div v-if="item.patientText" class="bubble right">{{ item.patientText }}</div>
-                <ElAlert v-if="item.note" :title="item.note" type="warning" show-icon :closable="false" />
+                <ElAlert
+                  v-if="item.note"
+                  :title="item.note"
+                  type="warning"
+                  show-icon
+                  :closable="false"
+                />
               </div>
             </div>
           </div>
@@ -133,10 +157,17 @@
     patients.value.filter((patient) => !keyword.value || patient.name.includes(keyword.value))
   )
   const currentPatient = computed(
-    () => patients.value.find((item) => item.id === selectedPatientId.value) || patients.value[0] || emptyPatient
+    () =>
+      patients.value.find((item) => item.id === selectedPatientId.value) ||
+      patients.value[0] ||
+      emptyPatient
   )
-  const respondedCount = computed(() => conversations.value.filter((item) => item.patientText).length)
-  const pendingCount = computed(() => conversations.value.filter((item) => item.status.includes('待')).length)
+  const respondedCount = computed(
+    () => conversations.value.filter((item) => item.patientText).length
+  )
+  const pendingCount = computed(
+    () => conversations.value.filter((item) => item.status.includes('待')).length
+  )
   const conversationType = computed(() => {
     if (conversationFilter.value === '小智提醒') return '小智提醒'
     if (conversationFilter.value === '患者聊天') return '患者聊天'
@@ -193,5 +224,5 @@
 </script>
 
 <style lang="scss" scoped>
-  @use '../../style.scss';
+  @use '../../style';
 </style>

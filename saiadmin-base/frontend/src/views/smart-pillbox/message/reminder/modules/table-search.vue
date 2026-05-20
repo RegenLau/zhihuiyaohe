@@ -18,7 +18,7 @@
     </ElCol>
     <ElCol :xs="24" :sm="12" :md="8" :lg="6">
       <ElFormItem label="患者" prop="patient">
-        <ElInput v-model="formData.patient" clearable />
+        <ElInput v-model="formData.patient" placeholder="请输入患者姓名" clearable />
       </ElFormItem>
     </ElCol>
   </SaSearchBar>

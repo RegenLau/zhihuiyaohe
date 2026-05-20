@@ -7,7 +7,12 @@
       </div>
     </div>
 
-    <TableSearch v-if="showSearchBar" v-model="searchForm" @search="handleSearch" @reset="handleReset" />
+    <TableSearch
+      v-if="showSearchBar"
+      v-model="searchForm"
+      @search="handleSearch"
+      @reset="handleReset"
+    />
 
     <div class="summary-grid mb-4">
       <div v-for="item in deviceSummary" :key="item.label" class="summary-item">
@@ -45,7 +50,12 @@
         </template>
         <template #operation="{ row }">
           <ElSpace>
-            <SaButton type="success" icon="ri:file-list-3-line" tool-tip="开关记录" @click="showDeviceLog(row)" />
+            <SaButton
+              type="success"
+              icon="ri:file-list-3-line"
+              tool-tip="开关记录"
+              @click="showDeviceLog(row)"
+            />
             <SaButton type="secondary" tool-tip="编辑" @click="showDialog('edit', row)" />
             <SaButton type="error" tool-tip="解绑" @click="unbindDevice(row)" />
           </ElSpace>
@@ -89,8 +99,7 @@
     handleCurrentChange,
     handleSortChange,
     refreshData,
-    refreshUpdate,
-    refreshRemove
+    refreshUpdate
   } = useTable({
     core: {
       apiFn: deviceApi.list,
@@ -110,10 +119,26 @@
   const deviceSummary = computed(() => {
     const records = (data.value || []) as Device[]
     return [
-      { label: '在线设备', value: records.filter((item) => item.status === '在线').length, className: 'text-success' },
-      { label: '离线设备', value: records.filter((item) => item.status === '离线').length, className: 'text-danger' },
-      { label: '待分配设备', value: records.filter((item) => item.status === '待分配').length, className: '' },
-      { label: '已绑定设备', value: records.filter((item) => item.patient !== '-').length, className: '' }
+      {
+        label: '在线设备',
+        value: records.filter((item) => item.status === '在线').length,
+        className: 'is-success'
+      },
+      {
+        label: '离线设备',
+        value: records.filter((item) => item.status === '离线').length,
+        className: 'is-danger'
+      },
+      {
+        label: '待分配设备',
+        value: records.filter((item) => item.status === '待分配').length,
+        className: 'is-warning'
+      },
+      {
+        label: '已绑定设备',
+        value: records.filter((item) => item.patient !== '-').length,
+        className: ''
+      }
     ]
   })
 
@@ -140,5 +165,5 @@
 </script>
 
 <style lang="scss" scoped>
-  @use '../../style.scss';
+  @use '../../style';
 </style>

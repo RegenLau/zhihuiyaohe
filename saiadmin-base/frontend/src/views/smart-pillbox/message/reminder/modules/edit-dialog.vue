@@ -4,7 +4,7 @@
       <ElRow :gutter="16">
         <ElCol :xs="24" :md="12">
           <ElFormItem label="提醒类型" prop="type">
-            <ElSelect v-model="formData.type">
+            <ElSelect v-model="formData.type" placeholder="请选择提醒类型">
               <ElOption label="子女提醒" value="子女提醒" />
               <ElOption label="复诊提醒" value="复诊提醒" />
               <ElOption label="系统提醒" value="系统提醒" />
@@ -13,34 +13,45 @@
         </ElCol>
         <ElCol :xs="24" :md="12">
           <ElFormItem label="患者" prop="patient">
-            <ElInput v-model="formData.patient" />
+            <ElInput v-model="formData.patient" placeholder="请输入患者姓名" />
           </ElFormItem>
         </ElCol>
         <ElCol :xs="24" :md="12">
           <ElFormItem label="接收方" prop="receiver">
-            <ElInput v-model="formData.receiver" />
+            <ElInput v-model="formData.receiver" placeholder="请输入接收方" />
           </ElFormItem>
         </ElCol>
         <ElCol :xs="24" :md="12">
           <ElFormItem label="渠道" prop="channel">
-            <ElInput v-model="formData.channel" />
+            <ElInput v-model="formData.channel" placeholder="请输入消息渠道" />
           </ElFormItem>
         </ElCol>
         <ElCol :span="24">
           <ElFormItem label="消息标题" prop="title">
-            <ElInput v-model="formData.title" />
+            <ElInput v-model="formData.title" placeholder="请输入消息标题" />
           </ElFormItem>
         </ElCol>
         <ElCol :span="24">
           <ElFormItem label="消息正文" prop="content">
-            <ElInput v-model="formData.content" type="textarea" :rows="4" />
+            <ElInput
+              v-model="formData.content"
+              type="textarea"
+              :rows="4"
+              placeholder="请输入消息正文"
+            />
           </ElFormItem>
         </ElCol>
       </ElRow>
     </ElForm>
     <template #footer>
-      <ElButton @click="visible = false">取消</ElButton>
-      <ElButton type="primary" @click="handleSubmit">保存</ElButton>
+      <ElButton @click="visible = false">
+        <template #icon><ArtSvgIcon icon="ri:close-line" /></template>
+        取消
+      </ElButton>
+      <ElButton type="primary" @click="handleSubmit">
+        <template #icon><ArtSvgIcon icon="ri:save-3-line" /></template>
+        保存
+      </ElButton>
     </template>
   </ElDialog>
 </template>

@@ -68,7 +68,12 @@
             </div>
           </template>
           <ElTimeline v-loading="dashboardLoading">
-            <ElTimelineItem v-for="risk in risks" :key="risk.title" :type="risk.type" :timestamp="risk.timestamp">
+            <ElTimelineItem
+              v-for="risk in risks"
+              :key="risk.title"
+              :type="risk.type"
+              :timestamp="risk.timestamp"
+            >
               <b>{{ risk.title }}</b>
               <div class="muted mt-1">{{ risk.note }}</div>
             </ElTimelineItem>
@@ -108,12 +113,15 @@
               </ElSpace>
             </template>
             <template #completionRate="{ row }">
-              <ElProgress :percentage="row.completionRate" :status="row.completionRate < 70 ? 'exception' : undefined" />
+              <ElProgress
+                :percentage="row.completionRate"
+                :status="row.completionRate < 70 ? 'exception' : undefined"
+              />
             </template>
             <template #deviceStatus="{ row }">
               <ElTag :type="row.deviceStatusType">{{ row.deviceStatus }}</ElTag>
             </template>
-            <template #operation="{ row }">
+            <template #operation>
               <SaButton
                 type="success"
                 icon="ri:eye-line"
@@ -129,7 +137,11 @@
           <template #header><b>快速操作</b></template>
           <ElRow :gutter="10">
             <ElCol :span="12">
-              <ElButton class="w-full" type="primary" @click="router.push('/doctor/patient-create')">
+              <ElButton
+                class="w-full"
+                type="primary"
+                @click="router.push('/doctor/patient-create')"
+              >
                 <template #icon><ArtSvgIcon icon="ri:user-add-line" /></template>
                 新增患者建档
               </ElButton>
@@ -211,5 +223,5 @@
 </script>
 
 <style lang="scss" scoped>
-  @use '../../style.scss';
+  @use '../../style';
 </style>

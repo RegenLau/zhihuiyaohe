@@ -1,23 +1,70 @@
 .pillbox-page {
+  --pillbox-gap: 16px;
+  --pillbox-gap-sm: 12px;
+  --pillbox-card-radius: 8px;
+  --pillbox-text-strong: var(--art-text-gray-900);
+  --pillbox-text-regular: var(--art-text-gray-700);
+  --pillbox-text-muted: var(--art-text-gray-500);
+  --pillbox-border: var(--el-border-color-lighter);
+  --pillbox-surface: var(--el-bg-color);
+  --pillbox-surface-soft: var(--el-fill-color-light);
+
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--pillbox-text-regular);
+
+  :deep(.el-row) {
+    row-gap: var(--pillbox-gap);
+  }
+
+  :deep(.el-card) {
+    border-color: var(--pillbox-border);
+    border-radius: var(--pillbox-card-radius);
+  }
+
+  :deep(.el-card__header) {
+    padding: 16px 20px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--pillbox-text-strong);
+  }
+
+  :deep(.el-card__body) {
+    padding: 20px;
+  }
+
+  :deep(.el-button) {
+    font-weight: 500;
+  }
+
+  :deep(.el-tag) {
+    border-radius: 6px;
+  }
+
+  :deep(.el-form-item__label) {
+    color: var(--pillbox-text-regular);
+  }
+
   .page-header {
     display: flex;
-    gap: 12px;
+    gap: var(--pillbox-gap-sm);
     align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 16px;
+    margin-bottom: var(--pillbox-gap);
 
     h2,
     h3 {
       margin: 0;
       font-size: 20px;
       font-weight: 700;
-      color: var(--art-text-gray-900);
+      line-height: 1.35;
+      color: var(--pillbox-text-strong);
     }
 
     p {
       margin: 6px 0 0;
-      color: var(--art-text-gray-500);
       font-size: 13px;
+      color: var(--pillbox-text-muted);
     }
   }
 
@@ -25,28 +72,28 @@
     min-height: 116px;
 
     :deep(.el-card__body) {
-      height: 100%;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      height: 100%;
     }
   }
 
   .stat-value {
     margin-top: 12px;
     font-size: 28px;
-    line-height: 1;
     font-weight: 800;
+    line-height: 1;
   }
 
   .muted {
-    color: var(--art-text-gray-500);
+    color: var(--pillbox-text-muted);
   }
 
   .patient-layout {
     display: grid;
     grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
-    gap: 16px;
+    gap: var(--pillbox-gap);
     align-items: start;
   }
 
@@ -61,64 +108,64 @@
 
   .patient-option {
     width: 100%;
-    margin-top: 10px;
     padding: 14px;
+    margin-top: 10px;
     text-align: left;
     cursor: pointer;
+    background: var(--pillbox-surface);
     border: 1px solid var(--el-border-color-light);
-    border-radius: 8px;
-    background: var(--el-bg-color);
+    border-radius: var(--pillbox-card-radius);
     transition: all 0.2s;
 
     &:hover,
     &.is-active {
-      border-color: var(--el-color-primary);
       background: var(--el-color-primary-light-9);
+      border-color: var(--el-color-primary);
     }
   }
 
   .detail-stack {
     display: flex;
-    min-width: 0;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--pillbox-gap);
+    min-width: 0;
   }
 
   .detail-hero {
     display: flex;
-    gap: 12px;
+    gap: var(--pillbox-gap-sm);
     align-items: flex-start;
     justify-content: space-between;
 
     h3 {
       margin: 0;
-      color: var(--art-text-gray-900);
       font-size: 18px;
       font-weight: 700;
       line-height: 1.35;
+      color: var(--pillbox-text-strong);
     }
   }
 
   .form-step-title {
     margin: 0;
-    color: var(--art-text-gray-900);
     font-size: 16px;
     font-weight: 700;
     line-height: 1.4;
+    color: var(--pillbox-text-strong);
   }
 
   .panel-header {
     display: flex;
-    gap: 12px;
+    gap: var(--pillbox-gap-sm);
     align-items: flex-start;
     justify-content: space-between;
   }
 
   .chart-bars {
     display: flex;
-    height: 224px;
-    gap: 12px;
+    gap: var(--pillbox-gap-sm);
     align-items: flex-end;
+    height: 224px;
   }
 
   .chart-bar-item {
@@ -128,10 +175,10 @@
 
   .chart-bar-stack {
     display: flex;
-    height: 168px;
     gap: 4px;
     align-items: flex-end;
     justify-content: center;
+    height: 168px;
   }
 
   .chart-bar {
@@ -151,31 +198,43 @@
 
   .task-time {
     margin-top: 8px;
-    color: var(--art-text-gray-900);
     font-size: 20px;
     font-weight: 800;
     line-height: 1.2;
+    color: var(--pillbox-text-strong);
   }
 
   .summary-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
+    gap: var(--pillbox-gap-sm);
   }
 
   .summary-item {
     padding: 16px;
-    border: 1px solid var(--el-border-color-lighter);
-    border-radius: 8px;
-    background: var(--el-bg-color);
+    background: var(--pillbox-surface);
+    border: 1px solid var(--pillbox-border);
+    border-radius: var(--pillbox-card-radius);
   }
 
   .summary-number {
     display: block;
     margin-bottom: 6px;
-    color: var(--el-color-primary);
     font-size: 24px;
     font-weight: 800;
+    color: var(--el-color-primary);
+
+    &.is-success {
+      color: var(--el-color-success);
+    }
+
+    &.is-danger {
+      color: var(--el-color-danger);
+    }
+
+    &.is-warning {
+      color: var(--el-color-warning);
+    }
   }
 
   .chip-row {
@@ -187,21 +246,21 @@
   .card-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
+    gap: var(--pillbox-gap);
   }
 
   .timeline-card {
     padding: 14px;
-    border: 1px solid var(--el-border-color-lighter);
-    border-radius: 8px;
-    background: var(--el-bg-color);
+    background: var(--pillbox-surface);
+    border: 1px solid var(--pillbox-border);
+    border-radius: var(--pillbox-card-radius);
   }
 
   .drug-card {
     padding: 16px;
-    border: 1px solid var(--el-border-color-lighter);
-    border-radius: 8px;
-    background: var(--el-bg-color);
+    background: var(--pillbox-surface);
+    border: 1px solid var(--pillbox-border);
+    border-radius: var(--pillbox-card-radius);
   }
 
   .conversation-flow {
@@ -212,9 +271,9 @@
   .bubble {
     max-width: 84%;
     padding: 12px 14px;
-    border: 1px solid var(--el-border-color-lighter);
-    border-radius: 8px;
-    background: var(--el-fill-color-light);
+    background: var(--pillbox-surface-soft);
+    border: 1px solid var(--pillbox-border);
+    border-radius: var(--pillbox-card-radius);
 
     &.right {
       justify-self: end;
@@ -223,7 +282,7 @@
   }
 }
 
-@media (max-width: 1100px) {
+@media (width <= 1100px) {
   .pillbox-page {
     .patient-layout,
     .summary-grid,

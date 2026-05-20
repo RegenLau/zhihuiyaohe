@@ -17,16 +17,36 @@
           <template #header>
             <div>
               <b>知情同意书设置</b>
-              <div class="muted text-sm mt-1">患者或家属在小程序端阅读并确认，后台负责维护内容、版本和启用状态</div>
+              <div class="muted text-sm mt-1"
+                >患者或家属在小程序端阅读并确认，后台负责维护内容、版本和启用状态</div
+              >
             </div>
           </template>
           <ElForm label-width="110px">
             <ElRow :gutter="16">
-              <ElCol :span="12"><ElFormItem label="协议名称"><ElInput v-model="agreement.name" /></ElFormItem></ElCol>
-              <ElCol :span="12"><ElFormItem label="当前版本"><ElInput v-model="agreement.version" /></ElFormItem></ElCol>
-              <ElCol :span="12"><ElFormItem label="启用状态"><SaSwitch v-model="agreement.status" /></ElFormItem></ElCol>
-              <ElCol :span="12"><ElFormItem label="适用端"><ElInput model-value="小程序患者端 / 子女端" readonly /></ElFormItem></ElCol>
-              <ElCol :span="24"><ElFormItem label="协议摘要"><ElInput v-model="agreement.summary" type="textarea" :rows="4" /></ElFormItem></ElCol>
+              <ElCol :span="12"
+                ><ElFormItem label="协议名称"
+                  ><ElInput v-model="agreement.name" placeholder="请输入协议名称" /></ElFormItem
+              ></ElCol>
+              <ElCol :span="12"
+                ><ElFormItem label="当前版本"
+                  ><ElInput v-model="agreement.version" placeholder="请输入版本号" /></ElFormItem
+              ></ElCol>
+              <ElCol :span="12"
+                ><ElFormItem label="启用状态"><SaSwitch v-model="agreement.status" /></ElFormItem
+              ></ElCol>
+              <ElCol :span="12"
+                ><ElFormItem label="适用端"
+                  ><ElInput model-value="小程序患者端 / 子女端" readonly /></ElFormItem
+              ></ElCol>
+              <ElCol :span="24"
+                ><ElFormItem label="协议摘要"
+                  ><ElInput
+                    v-model="agreement.summary"
+                    type="textarea"
+                    :rows="4"
+                    placeholder="请输入协议摘要" /></ElFormItem
+              ></ElCol>
               <ElCol :span="24">
                 <ElFormItem label="协议正文">
                   <SaEditor v-model="agreement.content" height="320px" />
@@ -50,7 +70,9 @@
             </ElButton>
           </div>
           <ElTimeline class="mt-4">
-            <ElTimelineItem type="primary" timestamp="当前启用">{{ agreement.version }} 已启用</ElTimelineItem>
+            <ElTimelineItem type="primary" timestamp="当前启用"
+              >{{ agreement.version }} 已启用</ElTimelineItem
+            >
             <ElTimelineItem type="warning" timestamp="历史版本">V2026.04 已归档</ElTimelineItem>
           </ElTimeline>
         </ElCard>
@@ -96,12 +118,12 @@
 </script>
 
 <style lang="scss" scoped>
-  @use '../../style.scss';
+  @use '../../style';
 
   .phone-preview {
-    padding: 16px;
-    border: 1px solid var(--el-border-color-lighter);
-    border-radius: 8px;
-    background: var(--el-fill-color-light);
+    padding: var(--pillbox-gap);
+    background: var(--pillbox-surface-soft);
+    border: 1px solid var(--pillbox-border);
+    border-radius: var(--pillbox-card-radius);
   }
 </style>

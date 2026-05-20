@@ -24,17 +24,36 @@
           <h3 class="form-step-title">添加患者信息</h3>
           <p class="muted mb-4">先建立患者基础档案，身份证号为选填，用于后续系统对接。</p>
           <ElRow :gutter="16">
-            <ElCol :xs="24" :md="12"><ElFormItem label="患者姓名" prop="name"><ElInput v-model="form.name" placeholder="请输入患者姓名" /></ElFormItem></ElCol>
-            <ElCol :xs="24" :md="12"><ElFormItem label="手机号" prop="phone"><ElInput v-model="form.phone" placeholder="请输入手机号" /></ElFormItem></ElCol>
+            <ElCol :xs="24" :md="12"
+              ><ElFormItem label="患者姓名" prop="name"
+                ><ElInput v-model="form.name" placeholder="请输入患者姓名" /></ElFormItem
+            ></ElCol>
+            <ElCol :xs="24" :md="12"
+              ><ElFormItem label="手机号" prop="phone"
+                ><ElInput v-model="form.phone" placeholder="请输入手机号" /></ElFormItem
+            ></ElCol>
             <ElCol :xs="24" :md="12">
               <ElFormItem label="性别" prop="gender">
-                <ElSelect v-model="form.gender"><ElOption label="男" value="男" /><ElOption label="女" value="女" /></ElSelect>
+                <ElSelect v-model="form.gender" placeholder="请选择性别"
+                  ><ElOption label="男" value="男" /><ElOption label="女" value="女"
+                /></ElSelect>
               </ElFormItem>
             </ElCol>
-            <ElCol :xs="24" :md="12"><ElFormItem label="年龄" prop="age"><ElInputNumber v-model="form.age" :min="1" /></ElFormItem></ElCol>
-            <ElCol :xs="24" :md="12"><ElFormItem label="档案编号" prop="recordNo"><ElInput v-model="form.recordNo" placeholder="请输入档案编号" /></ElFormItem></ElCol>
-            <ElCol :xs="24" :md="12"><ElFormItem label="身份证号"><ElInput placeholder="选填" /></ElFormItem></ElCol>
-            <ElCol :span="24"><ElFormItem label="居住地址"><ElInput v-model="form.address" /></ElFormItem></ElCol>
+            <ElCol :xs="24" :md="12"
+              ><ElFormItem label="年龄" prop="age"
+                ><ElInputNumber v-model="form.age" :min="1" /></ElFormItem
+            ></ElCol>
+            <ElCol :xs="24" :md="12"
+              ><ElFormItem label="档案编号" prop="recordNo"
+                ><ElInput v-model="form.recordNo" placeholder="请输入档案编号" /></ElFormItem
+            ></ElCol>
+            <ElCol :xs="24" :md="12"
+              ><ElFormItem label="身份证号"><ElInput placeholder="选填" /></ElFormItem
+            ></ElCol>
+            <ElCol :span="24"
+              ><ElFormItem label="居住地址"
+                ><ElInput v-model="form.address" placeholder="请输入居住地址" /></ElFormItem
+            ></ElCol>
           </ElRow>
         </template>
 
@@ -42,23 +61,78 @@
           <h3 class="form-step-title">补充诊疗信息和联系人</h3>
           <p class="muted mb-4">记录基础疾病、诊疗备注和家庭联系人，便于后续提醒和随访。</p>
           <ElRow :gutter="16">
-            <ElCol :span="24"><ElFormItem label="基础疾病" prop="diseases"><ElInput v-model="form.diseases" /></ElFormItem></ElCol>
-            <ElCol :xs="24" :md="12"><ElFormItem label="家属姓名" prop="familyName"><ElInput v-model="form.familyName" /></ElFormItem></ElCol>
-            <ElCol :xs="24" :md="12"><ElFormItem label="家属手机号" prop="familyPhone"><ElInput v-model="form.familyPhone" /></ElFormItem></ElCol>
-            <ElCol :xs="24" :md="12"><ElFormItem label="复诊周期"><ElSelect v-model="form.reviewCycle"><ElOption label="30 天" value="30 天" /><ElOption label="60 天" value="60 天" /></ElSelect></ElFormItem></ElCol>
-            <ElCol :span="24"><ElFormItem label="诊疗备注"><ElInput v-model="form.remark" type="textarea" :rows="4" /></ElFormItem></ElCol>
+            <ElCol :span="24"
+              ><ElFormItem label="基础疾病" prop="diseases"
+                ><ElInput v-model="form.diseases" placeholder="多个疾病用逗号分隔" /></ElFormItem
+            ></ElCol>
+            <ElCol :xs="24" :md="12"
+              ><ElFormItem label="家属姓名" prop="familyName"
+                ><ElInput v-model="form.familyName" placeholder="请输入家属姓名" /></ElFormItem
+            ></ElCol>
+            <ElCol :xs="24" :md="12"
+              ><ElFormItem label="家属手机号" prop="familyPhone"
+                ><ElInput v-model="form.familyPhone" placeholder="请输入家属手机号" /></ElFormItem
+            ></ElCol>
+            <ElCol :xs="24" :md="12"
+              ><ElFormItem label="复诊周期"
+                ><ElSelect v-model="form.reviewCycle" placeholder="请选择复诊周期"
+                  ><ElOption label="30 天" value="30 天" /><ElOption
+                    label="60 天"
+                    value="60 天" /></ElSelect></ElFormItem
+            ></ElCol>
+            <ElCol :span="24"
+              ><ElFormItem label="诊疗备注"
+                ><ElInput
+                  v-model="form.remark"
+                  type="textarea"
+                  :rows="4"
+                  placeholder="请输入诊疗备注" /></ElFormItem
+            ></ElCol>
           </ElRow>
         </template>
 
         <template v-if="activeStep === 2">
           <h3 class="form-step-title">添加用药计划</h3>
-          <p class="muted mb-4">首次建档时同步创建用药计划；后续复诊仍可在独立的用药计划模块维护。</p>
+          <p class="muted mb-4"
+            >首次建档时同步创建用药计划；后续复诊仍可在独立的用药计划模块维护。</p
+          >
           <ElRow :gutter="16">
-            <ElCol :xs="24" :md="12"><ElFormItem label="计划名称" prop="planName"><ElInput v-model="form.planName" /></ElFormItem></ElCol>
-            <ElCol :xs="24" :md="12"><ElFormItem label="开始日期" prop="startDate"><ElDatePicker v-model="form.startDate" type="date" value-format="YYYY-MM-DD" /></ElFormItem></ElCol>
-            <ElCol :xs="24" :md="12"><ElFormItem label="处方来源" prop="source"><ElSelect v-model="form.source"><ElOption label="手动录入" value="手动录入" /><ElOption label="处方照片" value="处方照片" /><ElOption label="HIS 截图" value="HIS 截图" /></ElSelect></ElFormItem></ElCol>
-            <ElCol :xs="24" :md="12"><ElFormItem label="复诊提醒"><ElSelect v-model="form.reviewReminder"><ElOption label="自动推算" value="自动推算" /><ElOption label="手动设置" value="手动设置" /></ElSelect></ElFormItem></ElCol>
-            <ElCol :span="24"><ElFormItem label="药品明细" prop="drugs"><ElInput v-model="form.drugs" type="textarea" :rows="4" /></ElFormItem></ElCol>
+            <ElCol :xs="24" :md="12"
+              ><ElFormItem label="计划名称" prop="planName"
+                ><ElInput v-model="form.planName" placeholder="请输入计划名称" /></ElFormItem
+            ></ElCol>
+            <ElCol :xs="24" :md="12"
+              ><ElFormItem label="开始日期" prop="startDate"
+                ><ElDatePicker
+                  v-model="form.startDate"
+                  type="date"
+                  value-format="YYYY-MM-DD"
+                  placeholder="请选择开始日期" /></ElFormItem
+            ></ElCol>
+            <ElCol :xs="24" :md="12"
+              ><ElFormItem label="处方来源" prop="source"
+                ><ElSelect v-model="form.source" placeholder="请选择处方来源"
+                  ><ElOption label="手动录入" value="手动录入" /><ElOption
+                    label="处方照片"
+                    value="处方照片" /><ElOption
+                    label="HIS 截图"
+                    value="HIS 截图" /></ElSelect></ElFormItem
+            ></ElCol>
+            <ElCol :xs="24" :md="12"
+              ><ElFormItem label="复诊提醒"
+                ><ElSelect v-model="form.reviewReminder" placeholder="请选择复诊提醒"
+                  ><ElOption label="自动推算" value="自动推算" /><ElOption
+                    label="手动设置"
+                    value="手动设置" /></ElSelect></ElFormItem
+            ></ElCol>
+            <ElCol :span="24"
+              ><ElFormItem label="药品明细" prop="drugs"
+                ><ElInput
+                  v-model="form.drugs"
+                  type="textarea"
+                  :rows="4"
+                  placeholder="每行填写药品、剂量、频次、时间" /></ElFormItem
+            ></ElCol>
             <ElCol :span="24">
               <ElFormItem label="处方附件">
                 <ElUpload drag :auto-upload="false">
@@ -72,13 +146,42 @@
 
         <template v-if="activeStep === 3">
           <h3 class="form-step-title">绑定药盒和小程序</h3>
-          <p class="muted mb-4">选择待绑定设备并生成小程序绑定入口，知情同意由患者或家属在小程序端确认。</p>
+          <p class="muted mb-4"
+            >选择待绑定设备并生成小程序绑定入口，知情同意由患者或家属在小程序端确认。</p
+          >
           <ElRow :gutter="16">
-            <ElCol :xs="24" :md="12"><ElFormItem label="药盒设备" prop="device"><ElSelect v-model="form.device"><ElOption label="PBX-202605-021 待分配" value="PBX-202605-021" /><ElOption label="暂不绑定" value="暂不绑定" /></ElSelect></ElFormItem></ElCol>
-            <ElCol :xs="24" :md="12"><ElFormItem label="绑定方式"><ElSelect v-model="form.bindMode"><ElOption label="后台选择设备" value="后台选择设备" /><ElOption label="患者小程序扫码" value="患者小程序扫码" /></ElSelect></ElFormItem></ElCol>
-            <ElCol :xs="24" :md="12"><ElFormItem label="小程序绑定"><ElSelect v-model="form.miniProgram"><ElOption label="发送给患者" value="发送给患者" /><ElOption label="发送给家属" value="发送给家属" /></ElSelect></ElFormItem></ElCol>
-            <ElCol :xs="24" :md="12"><ElFormItem label="知情同意"><ElInput model-value="等待小程序端确认" readonly /></ElFormItem></ElCol>
-            <ElCol :span="24"><ElAlert show-icon type="info" :closable="false" title="后台仅配置协议内容、查看确认状态，不代替患者确认。" /></ElCol>
+            <ElCol :xs="24" :md="12"
+              ><ElFormItem label="药盒设备" prop="device"
+                ><ElSelect v-model="form.device" placeholder="请选择药盒设备"
+                  ><ElOption label="PBX-202605-021 待分配" value="PBX-202605-021" /><ElOption
+                    label="暂不绑定"
+                    value="暂不绑定" /></ElSelect></ElFormItem
+            ></ElCol>
+            <ElCol :xs="24" :md="12"
+              ><ElFormItem label="绑定方式"
+                ><ElSelect v-model="form.bindMode" placeholder="请选择绑定方式"
+                  ><ElOption label="后台选择设备" value="后台选择设备" /><ElOption
+                    label="患者小程序扫码"
+                    value="患者小程序扫码" /></ElSelect></ElFormItem
+            ></ElCol>
+            <ElCol :xs="24" :md="12"
+              ><ElFormItem label="小程序绑定"
+                ><ElSelect v-model="form.miniProgram" placeholder="请选择发送对象"
+                  ><ElOption label="发送给患者" value="发送给患者" /><ElOption
+                    label="发送给家属"
+                    value="发送给家属" /></ElSelect></ElFormItem
+            ></ElCol>
+            <ElCol :xs="24" :md="12"
+              ><ElFormItem label="知情同意"
+                ><ElInput model-value="等待小程序端确认" readonly /></ElFormItem
+            ></ElCol>
+            <ElCol :span="24"
+              ><ElAlert
+                show-icon
+                type="info"
+                :closable="false"
+                title="后台仅配置协议内容、查看确认状态，不代替患者确认。"
+            /></ElCol>
           </ElRow>
         </template>
 
@@ -106,7 +209,9 @@
           上一步
         </ElButton>
         <ElButton type="primary" @click="handleNext">
-          <template #icon><ArtSvgIcon :icon="activeStep === 4 ? 'ri:check-line' : 'ri:arrow-right-line'" /></template>
+          <template #icon
+            ><ArtSvgIcon :icon="activeStep === 4 ? 'ri:check-line' : 'ri:arrow-right-line'"
+          /></template>
           {{ activeStep === 4 ? '完成建档' : '下一步' }}
         </ElButton>
       </div>
@@ -195,5 +300,5 @@
 </script>
 
 <style lang="scss" scoped>
-  @use '../../style.scss';
+  @use '../../style';
 </style>

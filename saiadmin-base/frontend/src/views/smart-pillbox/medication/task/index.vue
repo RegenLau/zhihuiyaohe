@@ -45,7 +45,9 @@
           <div class="detail-hero">
             <div>
               <h3>{{ currentPatient.name }} · 今日提醒计划</h3>
-              <p class="muted mt-1">可继续处理今日执行、异常提醒和临时调整；长期处方变更请进入用药计划。</p>
+              <p class="muted mt-1"
+                >可继续处理今日执行、异常提醒和临时调整；长期处方变更请进入用药计划。</p
+              >
             </div>
             <ElSpace wrap>
               <ElButton @click="router.push('/doctor/plans')">
@@ -61,10 +63,22 @@
         </ElCard>
 
         <div class="summary-grid">
-          <div class="summary-item"><span class="summary-number">{{ taskSummary.pending }} 条</span><span class="muted">待执行</span></div>
-          <div class="summary-item"><span class="summary-number">{{ taskSummary.done }} 条</span><span class="muted">已完成</span></div>
-          <div class="summary-item"><span class="summary-number">{{ taskSummary.risk }} 条</span><span class="muted">异常 / 未打卡</span></div>
-          <div class="summary-item"><span class="summary-number">{{ currentPatient.nextReminder }}</span><span class="muted">下一提醒</span></div>
+          <div class="summary-item">
+            <span class="summary-number">{{ taskSummary.pending }} 条</span>
+            <span class="muted">待执行</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-number">{{ taskSummary.done }} 条</span>
+            <span class="muted">已完成</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-number">{{ taskSummary.risk }} 条</span>
+            <span class="muted">异常 / 未打卡</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-number">{{ currentPatient.nextReminder }}</span>
+            <span class="muted">下一提醒</span>
+          </div>
         </div>
 
         <ElCard shadow="never">
@@ -79,12 +93,18 @@
             <div class="flex justify-between items-start gap-3">
               <div>
                 <b>今日提醒时间表</b>
-                <div class="muted text-sm mt-1">任务由生效用药计划生成；本页只处理当天执行和临时调整。</div>
+                <div class="muted text-sm mt-1"
+                  >任务由生效用药计划生成；本页只处理当天执行和临时调整。</div
+                >
               </div>
               <ElTag type="warning">异常 {{ taskSummary.risk }} 条</ElTag>
             </div>
           </template>
-          <ElSegmented v-model="drugFilter" :options="['全部用药', '硝苯地平控释片', '二甲双胍片']" class="mb-4" />
+          <ElSegmented
+            v-model="drugFilter"
+            :options="['全部用药', '硝苯地平控释片', '二甲双胍片']"
+            class="mb-4"
+          />
           <ElEmpty v-if="displayedTasks.length === 0" description="当前筛选条件下暂无服药任务" />
           <div v-else class="detail-stack">
             <div v-for="task in displayedTasks" :key="task.id" class="timeline-card">
@@ -103,7 +123,12 @@
                   <div class="muted mt-2">{{ task.suggestion }}</div>
                 </ElCol>
                 <ElCol :xs="24" :md="6" class="text-right">
-                  <ElButton v-if="task.statusType === 'danger'" type="primary" link @click="router.push('/doctor/messages')">
+                  <ElButton
+                    v-if="task.statusType === 'danger'"
+                    type="primary"
+                    link
+                    @click="router.push('/doctor/messages')"
+                  >
                     <template #icon><ArtSvgIcon icon="ri:notification-3-line" /></template>
                     通知子女
                   </ElButton>
@@ -116,7 +141,13 @@
               </ElRow>
             </div>
           </div>
-          <ElAlert class="mt-4" show-icon :closable="false" type="info" :title="`今日临时调整只影响 ${taskDate || '所选日期'} 的任务；需要长期变更时，请在用药计划中修改当前方案并重新下发药盒。`" />
+          <ElAlert
+            class="mt-4"
+            show-icon
+            :closable="false"
+            type="info"
+            :title="`今日临时调整只影响 ${taskDate || '所选日期'} 的任务；需要长期变更时，请在用药计划中修改当前方案并重新下发药盒。`"
+          />
         </ElCard>
       </div>
     </div>
@@ -166,7 +197,10 @@
     patients.value.filter((patient) => !keyword.value || patient.name.includes(keyword.value))
   )
   const currentPatient = computed(
-    () => patients.value.find((item) => item.id === selectedPatientId.value) || patients.value[0] || emptyPatient
+    () =>
+      patients.value.find((item) => item.id === selectedPatientId.value) ||
+      patients.value[0] ||
+      emptyPatient
   )
   const taskSummary = computed(() => ({
     pending: taskRecords.value.filter((item) => item.status === '待执行').length,
@@ -230,5 +264,5 @@
 </script>
 
 <style lang="scss" scoped>
-  @use '../../style.scss';
+  @use '../../style';
 </style>
