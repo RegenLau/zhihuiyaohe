@@ -52,7 +52,12 @@
           </ElSpace>
         </template>
         <template #deviceStatus="{ row }">
-          <ElTag :type="row.deviceStatusType">{{ row.deviceNo }}</ElTag>
+          <ElTag :type="row.deviceStatusType">{{ row.deviceStatus }}</ElTag>
+        </template>
+        <template #child="{ row }">
+          <ElTag :type="getChildStatusType(row.child)" effect="plain">
+            {{ getChildStatus(row.child) }}
+          </ElTag>
         </template>
         <template #taskRisk="{ row }">
           <ElTag
@@ -130,8 +135,8 @@
       columnsFactory: () => [
         { prop: 'patient', label: '患者', useSlot: true, minWidth: 160 },
         { prop: 'diseases', label: '基础疾病', useSlot: true, minWidth: 160 },
-        { prop: 'deviceStatus', label: '药盒', useSlot: true, minWidth: 170 },
-        { prop: 'child', label: '子女绑定', minWidth: 180, showOverflowTooltip: true },
+        { prop: 'deviceStatus', label: '设备状态', useSlot: true, width: 120 },
+        { prop: 'child', label: '子女绑定状态', useSlot: true, width: 140 },
         { prop: 'taskRisk', label: '最近任务', useSlot: true, width: 120 },
         { prop: 'operation', label: '操作', useSlot: true, width: 150, fixed: 'right' }
       ]
@@ -147,6 +152,15 @@
     searchForm.value = { keyword: '', deviceStatus: '' }
     await resetSearchParams()
     getData()
+  }
+
+  const isChildBound = (child?: string) => Boolean(child && !['待绑定', '未绑定'].includes(child))
+
+  const getChildStatus = (child?: string) => (isChildBound(child) ? '已绑定' : child || '未绑定')
+
+  const getChildStatusType = (child?: string) => {
+    if (isChildBound(child)) return 'success'
+    return child === '待绑定' ? 'warning' : 'info'
   }
 </script>
 
