@@ -70,6 +70,26 @@ export const smartPillboxRoutes: AppRouteRecord[] = [
     isHide: true,
     activePath: '/doctor/patients'
   }),
+  createSmartPillboxRoute({
+    path: '/doctor/patient-detail',
+    name: 'SmartPillboxPatientDetail',
+    title: '患者详情',
+    icon: 'ri:file-user-line',
+    component: '/smart-pillbox/patient/detail',
+    keepAlive: false,
+    isHide: true,
+    activePath: '/doctor/patients'
+  }),
+  createSmartPillboxRoute({
+    path: '/doctor/health-data',
+    name: 'SmartPillboxHealthData',
+    title: '健康数据',
+    icon: 'ri:pulse-line',
+    component: '/smart-pillbox/health/data',
+    keepAlive: true,
+    isHide: true,
+    activePath: '/doctor/patients'
+  }),
   {
     path: '/doctor/medication',
     name: 'SmartPillboxMedication',

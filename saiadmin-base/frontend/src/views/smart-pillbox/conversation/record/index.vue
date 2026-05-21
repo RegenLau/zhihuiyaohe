@@ -81,7 +81,7 @@
                   >按时间回看患者与小智设备的提醒、患者聊天及未响应记录。</div
                 >
               </div>
-              <ElTag type="primary">最近 {{ conversations.length }} 条</ElTag>
+              <ElTag type="primary">{{ currentPatient.deviceNo }} · 最近 {{ conversations.length }} 条</ElTag>
             </div>
           </template>
           <ElSegmented
@@ -124,10 +124,11 @@
   defineOptions({ name: 'SmartPillboxConversationRecord' })
 
   const router = useRouter()
+  const route = useRoute()
   const keyword = ref('')
-  const selectedPatientId = ref(1)
+  const selectedPatientId = ref(Number(route.query.patientId || 1))
   const conversationFilter = ref('全部')
-  const conversationFilterOptions = ['全部', '小智提醒', '患者聊天', '未响应']
+  const conversationFilterOptions = ['全部', '小智提醒', '患者聊天', '设备事件', '未响应']
   const patients = ref<Patient[]>([])
   const conversations = ref<Conversation[]>([])
   const patientLoading = ref(false)
@@ -154,7 +155,11 @@
   }
 
   const patientOptions = computed(() =>
-    patients.value.filter((patient) => !keyword.value || patient.name.includes(keyword.value))
+    patients.value.filter(
+      (patient) =>
+        !keyword.value ||
+        [patient.name, patient.recordNo, patient.deviceNo].some((value) => value.includes(keyword.value))
+    )
   )
   const currentPatient = computed(
     () =>
@@ -171,6 +176,7 @@
   const conversationType = computed(() => {
     if (conversationFilter.value === '小智提醒') return '小智提醒'
     if (conversationFilter.value === '患者聊天') return '患者聊天'
+    if (conversationFilter.value === '设备事件') return '设备事件'
     return ''
   })
   const conversationStatus = computed(() => {

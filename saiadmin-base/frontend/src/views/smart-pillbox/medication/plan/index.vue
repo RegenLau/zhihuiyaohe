@@ -84,7 +84,7 @@
 
         <ElCard shadow="never">
           <div class="flex justify-between items-center gap-3 flex-wrap">
-            <ElSegmented v-model="planView" :options="['当前方案', '历史方案', '处方附件']" />
+            <ElSegmented v-model="planView" :options="['当前方案', '历史方案', '处方审核']" />
             <ElSpace wrap>
               <ElButton @click="openCreateDialog">
                 <template #icon><ArtSvgIcon icon="ri:file-copy-line" /></template>
@@ -113,7 +113,36 @@
             </div>
           </template>
 
-          <ElEmpty v-if="currentPlan.drugs.length === 0" description="当前患者尚未完成用药计划" />
+          <ElEmpty v-if="visiblePlans.length === 0" description="当前患者尚未完成用药计划" />
+          <div v-else-if="planView === '历史方案'" class="detail-stack">
+            <div v-for="plan in visiblePlans" :key="plan.id" class="drug-card">
+              <div class="flex justify-between items-start gap-3">
+                <div>
+                  <b>{{ plan.title }}</b>
+                  <div class="muted text-sm mt-1">
+                    {{ plan.code }} · {{ plan.period }} · {{ plan.source }}
+                  </div>
+                </div>
+                <ElTag :type="plan.dispatchType">{{ plan.dispatchStatus }}</ElTag>
+              </div>
+              <div class="chip-row mt-3">
+                <ElTag effect="plain">药品 {{ plan.drugs.length }} 种</ElTag>
+                <ElTag effect="plain">{{ plan.generatedTasks }}</ElTag>
+                <ElTag effect="plain">{{ plan.auditSummary || '无审核提示' }}</ElTag>
+              </div>
+            </div>
+          </div>
+          <ElDescriptions v-else-if="planView === '处方审核'" :column="1" border>
+            <ElDescriptionsItem label="审核结论">
+              {{ currentPlan.auditSummary || '当前处方未发现需要拦截的问题' }}
+            </ElDescriptionsItem>
+            <ElDescriptionsItem label="注意事项">
+              控释、缓释、肠溶类药物默认提示整片吞服；慢病长期用药默认生成余药量提醒。
+            </ElDescriptionsItem>
+            <ElDescriptionsItem label="适用患者">
+              {{ currentPatient.name }}，{{ currentPatient.diseases.join('、') || '未填写疾病' }}
+            </ElDescriptionsItem>
+          </ElDescriptions>
           <ElRow v-else v-loading="planLoading" :gutter="12">
             <ElCol v-for="drug in currentPlan.drugs" :key="drug.name" :xs="24" :md="12">
               <div class="drug-card mb-3">
@@ -122,8 +151,12 @@
                   <ElTag>{{ drug.time }}</ElTag>
                   <ElTag>{{ drug.dose }}</ElTag>
                   <ElTag>{{ drug.frequency }}</ElTag>
+                  <ElTag v-if="drug.specification" effect="plain">{{ drug.specification }}</ElTag>
                 </div>
-                <div class="muted mt-3">{{ drug.guide }}</div>
+                <div class="muted mt-3">
+                  {{ drug.guide }}
+                  <span v-if="drug.startDate"> · {{ drug.startDate }} 至 {{ drug.endDate || '长期' }}</span>
+                </div>
               </div>
             </ElCol>
           </ElRow>
@@ -202,8 +235,9 @@
   defineOptions({ name: 'SmartPillboxPlan' })
 
   const router = useRouter()
+  const route = useRoute()
   const keyword = ref('')
-  const selectedPatientId = ref(1)
+  const selectedPatientId = ref(Number(route.query.patientId || 1))
   const planView = ref('当前方案')
   const editVisible = ref(false)
   const editFormRef = ref<FormInstance>()
@@ -253,7 +287,11 @@
   }
 
   const patientOptions = computed(() =>
-    patients.value.filter((patient) => !keyword.value || patient.name.includes(keyword.value))
+    patients.value.filter(
+      (patient) =>
+        !keyword.value ||
+        [patient.name, patient.recordNo, patient.deviceNo].some((value) => value.includes(keyword.value))
+    )
   )
   const currentPatient = computed(
     () =>
@@ -263,6 +301,13 @@
   )
   const currentPlan = computed(
     () => plans.value.find((item) => item.patientId === selectedPatientId.value) || emptyPlan
+  )
+  const visiblePlans = computed(() =>
+    planView.value === '历史方案'
+      ? plans.value.filter((item) => item.patientId === selectedPatientId.value)
+      : currentPlan.value.id
+        ? [currentPlan.value]
+        : []
   )
   const planHeroNote = computed(() => {
     if (!currentPlan.value.id) return '当前患者尚未创建用药计划，可先创建草稿并在确认后下发药盒。'
@@ -327,7 +372,10 @@
           dose,
           frequency,
           time,
-          guide: '请按处方和医药师建议执行，异常情况及时联系医药师。'
+          guide: '请按处方和医药师建议执行，异常情况及时联系医药师。',
+          startDate: editForm.startDate,
+          endDate: '',
+          durationDays: 30
         }
       })
 
@@ -345,14 +393,19 @@
     await editFormRef.value?.validate()
     await planApi.save({
       patientId: selectedPatientId.value,
+      patientName: currentPatient.value.name,
       title: editForm.title,
       code: '草稿',
       period: editForm.startDate ? `${editForm.startDate} 起` : '未设置',
+      startDate: editForm.startDate,
+      endDate: null,
       status: editForm.status,
       dispatchStatus: '未下发',
       dispatchType: editForm.status === '已生效' ? 'success' : 'info',
       generatedTasks: '未生成',
       source: '手动录入',
+      reminderCount: parseDrugInput(editForm.drugText).length,
+      auditSummary: '请在下发前复核剂量、频次和患者过敏史',
       drugs: parseDrugInput(editForm.drugText)
     })
     editVisible.value = false

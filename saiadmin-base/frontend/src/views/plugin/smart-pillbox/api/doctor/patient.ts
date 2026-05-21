@@ -1,10 +1,13 @@
 import request from '@/utils/http'
-import type { Patient, SmartPillboxListParams } from './types'
+import type { MedicationRecord, Patient, SmartPillboxListParams } from './types'
 
 const baseUrl = '/app/smart-pillbox/admin/doctor/patient'
 
 export interface PatientListParams extends SmartPillboxListParams {
   deviceStatus?: string
+  status?: string
+  disease?: string
+  hasAllergy?: string
 }
 
 export default {
@@ -18,6 +21,12 @@ export default {
     return request.get<Patient>({
       url: `${baseUrl}/read`,
       params: { id }
+    })
+  },
+  medicineRecords(id: number | string, date?: string) {
+    return request.get<MedicationRecord[]>({
+      url: `${baseUrl}/medicineRecords`,
+      params: { id, date }
     })
   },
   save(params: Partial<Patient>) {

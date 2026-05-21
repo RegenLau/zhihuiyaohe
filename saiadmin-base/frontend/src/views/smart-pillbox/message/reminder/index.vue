@@ -42,7 +42,11 @@
           <div>
             <b>{{ row.title }}</b>
             <div class="muted text-xs">{{ row.content }}</div>
+            <div class="muted text-xs mt-1">{{ row.triggerSource || '手动创建' }}</div>
           </div>
+        </template>
+        <template #type="{ row }">
+          <ElTag effect="plain">{{ row.type }}</ElTag>
         </template>
         <template #status="{ row }"
           ><ElTag :type="row.statusType">{{ row.status }}</ElTag></template
@@ -51,6 +55,12 @@
           <ElSpace>
             <SaButton type="success" icon="ri:eye-line" tool-tip="查看" @click="viewMessage(row)" />
             <SaButton type="secondary" tool-tip="编辑" @click="showDialog('edit', row)" />
+            <SaButton
+              type="primary"
+              icon="ri:check-line"
+              tool-tip="处理"
+              @click="markHandled(row)"
+            />
           </ElSpace>
         </template>
       </ArtTable>
@@ -75,8 +85,14 @@
 
   defineOptions({ name: 'SmartPillboxReminder' })
 
+  const route = useRoute()
   const showSearchBar = ref(true)
-  const searchForm = ref({ type: '', patient: '' })
+  const searchForm = ref({
+    type: String(route.query.type || ''),
+    patient: String(route.query.patient || ''),
+    status: '',
+    keyword: ''
+  })
   const { dialogType, dialogVisible, dialogData, showDialog } = useSaiAdmin()
 
   const {
@@ -96,8 +112,13 @@
   } = useTable({
     core: {
       apiFn: messageApi.list,
+      apiParams: {
+        type: String(route.query.type || ''),
+        patient: String(route.query.patient || '')
+      },
       columnsFactory: () => [
         { prop: 'message', label: '消息', useSlot: true, minWidth: 220 },
+        { prop: 'type', label: '类型', useSlot: true, width: 120 },
         { prop: 'patient', label: '患者', width: 120 },
         { prop: 'receiver', label: '接收方', minWidth: 150 },
         { prop: 'channel', label: '渠道', minWidth: 150 },
@@ -114,7 +135,7 @@
   }
 
   const handleReset = async () => {
-    searchForm.value = { type: '', patient: '' }
+    searchForm.value = { type: '', patient: '', status: '', keyword: '' }
     await resetSearchParams()
     getData()
   }
@@ -129,6 +150,12 @@
 
   const viewMessage = (row: Record<string, any>) => {
     ElMessage.success(`${row.title} 已打开`)
+  }
+
+  const markHandled = async (row: Record<string, any>) => {
+    await messageApi.update({ ...row, status: '已处理', statusType: 'success' })
+    ElMessage.success('提醒消息已处理')
+    refreshUpdate()
   }
 </script>
 

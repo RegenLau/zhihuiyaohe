@@ -48,13 +48,25 @@
         <template #status="{ row }">
           <ElTag :type="row.statusType">{{ row.status }}</ElTag>
         </template>
+        <template #battery="{ row }">
+          <ElProgress
+            :percentage="Number(row.batteryLevel ?? String(row.battery).replace('%', '')) || 0"
+            :stroke-width="8"
+            :status="Number(row.batteryLevel) < 20 ? 'exception' : undefined"
+          />
+        </template>
+        <template #dispatchStatus="{ row }">
+          <ElTag :type="row.dispatchStatus?.includes('待') ? 'warning' : 'success'" effect="plain">
+            {{ row.dispatchStatus || '未同步' }}
+          </ElTag>
+        </template>
         <template #operation="{ row }">
           <ElSpace>
             <SaButton
               type="success"
               icon="ri:file-list-3-line"
-              tool-tip="开关记录"
-              @click="showDeviceLog(row)"
+              tool-tip="对话记录"
+              @click="router.push(`/doctor/conversations?patientId=${row.bindPatientId || ''}`)"
             />
             <SaButton type="secondary" tool-tip="编辑" @click="showDialog('edit', row)" />
             <SaButton type="error" tool-tip="解绑" @click="unbindDevice(row)" />
@@ -83,6 +95,7 @@
 
   defineOptions({ name: 'SmartPillboxDeviceManage' })
 
+  const router = useRouter()
   const showSearchBar = ref(true)
   const searchForm = ref({ sn: '', status: '' })
   const { dialogType, dialogVisible, dialogData, showDialog } = useSaiAdmin()
@@ -107,9 +120,11 @@
         { prop: 'sn', label: '设备 SN', minWidth: 170 },
         { prop: 'patient', label: '绑定患者', minWidth: 130 },
         { prop: 'status', label: '在线状态', useSlot: true, width: 110 },
-        { prop: 'battery', label: '电量', width: 100 },
+        { prop: 'battery', label: '电量', useSlot: true, width: 140 },
         { prop: 'wifi', label: 'WiFi 状态', width: 120 },
         { prop: 'firmware', label: '固件版本', width: 120 },
+        { prop: 'lastHeartbeat', label: '最后心跳', width: 160 },
+        { prop: 'dispatchStatus', label: '计划同步', useSlot: true, width: 120 },
         { prop: 'bindDate', label: '绑定日期', width: 140 },
         { prop: 'operation', label: '操作', useSlot: true, width: 150, fixed: 'right' }
       ]
@@ -153,12 +168,15 @@
     getData()
   }
 
-  const showDeviceLog = (row: Record<string, any>) => {
-    ElMessage.success(`${row.sn} 开关记录已加载`)
-  }
-
   const unbindDevice = async (row: Record<string, any>) => {
-    await deviceApi.update({ ...row, patient: '-', status: '待分配', statusType: 'warning' })
+    await deviceApi.update({
+      ...row,
+      bindPatientId: null,
+      patient: '-',
+      status: '待分配',
+      statusType: 'warning',
+      dispatchStatus: '未绑定'
+    })
     ElMessage.success('设备已解绑')
     refreshUpdate()
   }

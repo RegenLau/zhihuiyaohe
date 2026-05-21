@@ -84,6 +84,7 @@
         <ElCard shadow="never">
           <div class="flex justify-between items-center gap-3 flex-wrap">
             <ElSegmented v-model="taskView" :options="['今日任务', '整体方案', '异常记录']" />
+            <ElSegmented v-model="statusFilter" :options="['全部状态', '待执行', '已完成', '漏服']" />
             <ElDatePicker v-model="taskDate" type="date" value-format="YYYY-MM-DD" />
           </div>
         </ElCard>
@@ -102,7 +103,7 @@
           </template>
           <ElSegmented
             v-model="drugFilter"
-            :options="['全部用药', '硝苯地平控释片', '二甲双胍片']"
+            :options="drugFilterOptions"
             class="mb-4"
           />
           <ElEmpty v-if="displayedTasks.length === 0" description="当前筛选条件下暂无服药任务" />
@@ -127,14 +128,18 @@
                     v-if="task.statusType === 'danger'"
                     type="primary"
                     link
-                    @click="router.push('/doctor/messages')"
+                    @click="notifyFamily(task)"
                   >
                     <template #icon><ArtSvgIcon icon="ri:notification-3-line" /></template>
                     通知子女
                   </ElButton>
-                  <ElButton v-else-if="task.statusType === 'warning'" type="primary" link>
-                    <template #icon><ArtSvgIcon icon="ri:edit-line" /></template>
-                    修改剂量
+                  <ElButton v-if="task.status !== '已完成'" type="success" link @click="markDone(task)">
+                    <template #icon><ArtSvgIcon icon="ri:check-line" /></template>
+                    标记完成
+                  </ElButton>
+                  <ElButton v-if="task.status === '待执行'" type="danger" link @click="markMissed(task)">
+                    <template #icon><ArtSvgIcon icon="ri:close-circle-line" /></template>
+                    标记漏服
                   </ElButton>
                   <ElTag :type="task.statusType">{{ task.status }}</ElTag>
                 </ElCol>
@@ -163,11 +168,13 @@
   defineOptions({ name: 'SmartPillboxTask' })
 
   const router = useRouter()
+  const route = useRoute()
   const keyword = ref('')
-  const selectedPatientId = ref(1)
+  const selectedPatientId = ref(Number(route.query.patientId || 1))
   const taskView = ref('今日任务')
   const drugFilter = ref('全部用药')
-  const taskDate = ref('2026-05-20')
+  const statusFilter = ref('全部状态')
+  const taskDate = ref('2026-05-21')
   const patients = ref<Patient[]>([])
   const taskRecords = ref<MedicationTask[]>([])
   const patientLoading = ref(false)
@@ -194,7 +201,11 @@
   }
 
   const patientOptions = computed(() =>
-    patients.value.filter((patient) => !keyword.value || patient.name.includes(keyword.value))
+    patients.value.filter(
+      (patient) =>
+        !keyword.value ||
+        [patient.name, patient.recordNo, patient.deviceNo].some((value) => value.includes(keyword.value))
+    )
   )
   const currentPatient = computed(
     () =>
@@ -208,11 +219,19 @@
     risk: taskRecords.value.filter((item) => item.statusType === 'danger').length
   }))
   const displayedTasks = computed(() => {
+    let records = taskRecords.value
     if (taskView.value === '异常记录') {
-      return taskRecords.value.filter((item) => item.statusType === 'danger')
+      records = records.filter((item) => item.statusType === 'danger')
     }
-    return taskRecords.value
+    if (drugFilter.value !== '全部用药') {
+      records = records.filter((item) => item.drug === drugFilter.value)
+    }
+    return records
   })
+  const drugFilterOptions = computed(() => [
+    '全部用药',
+    ...Array.from(new Set(taskRecords.value.map((item) => item.drug)))
+  ])
 
   const loadPatients = async () => {
     patientLoading.value = true
@@ -236,7 +255,7 @@
         limit: 50,
         patientId: selectedPatientId.value,
         taskDate: taskDate.value,
-        drug: drugFilter.value
+        status: statusFilter.value
       })
       taskRecords.value = result.records
     } finally {
@@ -253,7 +272,36 @@
     ElMessage.success('今日调整已保存')
   }
 
-  watch([selectedPatientId, drugFilter, taskDate], () => {
+  const markDone = async (task: MedicationTask) => {
+    await taskApi.update({
+      ...task,
+      status: '已完成',
+      statusType: 'success',
+      source: '后台补录',
+      completedAt: `${taskDate.value} ${task.time}`
+    })
+    ElMessage.success('已标记为完成')
+    loadTasks()
+  }
+
+  const markMissed = async (task: MedicationTask) => {
+    await taskApi.update({
+      ...task,
+      status: '漏服',
+      statusType: 'danger',
+      source: '后台标记',
+      abnormalLevel: '高风险'
+    })
+    ElMessage.warning('已标记为漏服')
+    loadTasks()
+  }
+
+  const notifyFamily = (task: MedicationTask) => {
+    router.push(`/doctor/messages?patient=${currentPatient.value.name}&type=子女提醒`)
+    ElMessage.success(`${task.drug} 异常提醒已进入消息处理`)
+  }
+
+  watch([selectedPatientId, statusFilter, taskDate], () => {
     loadTasks()
   })
 

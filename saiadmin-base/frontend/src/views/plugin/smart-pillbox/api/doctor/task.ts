@@ -7,6 +7,7 @@ export interface TaskListParams extends SmartPillboxListParams {
   patientId?: number
   taskDate?: string
   drug?: string
+  status?: string
 }
 
 export default {

@@ -3,12 +3,16 @@ import express from 'express'
 import morgan from 'morgan'
 import {
   agreement,
+  buildHealthSummary,
   conversations,
   dashboard,
   devices,
+  healthRecords,
+  medicationRecords,
   messages,
   patients,
   plans,
+  syncPatientDerivedData,
   tasks
 } from './smartPillboxData.js'
 
@@ -47,7 +51,7 @@ const findById = (records, id) => records.find((item) => String(item.id) === Str
 
 const saveRecord = (records, body) => {
   const id = records.length ? Math.max(...records.map((item) => Number(item.id) || 0)) + 1 : 1
-  const record = { id, ...body }
+  const record = { ...body, id: body.id ?? id }
   records.unshift(record)
   return record
 }
@@ -135,11 +139,23 @@ app.get('/app/smart-pillbox/admin/doctor/dashboard/read', (req, res) => {
 })
 
 app.get('/app/smart-pillbox/admin/doctor/patient/list', (req, res) => {
-  const { keyword, deviceStatus } = req.query
+  const { keyword, deviceStatus, status, disease, hasAllergy } = req.query
   const records = patients.filter((item) => {
-    const keywordMatched = includesKeyword(keyword, [item.name, item.phone, item.recordNo])
+    const keywordMatched = includesKeyword(keyword, [
+      item.name,
+      item.phone,
+      item.recordNo,
+      item.deviceNo,
+      item.contacts?.map((contact) => contact.name).join(' ')
+    ])
     const deviceMatched = !deviceStatus || item.deviceStatus === deviceStatus
-    return keywordMatched && deviceMatched
+    const statusMatched = !status || item.status === status
+    const diseaseMatched = !disease || item.diseases?.includes(disease)
+    const allergyMatched =
+      !hasAllergy ||
+      (hasAllergy === 'yes' && item.allergies?.length) ||
+      (hasAllergy === 'no' && !item.allergies?.length)
+    return keywordMatched && deviceMatched && statusMatched && diseaseMatched && allergyMatched
   })
   res.json(ok(paginate(records, req.query)))
 })
@@ -148,12 +164,26 @@ app.get('/app/smart-pillbox/admin/doctor/patient/read', (req, res) => {
   res.json(ok(findById(patients, req.query.id) || patients[0]))
 })
 
+app.get('/app/smart-pillbox/admin/doctor/patient/medicineRecords', (req, res) => {
+  const { id, date } = req.query
+  const records = medicationRecords.filter((item) => {
+    const patientMatched = !id || String(item.patientId) === String(id)
+    const dateMatched = !date || String(item.time).startsWith(String(date))
+    return patientMatched && dateMatched
+  })
+  res.json(ok(records))
+})
+
 app.post('/app/smart-pillbox/admin/doctor/patient/save', (req, res) => {
-  res.json(ok(saveRecord(patients, req.body), 'saved'))
+  const record = saveRecord(patients, req.body)
+  syncPatientDerivedData(record)
+  res.json(ok(record, 'saved'))
 })
 
 app.put('/app/smart-pillbox/admin/doctor/patient/update', (req, res) => {
-  res.json(ok(updateRecord(patients, req.body), 'updated'))
+  const record = updateRecord(patients, req.body)
+  syncPatientDerivedData(record)
+  res.json(ok(record, 'updated'))
 })
 
 app.delete('/app/smart-pillbox/admin/doctor/patient/delete', (req, res) => {
@@ -189,11 +219,13 @@ app.delete('/app/smart-pillbox/admin/doctor/device/delete', (req, res) => {
 })
 
 app.get('/app/smart-pillbox/admin/doctor/message/list', (req, res) => {
-  const { patient, type } = req.query
+  const { patient, type, status, keyword } = req.query
   const records = messages.filter((item) => {
     const patientMatched = includesKeyword(patient, [item.patient, item.receiver])
     const typeMatched = !type || item.type === type
-    return patientMatched && typeMatched
+    const statusMatched = !status || item.status === status
+    const keywordMatched = includesKeyword(keyword, [item.title, item.content, item.triggerSource])
+    return patientMatched && typeMatched && statusMatched && keywordMatched
   })
   res.json(ok(paginate(records, req.query)))
 })
@@ -243,11 +275,13 @@ app.delete('/app/smart-pillbox/admin/doctor/plan/delete', (req, res) => {
 })
 
 app.get('/app/smart-pillbox/admin/doctor/task/list', (req, res) => {
-  const { patientId, drug } = req.query
+  const { patientId, drug, status, taskDate } = req.query
   const records = tasks.filter((item) => {
     const patientMatched = !patientId || String(item.patientId) === String(patientId)
     const drugMatched = !drug || drug === '全部用药' || item.drug === drug
-    return patientMatched && drugMatched
+    const statusMatched = !status || status === '全部状态' || item.status === status
+    const dateMatched = !taskDate || item.taskDate === taskDate
+    return patientMatched && drugMatched && statusMatched && dateMatched
   })
   res.json(ok(paginate(records, req.query)))
 })
@@ -277,6 +311,21 @@ app.get('/app/smart-pillbox/admin/doctor/conversation/list', (req, res) => {
 
 app.post('/app/smart-pillbox/admin/doctor/conversation/export', (req, res) => {
   res.json(ok(null, 'exported'))
+})
+
+app.get('/app/smart-pillbox/admin/doctor/health/list', (req, res) => {
+  const { patientId, keyword, riskLevel } = req.query
+  const records = healthRecords.filter((item) => {
+    const patientMatched = !patientId || String(item.patientId) === String(patientId)
+    const keywordMatched = includesKeyword(keyword, [item.patient, item.note])
+    const riskMatched = !riskLevel || item.riskLevel === riskLevel
+    return patientMatched && keywordMatched && riskMatched
+  })
+  res.json(ok(paginate(records, req.query)))
+})
+
+app.get('/app/smart-pillbox/admin/doctor/health/summary', (req, res) => {
+  res.json(ok(buildHealthSummary(req.query.patientId)))
 })
 
 app.get('/app/smart-pillbox/admin/doctor/settings/read', (req, res) => {

@@ -20,6 +20,19 @@
           <ElOption label="患者小程序扫码" value="患者小程序扫码" />
         </ElSelect>
       </ElFormItem>
+      <ElFormItem label="电量">
+        <ElInputNumber v-model="formData.batteryLevel" :min="0" :max="100" />
+      </ElFormItem>
+      <ElFormItem label="固件版本">
+        <ElInput v-model="formData.firmware" placeholder="请输入固件版本" />
+      </ElFormItem>
+      <ElFormItem label="同步状态">
+        <ElSelect v-model="formData.dispatchStatus" placeholder="请选择同步状态">
+          <ElOption label="计划已同步" value="计划已同步" />
+          <ElOption label="计划待重发" value="计划待重发" />
+          <ElOption label="未绑定" value="未绑定" />
+        </ElSelect>
+      </ElFormItem>
     </ElForm>
     <template #footer>
       <ElButton @click="visible = false">
@@ -67,7 +80,10 @@
     sn: '',
     patient: '',
     status: '在线',
-    bindMode: '后台选择设备'
+    bindMode: '后台选择设备',
+    batteryLevel: 100,
+    firmware: 'v2.1.3',
+    dispatchStatus: '计划已同步'
   })
 
   const rules: FormRules = {
@@ -84,6 +100,9 @@
       formData.patient = value?.patient || ''
       formData.status = value?.status || '在线'
       formData.bindMode = '后台选择设备'
+      formData.batteryLevel = value?.batteryLevel || Number(value?.battery?.replace('%', '')) || 100
+      formData.firmware = value?.firmware || 'v2.1.3'
+      formData.dispatchStatus = value?.dispatchStatus || '计划已同步'
     },
     { immediate: true, deep: true }
   )
@@ -102,7 +121,13 @@
       sn: formData.sn,
       patient: formData.patient,
       status: formData.status,
-      statusType: statusTypeMap[formData.status as keyof typeof statusTypeMap] || 'info'
+      statusType: statusTypeMap[formData.status as keyof typeof statusTypeMap] || 'info',
+      battery: `${formData.batteryLevel}%`,
+      batteryLevel: formData.batteryLevel,
+      firmware: formData.firmware,
+      dispatchStatus: formData.dispatchStatus,
+      wifi: formData.status === '离线' ? '未连接' : '已连接',
+      wifiConnected: formData.status !== '离线'
     }
     if (props.dialogType === 'add') {
       await deviceApi.save(payload)

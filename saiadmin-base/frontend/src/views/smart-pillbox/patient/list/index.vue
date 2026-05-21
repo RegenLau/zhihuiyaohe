@@ -54,10 +54,22 @@
         <template #deviceStatus="{ row }">
           <ElTag :type="row.deviceStatusType">{{ row.deviceStatus }}</ElTag>
         </template>
+        <template #allergy="{ row }">
+          <ElTag :type="row.allergies?.length ? 'warning' : 'info'" effect="plain">
+            {{ row.allergies?.length ? `${row.allergies.length} 条` : '无记录' }}
+          </ElTag>
+        </template>
         <template #child="{ row }">
           <ElTag :type="getChildStatusType(row.child)" effect="plain">
             {{ getChildStatus(row.child) }}
           </ElTag>
+        </template>
+        <template #completionRate="{ row }">
+          <ElProgress
+            :percentage="row.completionRate"
+            :stroke-width="8"
+            :status="row.completionRate < 60 ? 'exception' : row.completionRate < 85 ? 'warning' : 'success'"
+          />
         </template>
         <template #taskRisk="{ row }">
           <ElTag
@@ -74,18 +86,24 @@
         </template>
         <template #operation="{ row }">
           <ElSpace>
+            <SaButton
+              type="success"
+              icon="ri:eye-line"
+              tool-tip="详情"
+              @click="router.push(`/doctor/patient-detail?id=${row.id}`)"
+            />
             <SaButton type="secondary" tool-tip="编辑" @click="showDialog('edit', row)" />
             <SaButton
               type="success"
               icon="ri:file-list-3-line"
               tool-tip="计划"
-              @click="router.push('/doctor/plans')"
+              @click="router.push(`/doctor/plans?patientId=${row.id}`)"
             />
             <SaButton
               type="primary"
               icon="ri:message-2-line"
               tool-tip="提醒"
-              @click="router.push('/doctor/messages')"
+              @click="router.push(`/doctor/messages?patient=${row.name}`)"
             />
           </ElSpace>
         </template>
@@ -112,7 +130,7 @@
 
   const router = useRouter()
   const showSearchBar = ref(true)
-  const searchForm = ref({ keyword: '', deviceStatus: '' })
+  const searchForm = ref({ keyword: '', deviceStatus: '', status: '', disease: '', hasAllergy: '' })
 
   const { dialogType, dialogVisible, dialogData, showDialog } = useSaiAdmin()
 
@@ -136,9 +154,11 @@
         { prop: 'patient', label: '患者', useSlot: true, minWidth: 160 },
         { prop: 'diseases', label: '基础疾病', useSlot: true, minWidth: 160 },
         { prop: 'deviceStatus', label: '设备状态', useSlot: true, width: 120 },
+        { prop: 'allergy', label: '过敏史', useSlot: true, width: 110 },
         { prop: 'child', label: '子女绑定状态', useSlot: true, width: 140 },
+        { prop: 'completionRate', label: '完成率', useSlot: true, width: 150 },
         { prop: 'taskRisk', label: '最近任务', useSlot: true, width: 120 },
-        { prop: 'operation', label: '操作', useSlot: true, width: 150, fixed: 'right' }
+        { prop: 'operation', label: '操作', useSlot: true, width: 190, fixed: 'right' }
       ]
     }
   })
@@ -149,7 +169,7 @@
   }
 
   const handleReset = async () => {
-    searchForm.value = { keyword: '', deviceStatus: '' }
+    searchForm.value = { keyword: '', deviceStatus: '', status: '', disease: '', hasAllergy: '' }
     await resetSearchParams()
     getData()
   }

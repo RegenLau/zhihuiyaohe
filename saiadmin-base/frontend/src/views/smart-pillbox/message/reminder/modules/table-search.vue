@@ -21,6 +21,20 @@
         <ElInput v-model="formData.patient" placeholder="请输入患者姓名" clearable />
       </ElFormItem>
     </ElCol>
+    <ElCol :xs="24" :sm="12" :md="8" :lg="6">
+      <ElFormItem label="发送状态" prop="status">
+        <ElSelect v-model="formData.status" clearable placeholder="全部">
+          <ElOption label="待处理" value="待处理" />
+          <ElOption label="已处理" value="已处理" />
+          <ElOption label="已创建" value="已创建" />
+        </ElSelect>
+      </ElFormItem>
+    </ElCol>
+    <ElCol :xs="24" :sm="12" :md="8" :lg="6">
+      <ElFormItem label="关键词" prop="keyword">
+        <ElInput v-model="formData.keyword" placeholder="标题或规则来源" clearable />
+      </ElFormItem>
+    </ElCol>
   </SaSearchBar>
 </template>
 
