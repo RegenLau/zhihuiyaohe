@@ -24,6 +24,7 @@ export interface Patient {
   todayDrugs: number
   recentInteraction: string
   completionRate: number
+  medicationPlan?: Record<string, any>
   taskRisk: string
 }
 
