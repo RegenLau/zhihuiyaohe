@@ -47,11 +47,11 @@
         @pagination:current-change="handleCurrentChange"
         @sort-change="handleSortChange"
       >
+        <template #recordNo="{ row }">
+          <span class="patient-record-cell">{{ row.recordNo || `MR-${row.id}` }}</span>
+        </template>
         <template #name="{ row }">
           <b class="patient-name-cell">{{ row.name }}</b>
-        </template>
-        <template #basicInfo="{ row }">
-          <span class="muted patient-basic-cell">{{ row.gender }} {{ row.age }} 岁</span>
         </template>
         <template #phone="{ row }">
           <span class="patient-phone-cell">{{ row.phone }}</span>
@@ -150,8 +150,8 @@
     core: {
       apiFn: patientApi.list,
       columnsFactory: () => [
+        { prop: 'recordNo', label: '患者编号', useSlot: true, minWidth: 150 },
         { prop: 'name', label: '姓名', useSlot: true, minWidth: 96 },
-        { prop: 'basicInfo', label: '基本信息', useSlot: true, minWidth: 102 },
         { prop: 'phone', label: '手机号', useSlot: true, minWidth: 128 },
         { prop: 'deviceStatus', label: '设备状态', useSlot: true, minWidth: 108 },
         { prop: 'child', label: '子女绑定状态', useSlot: true, minWidth: 126 },
@@ -229,14 +229,16 @@
     }
   }
 
+  .patient-record-cell {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--art-text-gray-700);
+    white-space: nowrap;
+  }
+
   .patient-name-cell {
     font-weight: 600;
     color: var(--art-text-gray-800);
-  }
-
-  .patient-basic-cell {
-    font-size: 13px;
-    white-space: nowrap;
   }
 
   .patient-phone-cell {
