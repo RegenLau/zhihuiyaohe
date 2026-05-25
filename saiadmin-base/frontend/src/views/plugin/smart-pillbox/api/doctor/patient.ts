@@ -5,9 +5,6 @@ const baseUrl = '/app/smart-pillbox/admin/doctor/patient'
 
 export interface PatientListParams extends SmartPillboxListParams {
   deviceStatus?: string
-  status?: string
-  disease?: string
-  hasAllergy?: string
 }
 
 export default {

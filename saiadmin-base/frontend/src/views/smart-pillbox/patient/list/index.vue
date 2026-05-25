@@ -44,20 +44,8 @@
             <div class="muted text-xs">{{ row.gender }} {{ row.age }} 岁 {{ row.phone }}</div>
           </div>
         </template>
-        <template #diseases="{ row }">
-          <ElSpace wrap>
-            <ElTag v-for="disease in row.diseases" :key="disease" effect="plain">
-              {{ disease }}
-            </ElTag>
-          </ElSpace>
-        </template>
         <template #deviceStatus="{ row }">
           <ElTag :type="row.deviceStatusType">{{ row.deviceStatus }}</ElTag>
-        </template>
-        <template #allergy="{ row }">
-          <ElTag :type="row.allergies?.length ? 'warning' : 'info'" effect="plain">
-            {{ row.allergies?.length ? `${row.allergies.length} 条` : '无记录' }}
-          </ElTag>
         </template>
         <template #child="{ row }">
           <ElTag :type="getChildStatusType(row.child)" effect="plain">
@@ -65,24 +53,15 @@
           </ElTag>
         </template>
         <template #completionRate="{ row }">
-          <ElProgress
-            :percentage="row.completionRate"
-            :stroke-width="8"
-            :status="row.completionRate < 60 ? 'exception' : row.completionRate < 85 ? 'warning' : 'success'"
-          />
-        </template>
-        <template #taskRisk="{ row }">
-          <ElTag
-            :type="
-              row.taskRisk.includes('漏服')
-                ? 'danger'
-                : row.taskRisk === '正常'
-                  ? 'success'
-                  : 'warning'
-            "
-          >
-            {{ row.taskRisk }}
-          </ElTag>
+          <div class="completion-rate-cell">
+            <ElProgress
+              :percentage="getCompletionRate(row.completionRate)"
+              :stroke-width="8"
+              :show-text="false"
+              :color="getCompletionColor(row.completionRate)"
+            />
+            <span>{{ getCompletionRate(row.completionRate) }}%</span>
+          </div>
         </template>
         <template #operation="{ row }">
           <ElSpace>
@@ -130,7 +109,8 @@
 
   const router = useRouter()
   const showSearchBar = ref(true)
-  const searchForm = ref({ keyword: '', deviceStatus: '', status: '', disease: '', hasAllergy: '' })
+  const createSearchForm = () => ({ keyword: '', deviceStatus: '' })
+  const searchForm = ref(createSearchForm())
 
   const { dialogType, dialogVisible, dialogData, showDialog } = useSaiAdmin()
 
@@ -152,24 +132,24 @@
       apiFn: patientApi.list,
       columnsFactory: () => [
         { prop: 'patient', label: '患者', useSlot: true, minWidth: 160 },
-        { prop: 'diseases', label: '基础疾病', useSlot: true, minWidth: 160 },
         { prop: 'deviceStatus', label: '设备状态', useSlot: true, width: 120 },
-        { prop: 'allergy', label: '过敏史', useSlot: true, width: 110 },
         { prop: 'child', label: '子女绑定状态', useSlot: true, width: 140 },
         { prop: 'completionRate', label: '完成率', useSlot: true, width: 150 },
-        { prop: 'taskRisk', label: '最近任务', useSlot: true, width: 120 },
         { prop: 'operation', label: '操作', useSlot: true, width: 190, fixed: 'right' }
       ]
     }
   })
 
   const handleSearch = () => {
+    delete searchParams.status
+    delete searchParams.disease
+    delete searchParams.hasAllergy
     Object.assign(searchParams, searchForm.value)
     getData()
   }
 
   const handleReset = async () => {
-    searchForm.value = { keyword: '', deviceStatus: '', status: '', disease: '', hasAllergy: '' }
+    searchForm.value = createSearchForm()
     await resetSearchParams()
     getData()
   }
@@ -182,8 +162,32 @@
     if (isChildBound(child)) return 'success'
     return child === '待绑定' ? 'warning' : 'info'
   }
+
+  const getCompletionRate = (rate?: number) => Math.min(100, Math.max(0, Number(rate) || 0))
+
+  const getCompletionColor = (rate?: number) => {
+    const percentage = getCompletionRate(rate)
+    if (percentage < 60) return '#f56c6c'
+    if (percentage < 85) return '#e6a23c'
+    return '#13c2c2'
+  }
 </script>
 
 <style lang="scss" scoped>
   @use '../../style';
+
+  .completion-rate-cell {
+    display: grid;
+    grid-template-columns: minmax(72px, 1fr) 44px;
+    gap: 10px;
+    align-items: center;
+    max-width: 140px;
+
+    span {
+      font-size: 13px;
+      line-height: 1;
+      color: var(--art-text-gray-700);
+      text-align: right;
+    }
+  }
 </style>

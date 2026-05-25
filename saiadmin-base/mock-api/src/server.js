@@ -139,23 +139,11 @@ app.get('/app/smart-pillbox/admin/doctor/dashboard/read', (req, res) => {
 })
 
 app.get('/app/smart-pillbox/admin/doctor/patient/list', (req, res) => {
-  const { keyword, deviceStatus, status, disease, hasAllergy } = req.query
+  const { keyword, deviceStatus } = req.query
   const records = patients.filter((item) => {
-    const keywordMatched = includesKeyword(keyword, [
-      item.name,
-      item.phone,
-      item.recordNo,
-      item.deviceNo,
-      item.contacts?.map((contact) => contact.name).join(' ')
-    ])
+    const keywordMatched = includesKeyword(keyword, [item.name, item.phone])
     const deviceMatched = !deviceStatus || item.deviceStatus === deviceStatus
-    const statusMatched = !status || item.status === status
-    const diseaseMatched = !disease || item.diseases?.includes(disease)
-    const allergyMatched =
-      !hasAllergy ||
-      (hasAllergy === 'yes' && item.allergies?.length) ||
-      (hasAllergy === 'no' && !item.allergies?.length)
-    return keywordMatched && deviceMatched && statusMatched && diseaseMatched && allergyMatched
+    return keywordMatched && deviceMatched
   })
   res.json(ok(paginate(records, req.query)))
 })
