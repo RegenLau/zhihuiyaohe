@@ -240,6 +240,7 @@
   const selectedPatientId = ref(Number(route.query.patientId || 1))
   const planView = ref('当前方案')
   const editVisible = ref(false)
+  const autoCreateDialogOpened = ref(false)
   const editFormRef = ref<FormInstance>()
   const editForm = reactive({
     title: '',
@@ -346,6 +347,7 @@
   }
 
   const openCreateDialog = () => {
+    if (!currentPatient.value.id) return
     editForm.title = currentPlan.value.id ? `${currentPlan.value.title} 复诊调整` : '新建用药计划'
     editForm.startDate = ''
     editForm.status = '草稿'
@@ -353,6 +355,25 @@
       .map((drug) => `${drug.name}，${drug.dose}，${drug.frequency}，${drug.time}`)
       .join('\n')
     editVisible.value = true
+  }
+
+  const maybeOpenCreateDialogFromRoute = () => {
+    if (
+      autoCreateDialogOpened.value ||
+      route.query.action !== 'create' ||
+      !selectedPatientId.value
+    ) {
+      return
+    }
+    autoCreateDialogOpened.value = true
+    planView.value = '当前方案'
+    nextTick(() => {
+      openCreateDialog()
+      router.replace({
+        path: '/doctor/plans',
+        query: { patientId: selectedPatientId.value }
+      })
+    })
   }
 
   const parseDrugInput = (text: string) =>
@@ -420,6 +441,7 @@
   onMounted(async () => {
     await loadPatients()
     await loadPlans()
+    maybeOpenCreateDialogFromRoute()
   })
 </script>
 

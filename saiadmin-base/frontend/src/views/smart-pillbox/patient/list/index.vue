@@ -22,9 +22,17 @@
         @refresh="refreshData"
       >
         <template #left>
-          <ElButton type="primary" @click="router.push('/doctor/patient-create')">
+          <ElButton type="primary" @click="createDialogVisible = true">
             <template #icon><ArtSvgIcon icon="ri:user-add-line" /></template>
             新增患者建档
+          </ElButton>
+          <ElButton disabled>
+            <template #icon><ArtSvgIcon icon="ri:cloud-line" /></template>
+            HIS同步
+          </ElButton>
+          <ElButton disabled>
+            <template #icon><ArtSvgIcon icon="ri:upload-cloud-2-line" /></template>
+            批量导入
           </ElButton>
         </template>
       </ArtTableHeader>
@@ -95,6 +103,7 @@
       :initial-form-data="dialogData"
       @success="refreshUpdate"
     />
+    <CreateBasicDialog v-model="createDialogVisible" @success="handleCreateSuccess" />
   </div>
 </template>
 
@@ -102,6 +111,7 @@
   import patientApi from '@/views/plugin/smart-pillbox/api/doctor/patient'
   import { useSaiAdmin } from '@/composables/useSaiAdmin'
   import { useTable } from '@/hooks/core/useTable'
+  import CreateBasicDialog from './modules/create-basic-dialog.vue'
   import EditDialog from './modules/edit-dialog.vue'
   import TableSearch from './modules/table-search.vue'
 
@@ -109,6 +119,7 @@
 
   const router = useRouter()
   const showSearchBar = ref(true)
+  const createDialogVisible = ref(false)
   const createSearchForm = () => ({ keyword: '', deviceStatus: '' })
   const searchForm = ref(createSearchForm())
 
@@ -170,6 +181,10 @@
     if (percentage < 60) return '#f56c6c'
     if (percentage < 85) return '#e6a23c'
     return '#13c2c2'
+  }
+
+  const handleCreateSuccess = () => {
+    refreshData()
   }
 </script>
 

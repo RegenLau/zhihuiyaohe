@@ -5,7 +5,11 @@
         <ElInput v-model="formData.sn" placeholder="请输入设备 SN" />
       </ElFormItem>
       <ElFormItem label="绑定患者" prop="patient">
-        <ElInput v-model="formData.patient" placeholder="请输入绑定患者姓名" />
+        <ElInput
+          v-model="formData.patient"
+          placeholder="请输入绑定患者姓名"
+          :readonly="props.patientReadonly"
+        />
       </ElFormItem>
       <ElFormItem label="在线状态" prop="status">
         <ElSelect v-model="formData.status" placeholder="请选择在线状态">
@@ -29,6 +33,7 @@
       <ElFormItem label="同步状态">
         <ElSelect v-model="formData.dispatchStatus" placeholder="请选择同步状态">
           <ElOption label="计划已同步" value="计划已同步" />
+          <ElOption label="计划待下发" value="计划待下发" />
           <ElOption label="计划待重发" value="计划待重发" />
           <ElOption label="未绑定" value="未绑定" />
         </ElSelect>
@@ -57,15 +62,17 @@
     modelValue: boolean
     dialogType: string
     initialFormData?: Partial<Device>
+    patientReadonly?: boolean
   }
 
   const props = withDefaults(defineProps<Props>(), {
-    initialFormData: () => ({})
+    initialFormData: () => ({}),
+    patientReadonly: false
   })
 
   const emit = defineEmits<{
     (e: 'update:modelValue', value: boolean): void
-    (e: 'success'): void
+    (e: 'success', value: Partial<Device>): void
   }>()
 
   const visible = computed({
@@ -115,9 +122,10 @@
 
   const handleSubmit = async () => {
     await formRef.value?.validate()
-    const payload = {
+    const payload: Partial<Device> = {
       ...props.initialFormData,
       id: formData.id,
+      bindPatientId: props.initialFormData?.bindPatientId ?? null,
       sn: formData.sn,
       patient: formData.patient,
       status: formData.status,
@@ -125,17 +133,21 @@
       battery: `${formData.batteryLevel}%`,
       batteryLevel: formData.batteryLevel,
       firmware: formData.firmware,
+      bindDate:
+        props.initialFormData?.bindDate ||
+        new Date().toISOString().slice(0, 10),
       dispatchStatus: formData.dispatchStatus,
       wifi: formData.status === '离线' ? '未连接' : '已连接',
       wifiConnected: formData.status !== '离线'
     }
+    let savedDevice: Partial<Device>
     if (props.dialogType === 'add') {
-      await deviceApi.save(payload)
+      savedDevice = await deviceApi.save(payload)
     } else {
-      await deviceApi.update(payload)
+      savedDevice = await deviceApi.update(payload)
     }
     ElMessage.success('设备绑定关系已保存')
     visible.value = false
-    emit('success')
+    emit('success', savedDevice || payload)
   }
 </script>

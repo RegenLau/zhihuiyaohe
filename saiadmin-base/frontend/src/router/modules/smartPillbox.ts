@@ -136,7 +136,7 @@ export const smartPillboxRoutes: AppRouteRecord[] = [
     name: 'SmartPillboxDeviceRecords',
     component: '/index/index',
     meta: {
-      title: '设备记录',
+      title: '设备管理',
       icon: 'ri:device-line'
     },
     children: [
@@ -145,7 +145,7 @@ export const smartPillboxRoutes: AppRouteRecord[] = [
         name: 'SmartPillboxDevices',
         component: '/smart-pillbox/device/manage',
         meta: {
-          title: '设备管理',
+          title: '设备绑定',
           icon: 'ri:device-line',
           keepAlive: true
         }

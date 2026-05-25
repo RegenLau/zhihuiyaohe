@@ -29,7 +29,7 @@
         @refresh="refreshData"
       >
         <template #left>
-          <ElButton type="primary" @click="showDialog('add')">
+          <ElButton type="primary" @click="openBindDialog">
             <template #icon><ArtSvgIcon icon="ri:link-m" /></template>
             绑定药盒
           </ElButton>
@@ -79,14 +79,16 @@
       v-model="dialogVisible"
       :dialog-type="dialogType"
       :initial-form-data="dialogData"
-      @success="refreshUpdate"
+      :patient-readonly="isGuidedBinding"
+      @success="handleBindSuccess"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ElMessage } from 'element-plus'
+  import { ElMessage, ElMessageBox } from 'element-plus'
   import deviceApi from '@/views/plugin/smart-pillbox/api/doctor/device'
+  import patientApi from '@/views/plugin/smart-pillbox/api/doctor/patient'
   import { useSaiAdmin } from '@/composables/useSaiAdmin'
   import { useTable } from '@/hooks/core/useTable'
   import type { Device } from '@/views/plugin/smart-pillbox/api/doctor/types'
@@ -96,8 +98,10 @@
   defineOptions({ name: 'SmartPillboxDeviceManage' })
 
   const router = useRouter()
+  const route = useRoute()
   const showSearchBar = ref(true)
   const searchForm = ref({ sn: '', status: '' })
+  const guidedBindPatient = ref<{ id: number; name: string } | null>(null)
   const { dialogType, dialogVisible, dialogData, showDialog } = useSaiAdmin()
 
   const {
@@ -157,6 +161,57 @@
     ]
   })
 
+  const isGuidedBinding = computed(
+    () => dialogType.value === 'add' && Boolean(dialogData.value.bindPatientId)
+  )
+
+  const formatDateTime = () => {
+    const now = new Date()
+    const date = [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, '0'),
+      String(now.getDate()).padStart(2, '0')
+    ].join('-')
+    const time = [
+      String(now.getHours()).padStart(2, '0'),
+      String(now.getMinutes()).padStart(2, '0')
+    ].join(':')
+    return `${date} ${time}`
+  }
+
+  const openBindDialog = () => {
+    guidedBindPatient.value = null
+    showDialog('add')
+  }
+
+  const openGuidedBindDialog = async () => {
+    if (route.query.action !== 'bind') return
+
+    const patientId = Number(route.query.patientId)
+    if (!patientId) return
+
+    let patientName = String(route.query.patientName || '')
+    if (!patientName) {
+      const patient = await patientApi.read(patientId)
+      patientName = patient.name
+    }
+
+    guidedBindPatient.value = { id: patientId, name: patientName }
+    showDialog('add', {
+      bindPatientId: patientId,
+      patient: patientName,
+      sn: '',
+      status: '在线',
+      statusType: 'success',
+      battery: '100%',
+      batteryLevel: 100,
+      firmware: 'v2.1.3',
+      dispatchStatus: '计划待下发',
+      bindDate: new Date().toISOString().slice(0, 10)
+    })
+    router.replace({ path: '/doctor/devices' })
+  }
+
   const handleSearch = () => {
     Object.assign(searchParams, searchForm.value)
     getData()
@@ -166,6 +221,41 @@
     searchForm.value = { sn: '', status: '' }
     await resetSearchParams()
     getData()
+  }
+
+  const handleBindSuccess = async (device: Partial<Device>) => {
+    refreshUpdate()
+
+    const bindPatientId = Number(device.bindPatientId || guidedBindPatient.value?.id || 0)
+    if (!bindPatientId) return
+
+    const patient = await patientApi.read(bindPatientId)
+    const status = device.status === '离线' ? '离线' : '在线'
+    await patientApi.update({
+      ...patient,
+      deviceNo: device.sn || patient.deviceNo,
+      deviceStatus: status,
+      deviceStatusType: device.statusType || (status === '离线' ? 'danger' : 'success'),
+      taskRisk: '待设置用药计划',
+      updatedAt: formatDateTime()
+    })
+
+    try {
+      await ElMessageBox.confirm('设备已绑定，是否继续设置用药计划？', '继续设置用药计划', {
+        confirmButtonText: '继续设置',
+        cancelButtonText: '稍后处理',
+        type: 'success'
+      })
+      router.push({
+        path: '/doctor/plans',
+        query: {
+          patientId: bindPatientId,
+          action: 'create'
+        }
+      })
+    } catch {
+      guidedBindPatient.value = null
+    }
   }
 
   const unbindDevice = async (row: Record<string, any>) => {
@@ -180,6 +270,17 @@
     ElMessage.success('设备已解绑')
     refreshUpdate()
   }
+
+  watch(
+    () => route.fullPath,
+    () => {
+      openGuidedBindDialog()
+    }
+  )
+
+  onMounted(() => {
+    openGuidedBindDialog()
+  })
 </script>
 
 <style lang="scss" scoped>

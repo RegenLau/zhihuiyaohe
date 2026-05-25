@@ -1,34 +1,14 @@
 <template>
-  <div class="pillbox-page page-content">
-    <div class="page-header">
-      <div>
-        <h2>新增患者建档</h2>
-        <p>填写基础信息后先完成建档，再绑定药盒设备并设置用药计划</p>
-      </div>
-      <ElTag :type="createdPatient ? 'success' : 'primary'" size="large">
-        {{ createdPatient ? '建档完成' : '基础信息' }}
-      </ElTag>
-    </div>
-
-    <ElCard v-if="createdPatient" shadow="never">
-      <ElResult icon="success" title="患者建档成功" :sub-title="successSubtitle">
-        <template #extra>
-          <ElSpace wrap>
-            <ElButton @click="router.push('/doctor/patients')">
-              <template #icon><ArtSvgIcon icon="ri:user-search-line" /></template>
-              返回患者管理
-            </ElButton>
-            <ElButton v-if="hasBoundDevice" type="primary" @click="goToMedicationPlan()">
-              <template #icon><ArtSvgIcon icon="ri:file-list-3-line" /></template>
-              继续设置用药计划
-            </ElButton>
-            <ElButton v-else type="primary" @click="goToDeviceBinding()">
-              <template #icon><ArtSvgIcon icon="ri:link-m" /></template>
-              继续绑定设备
-            </ElButton>
-          </ElSpace>
-        </template>
-      </ElResult>
+  <ElDialog
+    v-model="visible"
+    title="新增患者建档"
+    width="720px"
+    class="patient-create-basic-dialog"
+    :close-on-click-modal="!saving"
+    @closed="resetDialog"
+  >
+    <template v-if="createdPatient">
+      <ElResult icon="success" title="患者建档成功" :sub-title="successSubtitle" />
 
       <ElDescriptions :column="2" border>
         <ElDescriptionsItem label="姓名">{{ createdPatient.name }}</ElDescriptionsItem>
@@ -40,76 +20,87 @@
         </ElDescriptionsItem>
         <ElDescriptionsItem label="下一步">{{ nextStepText }}</ElDescriptionsItem>
       </ElDescriptions>
-    </ElCard>
+    </template>
 
-    <ElCard v-else shadow="never">
-      <ElForm ref="formRef" :model="form" :rules="rules" label-width="110px">
-        <h3 class="form-step-title">患者基础信息</h3>
-        <p class="muted mb-4">批量导入和 HIS 同步也会先进入同样的基础档案状态。</p>
-
-        <ElRow :gutter="16">
-          <ElCol :xs="24" :md="12">
-            <ElFormItem label="患者姓名" prop="name">
-              <ElInput v-model="form.name" placeholder="请输入患者姓名" />
-            </ElFormItem>
-          </ElCol>
-          <ElCol :xs="24" :md="12">
-            <ElFormItem label="手机号" prop="phone">
-              <ElInput v-model="form.phone" placeholder="请输入手机号" />
-            </ElFormItem>
-          </ElCol>
-          <ElCol :xs="24" :md="12">
-            <ElFormItem label="性别" prop="gender">
-              <ElSelect v-model="form.gender" placeholder="请选择性别">
-                <ElOption label="男" value="男" />
-                <ElOption label="女" value="女" />
-              </ElSelect>
-            </ElFormItem>
-          </ElCol>
-          <ElCol :xs="24" :md="12">
-            <ElFormItem label="出生年月日" prop="birthDate">
-              <ElDatePicker
-                v-model="form.birthDate"
-                type="date"
-                value-format="YYYY-MM-DD"
-                placeholder="请选择出生年月日"
-                :disabled-date="disableFutureDate"
+    <ElForm v-else ref="formRef" :model="form" :rules="rules" label-width="110px">
+      <ElRow :gutter="16">
+        <ElCol :xs="24" :md="12">
+          <ElFormItem label="患者姓名" prop="name">
+            <ElInput v-model="form.name" placeholder="请输入患者姓名" />
+          </ElFormItem>
+        </ElCol>
+        <ElCol :xs="24" :md="12">
+          <ElFormItem label="手机号" prop="phone">
+            <ElInput v-model="form.phone" placeholder="请输入手机号" />
+          </ElFormItem>
+        </ElCol>
+        <ElCol :xs="24" :md="12">
+          <ElFormItem label="性别" prop="gender">
+            <ElSelect v-model="form.gender" placeholder="请选择性别">
+              <ElOption label="男" value="男" />
+              <ElOption label="女" value="女" />
+            </ElSelect>
+          </ElFormItem>
+        </ElCol>
+        <ElCol :xs="24" :md="12">
+          <ElFormItem label="出生年月日" prop="birthDate">
+            <ElDatePicker
+              v-model="form.birthDate"
+              type="date"
+              value-format="YYYY-MM-DD"
+              placeholder="请选择出生年月日"
+              :disabled-date="disableFutureDate"
+            />
+          </ElFormItem>
+        </ElCol>
+        <ElCol :span="24">
+          <ElFormItem label="设备绑定">
+            <ElSelect
+              v-model="form.deviceId"
+              filterable
+              :loading="devicesLoading"
+              placeholder="请选择设备"
+            >
+              <ElOption label="暂不绑定设备" value="" />
+              <ElOption
+                v-for="device in availableDevices"
+                :key="device.id"
+                :label="`${device.sn} | ${device.status} | 电量 ${device.battery}`"
+                :value="device.id"
               />
-            </ElFormItem>
-          </ElCol>
-          <ElCol :span="24">
-            <ElFormItem label="设备绑定">
-              <ElSelect
-                v-model="form.deviceId"
-                filterable
-                :loading="devicesLoading"
-                placeholder="请选择设备"
-              >
-                <ElOption label="暂不绑定设备" value="" />
-                <ElOption
-                  v-for="device in availableDevices"
-                  :key="device.id"
-                  :label="`${device.sn} | ${device.status} | 电量 ${device.battery}`"
-                  :value="device.id"
-                />
-              </ElSelect>
-            </ElFormItem>
-          </ElCol>
-        </ElRow>
+            </ElSelect>
+          </ElFormItem>
+        </ElCol>
+      </ElRow>
+    </ElForm>
 
-        <div class="form-actions">
-          <ElButton @click="router.push('/doctor/patients')">
-            <template #icon><ArtSvgIcon icon="ri:close-line" /></template>
-            取消
-          </ElButton>
-          <ElButton type="primary" :loading="saving" @click="handleSubmit">
-            <template #icon><ArtSvgIcon icon="ri:save-3-line" /></template>
-            保存基础档案
-          </ElButton>
-        </div>
-      </ElForm>
-    </ElCard>
-  </div>
+    <template #footer>
+      <template v-if="createdPatient">
+        <ElButton @click="visible = false">
+          <template #icon><ArtSvgIcon icon="ri:user-search-line" /></template>
+          返回患者管理
+        </ElButton>
+        <ElButton v-if="hasBoundDevice" type="primary" @click="goToMedicationPlan()">
+          <template #icon><ArtSvgIcon icon="ri:file-list-3-line" /></template>
+          继续设置用药计划
+        </ElButton>
+        <ElButton v-else type="primary" @click="goToDeviceBinding()">
+          <template #icon><ArtSvgIcon icon="ri:link-m" /></template>
+          继续绑定设备
+        </ElButton>
+      </template>
+      <template v-else>
+        <ElButton @click="visible = false">
+          <template #icon><ArtSvgIcon icon="ri:close-line" /></template>
+          取消
+        </ElButton>
+        <ElButton type="primary" :loading="saving" @click="handleSubmit">
+          <template #icon><ArtSvgIcon icon="ri:save-3-line" /></template>
+          保存基础档案
+        </ElButton>
+      </template>
+    </template>
+  </ElDialog>
 </template>
 
 <script setup lang="ts">
@@ -119,7 +110,15 @@
   import patientApi from '@/views/plugin/smart-pillbox/api/doctor/patient'
   import type { Device, Patient } from '@/views/plugin/smart-pillbox/api/doctor/types'
 
-  defineOptions({ name: 'SmartPillboxPatientCreate' })
+  interface Props {
+    modelValue: boolean
+  }
+
+  const props = defineProps<Props>()
+  const emit = defineEmits<{
+    (e: 'update:modelValue', value: boolean): void
+    (e: 'success', patient: Patient): void
+  }>()
 
   const router = useRouter()
   const formRef = ref<FormInstance>()
@@ -143,6 +142,11 @@
   })
 
   const form = reactive(createInitialForm())
+
+  const visible = computed({
+    get: () => props.modelValue,
+    set: (val) => emit('update:modelValue', val)
+  })
 
   const rules: FormRules = {
     name: [{ required: true, message: '请输入患者姓名', trigger: 'blur' }],
@@ -224,6 +228,13 @@
     return Math.max(age, 0)
   }
 
+  const resetDialog = () => {
+    Object.assign(form, createInitialForm())
+    createdPatient.value = null
+    saving.value = false
+    formRef.value?.clearValidate()
+  }
+
   const handleSubmit = async () => {
     await formRef.value?.validate()
     saving.value = true
@@ -257,6 +268,7 @@
       })
       const finalPatient = await bindSelectedDevice(patient)
       createdPatient.value = finalPatient
+      emit('success', finalPatient)
       ElMessage.success(selectedDevice.value ? '患者已建档并绑定设备' : '患者基础档案已保存')
     } finally {
       saving.value = false
@@ -293,6 +305,7 @@
 
   const goToDeviceBinding = (patient = createdPatient.value) => {
     if (!patient) return
+    visible.value = false
     router.push({
       path: '/doctor/devices',
       query: {
@@ -305,6 +318,7 @@
 
   const goToMedicationPlan = (patient = createdPatient.value) => {
     if (!patient) return
+    visible.value = false
     router.push({
       path: '/doctor/plans',
       query: {
@@ -314,24 +328,23 @@
     })
   }
 
-  onMounted(() => {
-    loadAvailableDevices()
-  })
+  watch(
+    () => visible.value,
+    (value) => {
+      if (value) loadAvailableDevices()
+    }
+  )
 </script>
 
 <style lang="scss" scoped>
-  @use '../../style';
+  :deep(.patient-create-basic-dialog) {
+    .el-result {
+      padding-top: 8px;
+    }
 
-  .form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    padding-top: 18px;
-    margin-top: 8px;
-    border-top: 1px solid var(--el-border-color-lighter);
-  }
-
-  .el-select {
-    width: 100%;
+    .el-select,
+    .el-date-editor.el-input {
+      width: 100%;
+    }
   }
 </style>
