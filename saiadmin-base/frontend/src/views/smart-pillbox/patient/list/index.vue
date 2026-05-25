@@ -79,7 +79,6 @@
               tool-tip="详情"
               @click="router.push(`/doctor/patient-detail?id=${row.id}`)"
             />
-            <SaButton type="secondary" tool-tip="编辑" @click="showDialog('edit', row)" />
             <SaButton
               type="success"
               icon="ri:file-list-3-line"
@@ -97,22 +96,14 @@
       </ArtTable>
     </ElCard>
 
-    <EditDialog
-      v-model="dialogVisible"
-      :dialog-type="dialogType"
-      :initial-form-data="dialogData"
-      @success="refreshUpdate"
-    />
     <CreateBasicDialog v-model="createDialogVisible" @success="handleCreateSuccess" />
   </div>
 </template>
 
 <script setup lang="ts">
   import patientApi from '@/views/plugin/smart-pillbox/api/doctor/patient'
-  import { useSaiAdmin } from '@/composables/useSaiAdmin'
   import { useTable } from '@/hooks/core/useTable'
   import CreateBasicDialog from './modules/create-basic-dialog.vue'
-  import EditDialog from './modules/edit-dialog.vue'
   import TableSearch from './modules/table-search.vue'
 
   defineOptions({ name: 'SmartPillboxPatientList' })
@@ -122,8 +113,6 @@
   const createDialogVisible = ref(false)
   const createSearchForm = () => ({ keyword: '', deviceStatus: '' })
   const searchForm = ref(createSearchForm())
-
-  const { dialogType, dialogVisible, dialogData, showDialog } = useSaiAdmin()
 
   const {
     columns,
@@ -136,8 +125,7 @@
     handleSizeChange,
     handleCurrentChange,
     handleSortChange,
-    refreshData,
-    refreshUpdate
+    refreshData
   } = useTable({
     core: {
       apiFn: patientApi.list,
@@ -146,7 +134,7 @@
         { prop: 'deviceStatus', label: '设备状态', useSlot: true, width: 120 },
         { prop: 'child', label: '子女绑定状态', useSlot: true, width: 140 },
         { prop: 'completionRate', label: '完成率', useSlot: true, width: 150 },
-        { prop: 'operation', label: '操作', useSlot: true, width: 190, fixed: 'right' }
+        { prop: 'operation', label: '操作', useSlot: true, width: 150, fixed: 'right' }
       ]
     }
   })
