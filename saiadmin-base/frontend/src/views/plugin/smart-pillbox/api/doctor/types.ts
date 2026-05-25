@@ -263,6 +263,7 @@ export interface AgreementSettings {
   status: number
   summary: string
   content: string
+  updatedAt?: string
 }
 
 export interface MedicationRecord {

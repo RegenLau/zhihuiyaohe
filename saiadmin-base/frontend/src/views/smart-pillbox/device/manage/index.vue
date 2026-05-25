@@ -7,19 +7,19 @@
       </div>
     </div>
 
-    <TableSearch
-      v-if="showSearchBar"
-      v-model="searchForm"
-      @search="handleSearch"
-      @reset="handleReset"
-    />
-
     <div class="summary-grid mb-4">
       <div v-for="item in deviceSummary" :key="item.label" class="summary-item">
         <span class="summary-number" :class="item.className">{{ item.value }}</span>
         <span class="muted">{{ item.label }}</span>
       </div>
     </div>
+
+    <TableSearch
+      v-if="showSearchBar"
+      v-model="searchForm"
+      @search="handleSearch"
+      @reset="handleReset"
+    />
 
     <ElCard class="art-table-card" shadow="never">
       <ArtTableHeader
@@ -29,9 +29,9 @@
         @refresh="refreshData"
       >
         <template #left>
-          <ElButton type="primary" @click="openBindDialog">
-            <template #icon><ArtSvgIcon icon="ri:link-m" /></template>
-            绑定药盒
+          <ElButton @click="importDialogVisible = true">
+            <template #icon><ArtSvgIcon icon="ri:upload-cloud-2-line" /></template>
+            导入设备
           </ElButton>
         </template>
       </ArtTableHeader>
@@ -55,11 +55,6 @@
             :status="Number(row.batteryLevel) < 20 ? 'exception' : undefined"
           />
         </template>
-        <template #dispatchStatus="{ row }">
-          <ElTag :type="row.dispatchStatus?.includes('待') ? 'warning' : 'success'" effect="plain">
-            {{ row.dispatchStatus || '未同步' }}
-          </ElTag>
-        </template>
         <template #operation="{ row }">
           <ElSpace>
             <SaButton
@@ -69,7 +64,12 @@
               @click="router.push(`/doctor/conversations?patientId=${row.bindPatientId || ''}`)"
             />
             <SaButton type="secondary" tool-tip="编辑" @click="showDialog('edit', row)" />
-            <SaButton type="error" tool-tip="解绑" @click="unbindDevice(row)" />
+            <SaButton
+              type="error"
+              :tool-tip="isDeviceBound(row) ? '解绑' : '未绑定'"
+              :disabled="!isDeviceBound(row)"
+              @click="unbindDevice(row)"
+            />
           </ElSpace>
         </template>
       </ArtTable>
@@ -82,6 +82,7 @@
       :patient-readonly="isGuidedBinding"
       @success="handleBindSuccess"
     />
+    <ImportDialog v-model="importDialogVisible" @success="refreshData" />
   </div>
 </template>
 
@@ -93,6 +94,7 @@
   import { useTable } from '@/hooks/core/useTable'
   import type { Device } from '@/views/plugin/smart-pillbox/api/doctor/types'
   import EditDialog from './modules/edit-dialog.vue'
+  import ImportDialog from './modules/import-dialog.vue'
   import TableSearch from './modules/table-search.vue'
 
   defineOptions({ name: 'SmartPillboxDeviceManage' })
@@ -100,6 +102,7 @@
   const router = useRouter()
   const route = useRoute()
   const showSearchBar = ref(true)
+  const importDialogVisible = ref(false)
   const searchForm = ref({ sn: '', status: '' })
   const guidedBindPatient = ref<{ id: number; name: string } | null>(null)
   const { dialogType, dialogVisible, dialogData, showDialog } = useSaiAdmin()
@@ -126,10 +129,7 @@
         { prop: 'status', label: '在线状态', useSlot: true, width: 110 },
         { prop: 'battery', label: '电量', useSlot: true, width: 140 },
         { prop: 'wifi', label: 'WiFi 状态', width: 120 },
-        { prop: 'firmware', label: '固件版本', width: 120 },
         { prop: 'lastHeartbeat', label: '最后心跳', width: 160 },
-        { prop: 'dispatchStatus', label: '计划同步', useSlot: true, width: 120 },
-        { prop: 'bindDate', label: '绑定日期', width: 140 },
         { prop: 'operation', label: '操作', useSlot: true, width: 150, fixed: 'right' }
       ]
     }
@@ -165,6 +165,10 @@
     () => dialogType.value === 'add' && Boolean(dialogData.value.bindPatientId)
   )
 
+  const isDeviceBound = (row: Partial<Device>) => {
+    return Boolean(row.bindPatientId || (row.patient && row.patient !== '-')) && row.status !== '待分配'
+  }
+
   const formatDateTime = () => {
     const now = new Date()
     const date = [
@@ -177,11 +181,6 @@
       String(now.getMinutes()).padStart(2, '0')
     ].join(':')
     return `${date} ${time}`
-  }
-
-  const openBindDialog = () => {
-    guidedBindPatient.value = null
-    showDialog('add')
   }
 
   const openGuidedBindDialog = async () => {
@@ -259,14 +258,36 @@
   }
 
   const unbindDevice = async (row: Record<string, any>) => {
-    await deviceApi.update({
+    if (!isDeviceBound(row)) {
+      ElMessage.warning('当前设备未绑定患者')
+      return
+    }
+
+    try {
+      await ElMessageBox.confirm(
+        `确认解除设备 ${row.sn} 与 ${row.patient} 的绑定关系？`,
+        '确认解绑设备',
+        {
+          confirmButtonText: '确认解绑',
+          cancelButtonText: '取消',
+          type: 'warning',
+          confirmButtonClass: 'el-button--danger'
+        }
+      )
+    } catch {
+      return
+    }
+
+    const payload: Partial<Device> = {
       ...row,
       bindPatientId: null,
       patient: '-',
       status: '待分配',
       statusType: 'warning',
       dispatchStatus: '未绑定'
-    })
+    }
+    const updatedDevice = await deviceApi.update(payload)
+    Object.assign(row, updatedDevice || payload)
     ElMessage.success('设备已解绑')
     refreshUpdate()
   }

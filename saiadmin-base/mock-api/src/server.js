@@ -25,6 +25,14 @@ app.use(morgan('dev'))
 
 const ok = (data = {}, message = 'success') => ({ code: 200, message, data })
 
+const formatNow = () => {
+  const pad = (value) => String(value).padStart(2, '0')
+  const now = new Date()
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(
+    now.getHours()
+  )}:${pad(now.getMinutes())}`
+}
+
 const toNumber = (value, fallback) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
@@ -330,6 +338,7 @@ app.get('/app/smart-pillbox/admin/doctor/settings/read', (req, res) => {
 
 app.put('/app/smart-pillbox/admin/doctor/settings/update', (req, res) => {
   Object.assign(agreement, req.body)
+  agreement.updatedAt = formatNow()
   res.json(ok(agreement, 'updated'))
 })
 

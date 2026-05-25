@@ -162,11 +162,26 @@ export const smartPillboxRoutes: AppRouteRecord[] = [
       }
     ]
   },
-  createSmartPillboxRoute({
+  {
     path: '/doctor/settings',
     name: 'SmartPillboxSettings',
-    title: '系统设置',
-    icon: 'ri:settings-3-line',
-    component: '/smart-pillbox/system/settings'
-  })
+    component: '/index/index',
+    redirect: '/doctor/settings/consent',
+    meta: {
+      title: '系统设置',
+      icon: 'ri:settings-3-line'
+    },
+    children: [
+      {
+        path: '/doctor/settings/consent',
+        name: 'SmartPillboxConsentSettings',
+        component: '/smart-pillbox/system/settings',
+        meta: {
+          title: '知情同意书设置',
+          icon: 'ri:file-shield-2-line',
+          keepAlive: true
+        }
+      }
+    ]
+  }
 ]

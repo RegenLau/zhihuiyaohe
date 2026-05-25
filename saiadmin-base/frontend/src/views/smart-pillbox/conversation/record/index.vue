@@ -1,5 +1,5 @@
 <template>
-  <div class="pillbox-page page-content">
+  <div class="pillbox-page page-content conversation-page">
     <div class="page-header">
       <div>
         <h2>对话记录</h2>
@@ -7,13 +7,13 @@
       </div>
     </div>
 
-    <div class="patient-layout">
-      <ElCard class="patient-list-card" shadow="never">
+    <div class="patient-layout conversation-layout">
+      <ElCard class="patient-list-card conversation-patient-card" shadow="never">
         <template #header><b>选择患者</b></template>
         <ElInput v-model="keyword" placeholder="搜索姓名、处方编号、设备号" clearable>
           <template #prefix><ArtSvgIcon icon="ri:search-line" /></template>
         </ElInput>
-        <ElScrollbar v-loading="patientLoading" height="calc(100vh - 250px)">
+        <ElScrollbar v-loading="patientLoading" class="patient-scrollbar">
           <button
             v-for="patient in patientOptions"
             :key="patient.id"
@@ -33,82 +33,56 @@
         </ElScrollbar>
       </ElCard>
 
-      <div class="detail-stack">
-        <ElCard shadow="never">
-          <div class="detail-hero">
-            <div>
-              <h3>{{ currentPatient.name }} 的对话记录</h3>
-              <p class="muted mt-1">患者与小智设备的提醒、患者聊天、未响应记录统一按时间回看。</p>
-            </div>
-            <ElSpace wrap>
-              <ElButton @click="router.push('/doctor/devices')">
-                <template #icon><ArtSvgIcon icon="ri:computer-line" /></template>
-                设备摘要
-              </ElButton>
-              <ElButton type="primary" @click="exportConversation">
-                <template #icon><ArtSvgIcon icon="ri:file-download-line" /></template>
-                导出记录
-              </ElButton>
-            </ElSpace>
-          </div>
-        </ElCard>
-
-        <div class="summary-grid">
-          <div class="summary-item">
-            <span class="summary-number">{{ conversations.length }} 条</span>
-            <span class="muted">近7天互动</span>
-          </div>
-          <div class="summary-item">
-            <span class="summary-number">{{ respondedCount }} 次</span>
-            <span class="muted">患者响应</span>
-          </div>
-          <div class="summary-item">
-            <span class="summary-number">{{ pendingCount }} 项</span>
-            <span class="muted">待人工跟进</span>
-          </div>
-          <div class="summary-item">
-            <span class="summary-number">{{ currentPatient.recentInteraction }}</span>
-            <span class="muted">最近一次互动</span>
-          </div>
-        </div>
-
-        <ElCard v-loading="conversationLoading" shadow="never">
+      <div class="detail-stack conversation-detail">
+        <ElCard v-loading="conversationLoading" class="timeline-card-shell" shadow="never">
           <template #header>
-            <div class="flex justify-between items-start gap-3">
-              <div>
-                <b>对话时间线</b>
-                <div class="muted text-sm mt-1"
-                  >按时间回看患者与小智设备的提醒、患者聊天及未响应记录。</div
-                >
-              </div>
-              <ElTag type="primary">{{ currentPatient.deviceNo }} · 最近 {{ conversations.length }} 条</ElTag>
+            <div class="timeline-header">
+              <ElTabs v-model="conversationFilter" class="timeline-tabs">
+                <ElTabPane
+                  v-for="option in conversationFilterOptions"
+                  :key="option"
+                  :label="option"
+                  :name="option"
+                />
+              </ElTabs>
+              <ElTag type="primary">最近 {{ conversations.length }} 条</ElTag>
             </div>
           </template>
-          <ElSegmented
-            v-model="conversationFilter"
-            :options="conversationFilterOptions"
-            class="mb-4"
-          />
-          <ElEmpty v-if="conversations.length === 0" description="当前筛选条件下暂无对话记录" />
-          <div v-else class="detail-stack">
-            <div v-for="item in conversations" :key="item.id" class="timeline-card">
-              <div class="flex justify-between items-center mb-3">
-                <b>{{ item.time }}</b>
-                <ElTag :type="item.statusType">{{ item.status }}</ElTag>
+          <ElScrollbar class="conversation-scrollbar">
+            <div class="conversation-scroll-content">
+              <div v-if="conversationFilter === '全部'" class="summary-grid conversation-summary">
+                <div class="summary-item">
+                  <span class="summary-number">{{ conversations.length }} 条</span>
+                  <span class="muted">近7天互动</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-number">{{ respondedCount }} 次</span>
+                  <span class="muted">患者响应</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-number">{{ pendingCount }} 项</span>
+                  <span class="muted">待人工跟进</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-number">{{ currentPatient.recentInteraction }}</span>
+                  <span class="muted">最近一次互动</span>
+                </div>
               </div>
-              <div class="conversation-flow">
-                <div v-if="item.deviceText" class="bubble">{{ item.deviceText }}</div>
-                <div v-if="item.patientText" class="bubble right">{{ item.patientText }}</div>
-                <ElAlert
-                  v-if="item.note"
-                  :title="item.note"
-                  type="warning"
-                  show-icon
-                  :closable="false"
-                />
+              <ElEmpty v-if="conversations.length === 0" description="当前筛选条件下暂无对话记录" />
+              <div v-else class="detail-stack timeline-list">
+                <div v-for="item in conversations" :key="item.id" class="timeline-card">
+                  <div class="flex justify-between items-center mb-3">
+                    <b>{{ item.time }}</b>
+                    <ElTag :type="item.statusType">{{ item.status }}</ElTag>
+                  </div>
+                  <div class="conversation-flow">
+                    <div v-if="item.deviceText" class="bubble">{{ item.deviceText }}</div>
+                    <div v-if="item.patientText" class="bubble right">{{ item.patientText }}</div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          </ElScrollbar>
         </ElCard>
       </div>
     </div>
@@ -116,14 +90,12 @@
 </template>
 
 <script setup lang="ts">
-  import { ElMessage } from 'element-plus'
   import conversationApi from '@/views/plugin/smart-pillbox/api/doctor/conversation'
   import patientApi from '@/views/plugin/smart-pillbox/api/doctor/patient'
   import type { Conversation, Patient } from '@/views/plugin/smart-pillbox/api/doctor/types'
 
   defineOptions({ name: 'SmartPillboxConversationRecord' })
 
-  const router = useRouter()
   const route = useRoute()
   const keyword = ref('')
   const selectedPatientId = ref(Number(route.query.patientId || 1))
@@ -167,11 +139,11 @@
       patients.value[0] ||
       emptyPatient
   )
-  const respondedCount = computed(
-    () => conversations.value.filter((item) => item.patientText).length
-  )
   const pendingCount = computed(
     () => conversations.value.filter((item) => item.status.includes('待')).length
+  )
+  const respondedCount = computed(
+    () => conversations.value.filter((item) => item.patientText).length
   )
   const conversationType = computed(() => {
     if (conversationFilter.value === '小智提醒') return '小智提醒'
@@ -214,11 +186,6 @@
     }
   }
 
-  const exportConversation = async () => {
-    await conversationApi.export({ patientId: selectedPatientId.value })
-    ElMessage.success('已导出当前患者对话记录')
-  }
-
   watch([selectedPatientId, conversationFilter], () => {
     loadConversations()
   })
@@ -231,4 +198,117 @@
 
 <style lang="scss" scoped>
   @use '../../style';
+
+  .conversation-page {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 118px);
+    min-height: 560px;
+    overflow: hidden;
+  }
+
+  .conversation-layout {
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+  }
+
+  .conversation-patient-card {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+
+    :deep(.el-card__body) {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
+    }
+  }
+
+  .patient-scrollbar {
+    flex: 1;
+    min-height: 0;
+    margin-top: 10px;
+
+    :deep(.el-scrollbar__bar) {
+      display: none;
+    }
+
+    :deep(.el-scrollbar__wrap) {
+      scrollbar-width: none;
+    }
+
+    :deep(.el-scrollbar__wrap::-webkit-scrollbar) {
+      display: none;
+    }
+  }
+
+  .conversation-detail {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .timeline-card-shell {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+
+    :deep(.el-card__body) {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+  }
+
+  .conversation-scrollbar {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .conversation-scroll-content {
+    min-height: 100%;
+  }
+
+  .conversation-summary {
+    margin-bottom: 14px;
+  }
+
+  .timeline-list {
+    gap: 12px;
+    padding-right: 4px;
+  }
+
+  .timeline-header {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .timeline-tabs {
+    flex: 1;
+    min-width: 0;
+
+    :deep(.el-tabs__header) {
+      margin: 0;
+    }
+
+    :deep(.el-tabs__nav-wrap::after) {
+      display: none;
+    }
+
+    :deep(.el-tabs__item) {
+      height: 32px;
+      font-size: 14px;
+      line-height: 32px;
+    }
+  }
 </style>

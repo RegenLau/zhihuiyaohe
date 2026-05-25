@@ -2,12 +2,12 @@
   <div class="pillbox-page page-content">
     <div class="page-header">
       <div>
-        <h2>系统设置</h2>
-        <p>维护知情同意书内容和业务基础配置</p>
+        <h2>知情同意书设置</h2>
+        <p>维护患者端知情同意书内容、版本和启用状态</p>
       </div>
       <ElButton type="primary" @click="saveSettings">
         <template #icon><ArtSvgIcon icon="ri:save-3-line" /></template>
-        保存并启用
+        保存
       </ElButton>
     </div>
 
@@ -61,7 +61,7 @@
           <template #header><b>小程序展示预览</b></template>
           <div class="phone-preview">
             <h3 class="form-step-title">{{ agreement.name }}</h3>
-            <div class="muted mb-3">版本 {{ agreement.version }}</div>
+            <div class="muted mb-3">更新时间 {{ agreement.updatedAt || '2026-05-21 14:08' }}</div>
             <p>{{ agreement.summary }}</p>
             <ElCheckbox :model-value="true">我已阅读并同意上述内容</ElCheckbox>
             <ElButton type="primary" class="w-full mt-4">
@@ -69,12 +69,6 @@
               确认并继续
             </ElButton>
           </div>
-          <ElTimeline class="mt-4">
-            <ElTimelineItem type="primary" timestamp="当前启用"
-              >{{ agreement.version }} 已启用</ElTimelineItem
-            >
-            <ElTimelineItem type="warning" timestamp="历史版本">V2026.04 已归档</ElTimelineItem>
-          </ElTimeline>
         </ElCard>
       </ElCol>
     </ElRow>
@@ -85,13 +79,14 @@
   import { ElMessage } from 'element-plus'
   import settingsApi from '@/views/plugin/smart-pillbox/api/doctor/settings'
 
-  defineOptions({ name: 'SmartPillboxSettings' })
+  defineOptions({ name: 'SmartPillboxConsentSettings' })
 
   const loading = ref(false)
   const agreement = reactive({
     name: '智慧药盒服务知情同意书',
     version: 'V2026.05',
     status: 1,
+    updatedAt: '2026-05-21 14:08',
     summary:
       '本服务用于协助患者进行用药计划提醒、服药任务记录、药盒设备绑定、用药相关问答和必要的信息上报。',
     content:

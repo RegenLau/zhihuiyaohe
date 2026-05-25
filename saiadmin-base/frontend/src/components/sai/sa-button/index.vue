@@ -4,10 +4,12 @@
     <el-tooltip :disabled="toolTip === ''" :content="toolTip" placement="top">
       <div
         :class="[
-          'inline-flex items-center justify-center min-w-8 h-8 px-2.5 text-sm c-p rounded-md align-middle',
+          'inline-flex items-center justify-center min-w-8 h-8 px-2.5 text-sm rounded-md align-middle',
+          disabled ? 'cursor-not-allowed opacity-50' : 'c-p',
           buttonClass
         ]"
         :style="{ backgroundColor: buttonBgColor, color: iconColor }"
+        :aria-disabled="disabled"
         @click="handleClick"
       >
         <Icon v-bind="bindAttrs" :icon="iconContent" class="art-svg-icon inline" />
@@ -31,9 +33,11 @@
     iconColor?: string
     /** 按钮背景色 */
     buttonBgColor?: string
+    /** 是否禁用 */
+    disabled?: boolean
   }
 
-  const props = withDefaults(defineProps<Props>(), { toolTip: '' })
+  const props = withDefaults(defineProps<Props>(), { toolTip: '', disabled: false })
 
   const attrs = useAttrs()
 
@@ -66,6 +70,7 @@
   })
 
   const handleClick = () => {
+    if (props.disabled) return
     emit('click')
   }
 </script>
