@@ -4,7 +4,8 @@ import type { MedicationRecord, Patient, SmartPillboxListParams } from './types'
 const baseUrl = '/app/smart-pillbox/admin/doctor/patient'
 
 export interface PatientListParams extends SmartPillboxListParams {
-  deviceStatus?: string
+  deviceBindStatus?: 'bound' | 'unbound' | ''
+  childBindStatus?: 'bound' | 'unbound' | ''
 }
 
 export default {

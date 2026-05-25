@@ -2,22 +2,29 @@
   <SaSearchBar
     ref="searchBarRef"
     v-model="formData"
-    label-width="90px"
+    label-width="76px"
     :showExpand="false"
     @reset="handleReset"
     @search="handleSearch"
   >
-    <ElCol :xs="24" :sm="12" :md="8" :lg="6">
+    <ElCol :xs="24" :sm="12" :md="7" :lg="6">
       <ElFormItem label="关键词" prop="keyword">
         <ElInput v-model="formData.keyword" placeholder="姓名/手机号" clearable />
       </ElFormItem>
     </ElCol>
-    <ElCol :xs="24" :sm="12" :md="8" :lg="6">
-      <ElFormItem label="药盒状态" prop="deviceStatus">
-        <ElSelect v-model="formData.deviceStatus" placeholder="全部" clearable>
-          <ElOption label="在线" value="在线" />
-          <ElOption label="离线" value="离线" />
-          <ElOption label="未绑定" value="未绑定" />
+    <ElCol :xs="24" :sm="12" :md="7" :lg="6">
+      <ElFormItem label="设备绑定" prop="deviceBindStatus">
+        <ElSelect v-model="formData.deviceBindStatus" placeholder="全部" clearable>
+          <ElOption label="已绑定" value="bound" />
+          <ElOption label="未绑定" value="unbound" />
+        </ElSelect>
+      </ElFormItem>
+    </ElCol>
+    <ElCol :xs="24" :sm="12" :md="7" :lg="6">
+      <ElFormItem label="子女绑定" prop="childBindStatus">
+        <ElSelect v-model="formData.childBindStatus" placeholder="全部" clearable>
+          <ElOption label="已绑定" value="bound" />
+          <ElOption label="未绑定" value="unbound" />
         </ElSelect>
       </ElFormItem>
     </ElCol>

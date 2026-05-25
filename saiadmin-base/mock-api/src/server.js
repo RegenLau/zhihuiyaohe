@@ -47,6 +47,13 @@ const includesKeyword = (keyword, values) => {
   return values.some((value) => String(value ?? '').includes(String(keyword)))
 }
 
+const isBoundValue = (value) => Boolean(value && !['待绑定', '未绑定'].includes(String(value)))
+
+const matchesBindStatus = (value, bindStatus) => {
+  if (!bindStatus) return true
+  return bindStatus === 'bound' ? isBoundValue(value) : !isBoundValue(value)
+}
+
 const findById = (records, id) => records.find((item) => String(item.id) === String(id))
 
 const saveRecord = (records, body) => {
@@ -139,11 +146,12 @@ app.get('/app/smart-pillbox/admin/doctor/dashboard/read', (req, res) => {
 })
 
 app.get('/app/smart-pillbox/admin/doctor/patient/list', (req, res) => {
-  const { keyword, deviceStatus } = req.query
+  const { keyword, deviceBindStatus, childBindStatus } = req.query
   const records = patients.filter((item) => {
     const keywordMatched = includesKeyword(keyword, [item.name, item.phone])
-    const deviceMatched = !deviceStatus || item.deviceStatus === deviceStatus
-    return keywordMatched && deviceMatched
+    const deviceMatched = matchesBindStatus(item.deviceStatus, deviceBindStatus)
+    const childMatched = matchesBindStatus(item.child, childBindStatus)
+    return keywordMatched && deviceMatched && childMatched
   })
   res.json(ok(paginate(records, req.query)))
 })

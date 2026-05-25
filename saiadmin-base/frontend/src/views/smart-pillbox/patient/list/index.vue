@@ -42,15 +42,19 @@
         :columns="columns"
         :loading="loading"
         :pagination="pagination"
+        :pagination-options="{ align: 'right' }"
         @pagination:size-change="handleSizeChange"
         @pagination:current-change="handleCurrentChange"
         @sort-change="handleSortChange"
       >
-        <template #patient="{ row }">
-          <div>
-            <b>{{ row.name }}</b>
-            <div class="muted text-xs">{{ row.gender }} {{ row.age }} 岁 {{ row.phone }}</div>
-          </div>
+        <template #name="{ row }">
+          <b class="patient-name-cell">{{ row.name }}</b>
+        </template>
+        <template #basicInfo="{ row }">
+          <span class="muted patient-basic-cell">{{ row.gender }} {{ row.age }} 岁</span>
+        </template>
+        <template #phone="{ row }">
+          <span class="patient-phone-cell">{{ row.phone }}</span>
         </template>
         <template #deviceStatus="{ row }">
           <ElTag :type="row.deviceStatusType">{{ row.deviceStatus }}</ElTag>
@@ -73,6 +77,13 @@
         </template>
         <template #operation="{ row }">
           <ElSpace>
+            <SaButton
+              v-if="!isDeviceBound(row)"
+              type="primary"
+              icon="ri:link-m"
+              tool-tip="绑定设备"
+              @click="openBindDeviceDialog(row)"
+            />
             <SaButton
               type="success"
               icon="ri:eye-line"
@@ -97,12 +108,19 @@
     </ElCard>
 
     <CreateBasicDialog v-model="createDialogVisible" @success="handleCreateSuccess" />
+    <BindDeviceDialog
+      v-model="bindDeviceDialogVisible"
+      :patient="bindDevicePatient"
+      @success="handleBindDeviceSuccess"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
   import patientApi from '@/views/plugin/smart-pillbox/api/doctor/patient'
   import { useTable } from '@/hooks/core/useTable'
+  import type { Patient } from '@/views/plugin/smart-pillbox/api/doctor/types'
+  import BindDeviceDialog from './modules/bind-device-dialog.vue'
   import CreateBasicDialog from './modules/create-basic-dialog.vue'
   import TableSearch from './modules/table-search.vue'
 
@@ -111,7 +129,9 @@
   const router = useRouter()
   const showSearchBar = ref(true)
   const createDialogVisible = ref(false)
-  const createSearchForm = () => ({ keyword: '', deviceStatus: '' })
+  const bindDeviceDialogVisible = ref(false)
+  const bindDevicePatient = ref<Patient | null>(null)
+  const createSearchForm = () => ({ keyword: '', deviceBindStatus: '', childBindStatus: '' })
   const searchForm = ref(createSearchForm())
 
   const {
@@ -130,11 +150,13 @@
     core: {
       apiFn: patientApi.list,
       columnsFactory: () => [
-        { prop: 'patient', label: '患者', useSlot: true, minWidth: 160 },
-        { prop: 'deviceStatus', label: '设备状态', useSlot: true, width: 120 },
-        { prop: 'child', label: '子女绑定状态', useSlot: true, width: 140 },
-        { prop: 'completionRate', label: '完成率', useSlot: true, width: 150 },
-        { prop: 'operation', label: '操作', useSlot: true, width: 150, fixed: 'right' }
+        { prop: 'name', label: '姓名', useSlot: true, minWidth: 96 },
+        { prop: 'basicInfo', label: '基本信息', useSlot: true, minWidth: 102 },
+        { prop: 'phone', label: '手机号', useSlot: true, minWidth: 128 },
+        { prop: 'deviceStatus', label: '设备状态', useSlot: true, minWidth: 108 },
+        { prop: 'child', label: '子女绑定状态', useSlot: true, minWidth: 126 },
+        { prop: 'completionRate', label: '完成率', useSlot: true, minWidth: 140 },
+        { prop: 'operation', label: '操作', useSlot: true, width: 170, fixed: 'right' }
       ]
     }
   })
@@ -162,6 +184,14 @@
     return child === '待绑定' ? 'warning' : 'info'
   }
 
+  const isDeviceBound = (row: Record<string, any>) =>
+    Boolean(row.deviceNo && row.deviceNo !== '未绑定' && row.deviceStatus !== '未绑定')
+
+  const openBindDeviceDialog = (row: Patient) => {
+    bindDevicePatient.value = row
+    bindDeviceDialogVisible.value = true
+  }
+
   const getCompletionRate = (rate?: number) => Math.min(100, Math.max(0, Number(rate) || 0))
 
   const getCompletionColor = (rate?: number) => {
@@ -172,6 +202,11 @@
   }
 
   const handleCreateSuccess = () => {
+    refreshData()
+  }
+
+  const handleBindDeviceSuccess = () => {
+    bindDevicePatient.value = null
     refreshData()
   }
 </script>
@@ -192,5 +227,21 @@
       color: var(--art-text-gray-700);
       text-align: right;
     }
+  }
+
+  .patient-name-cell {
+    font-weight: 600;
+    color: var(--art-text-gray-800);
+  }
+
+  .patient-basic-cell {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .patient-phone-cell {
+    font-size: 13px;
+    color: var(--art-text-gray-700);
+    white-space: nowrap;
   }
 </style>

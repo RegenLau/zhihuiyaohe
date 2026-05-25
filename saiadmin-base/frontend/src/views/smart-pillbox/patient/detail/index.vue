@@ -10,13 +10,24 @@
           <template #icon><ArtSvgIcon icon="ri:arrow-left-line" /></template>
           返回列表
         </ElButton>
-        <ElButton v-if="editing" @click="cancelEdit">
+        <ElButton
+          v-if="!isEditing"
+          :type="patient?.status === '重点关注' ? 'warning' : 'primary'"
+          plain
+          :disabled="!patient"
+          :loading="statusSaving"
+          @click="toggleFocusPatient"
+        >
+          <template #icon><ArtSvgIcon icon="ri:flag-line" /></template>
+          {{ patient?.status === '重点关注' ? '取消重点标注' : '标注重点患者' }}
+        </ElButton>
+        <ElButton v-if="isEditing" @click="cancelEdit">
           <template #icon><ArtSvgIcon icon="ri:close-line" /></template>
           取消编辑
         </ElButton>
         <ElButton v-else type="primary" :disabled="!patient" @click="startEdit">
           <template #icon><ArtSvgIcon icon="ri:edit-2-line" /></template>
-          编辑档案
+          编辑信息
         </ElButton>
       </ElSpace>
     </div>
@@ -81,26 +92,26 @@
         <ElTabs v-model="activeTab">
           <ElTabPane label="基础信息" name="basic">
             <ElForm
-              v-if="editing"
-              ref="formRef"
-              :model="editForm"
-              :rules="rules"
+              v-if="isEditing"
+              ref="basicFormRef"
+              :model="basicForm"
+              :rules="basicRules"
               label-width="110px"
             >
               <ElRow :gutter="16">
                 <ElCol :xs="24" :md="12">
                   <ElFormItem label="患者姓名" prop="name">
-                    <ElInput v-model="editForm.name" placeholder="请输入患者姓名" />
+                    <ElInput v-model="basicForm.name" placeholder="请输入患者姓名" />
                   </ElFormItem>
                 </ElCol>
                 <ElCol :xs="24" :md="12">
                   <ElFormItem label="手机号" prop="phone">
-                    <ElInput v-model="editForm.phone" placeholder="请输入手机号" />
+                    <ElInput v-model="basicForm.phone" placeholder="请输入手机号" />
                   </ElFormItem>
                 </ElCol>
                 <ElCol :xs="24" :md="12">
                   <ElFormItem label="性别" prop="gender">
-                    <ElSelect v-model="editForm.gender" placeholder="请选择性别">
+                    <ElSelect v-model="basicForm.gender" placeholder="请选择性别">
                       <ElOption label="男" value="男" />
                       <ElOption label="女" value="女" />
                     </ElSelect>
@@ -109,7 +120,7 @@
                 <ElCol :xs="24" :md="12">
                   <ElFormItem label="出生年月日" prop="birthDate">
                     <ElDatePicker
-                      v-model="editForm.birthDate"
+                      v-model="basicForm.birthDate"
                       type="date"
                       value-format="YYYY-MM-DD"
                       placeholder="请选择出生年月日"
@@ -118,70 +129,8 @@
                   </ElFormItem>
                 </ElCol>
                 <ElCol :xs="24" :md="12">
-                  <ElFormItem label="管理状态" prop="status">
-                    <ElSelect v-model="editForm.status" placeholder="请选择管理状态">
-                      <ElOption label="正常管理" value="正常管理" />
-                      <ElOption label="重点关注" value="重点关注" />
-                      <ElOption label="已归档" value="已归档" />
-                    </ElSelect>
-                  </ElFormItem>
-                </ElCol>
-                <ElCol :xs="24" :md="12">
-                  <ElFormItem label="家属信息" prop="child">
-                    <ElInput v-model="editForm.child" placeholder="请输入家属姓名和联系方式" />
-                  </ElFormItem>
-                </ElCol>
-                <ElCol :xs="24" :md="12">
                   <ElFormItem label="管理药师" prop="managementPharmacist">
-                    <ElInput v-model="editForm.managementPharmacist" placeholder="请输入管理药师" />
-                  </ElFormItem>
-                </ElCol>
-                <ElCol :xs="24" :md="12">
-                  <ElFormItem label="首诊药师" prop="firstConsultPharmacist">
-                    <ElInput
-                      v-model="editForm.firstConsultPharmacist"
-                      placeholder="请输入首诊药师"
-                    />
-                  </ElFormItem>
-                </ElCol>
-                <ElCol :span="24">
-                  <ElFormItem label="基础疾病" prop="diseasesText">
-                    <ElInput v-model="editForm.diseasesText" placeholder="多个疾病用逗号分隔" />
-                  </ElFormItem>
-                </ElCol>
-                <ElCol :span="24">
-                  <ElFormItem label="联系地址" prop="address">
-                    <ElInput v-model="editForm.address" placeholder="请输入联系地址" />
-                  </ElFormItem>
-                </ElCol>
-                <ElCol :span="24">
-                  <ElFormItem label="联系人" prop="contactsText">
-                    <ElInput
-                      v-model="editForm.contactsText"
-                      type="textarea"
-                      :rows="2"
-                      placeholder="每行填写：关系，姓名，电话"
-                    />
-                  </ElFormItem>
-                </ElCol>
-                <ElCol :span="24">
-                  <ElFormItem label="过敏史" prop="allergiesText">
-                    <ElInput
-                      v-model="editForm.allergiesText"
-                      type="textarea"
-                      :rows="2"
-                      placeholder="每行填写：过敏源，反应"
-                    />
-                  </ElFormItem>
-                </ElCol>
-                <ElCol :span="24">
-                  <ElFormItem label="诊疗备注" prop="remark">
-                    <ElInput
-                      v-model="editForm.remark"
-                      type="textarea"
-                      :rows="3"
-                      placeholder="请输入诊疗备注"
-                    />
+                    <ElInput v-model="basicForm.managementPharmacist" placeholder="请输入管理药师" />
                   </ElFormItem>
                 </ElCol>
               </ElRow>
@@ -190,9 +139,9 @@
                   <template #icon><ArtSvgIcon icon="ri:close-line" /></template>
                   取消
                 </ElButton>
-                <ElButton type="primary" :loading="saving" @click="savePatient">
+                <ElButton type="primary" :loading="saving" @click="saveBasicInfo">
                   <template #icon><ArtSvgIcon icon="ri:save-3-line" /></template>
-                  保存档案
+                  保存基础信息
                 </ElButton>
               </div>
             </ElForm>
@@ -200,12 +149,8 @@
             <template v-else>
               <ElDescriptions :column="2" border>
                 <ElDescriptionsItem label="出生年月">{{ patient.birthDate || '-' }}</ElDescriptionsItem>
-                <ElDescriptionsItem label="联系地址">{{ patient.address || '-' }}</ElDescriptionsItem>
                 <ElDescriptionsItem label="管理药师">
                   {{ patient.managementPharmacist || '-' }}
-                </ElDescriptionsItem>
-                <ElDescriptionsItem label="首诊药师">
-                  {{ patient.firstConsultPharmacist || '-' }}
                 </ElDescriptionsItem>
                 <ElDescriptionsItem label="药盒设备">{{ patient.deviceNo }}</ElDescriptionsItem>
                 <ElDescriptionsItem label="设备状态">
@@ -226,7 +171,33 @@
           </ElTabPane>
 
           <ElTabPane label="联系人" name="contacts">
-            <ElTable :data="patient.contacts || []" border>
+            <div class="tab-toolbar">
+              <div>
+                <h4>联系人</h4>
+                <p>维护家属联系人和主要联系人信息</p>
+              </div>
+            </div>
+            <ElForm v-if="isEditing" label-width="110px">
+              <ElFormItem label="联系人">
+                <ElInput
+                  v-model="contactsForm.contactsText"
+                  type="textarea"
+                  :rows="4"
+                  placeholder="每行填写：关系，姓名，电话"
+                />
+              </ElFormItem>
+              <div class="detail-edit-actions">
+                <ElButton @click="cancelEdit">
+                  <template #icon><ArtSvgIcon icon="ri:close-line" /></template>
+                  取消
+                </ElButton>
+                <ElButton type="primary" :loading="saving" @click="saveContacts">
+                  <template #icon><ArtSvgIcon icon="ri:save-3-line" /></template>
+                  保存联系人
+                </ElButton>
+              </div>
+            </ElForm>
+            <ElTable v-else :data="patient.contacts || []" border>
               <ElTableColumn prop="relation" label="关系" width="110" />
               <ElTableColumn prop="name" label="姓名" width="130" />
               <ElTableColumn prop="phone" label="电话" min-width="150" />
@@ -241,18 +212,58 @@
           </ElTabPane>
 
           <ElTabPane label="过敏史" name="allergies">
-            <ElTable :data="patient.allergies || []" border empty-text="暂无过敏史">
-              <ElTableColumn prop="allergenType" label="类型" width="110" />
-              <ElTableColumn prop="allergen" label="过敏源" width="150" />
-              <ElTableColumn label="严重程度" width="130">
-                <template #default="{ row }">
-                  <ElTag :type="getAllergyType(row.severity)">
-                    {{ getAllergyLabel(row.severity) }}
+            <div class="tab-toolbar">
+              <div>
+                <h4>基础疾病与过敏史</h4>
+                <p>维护基础疾病标签和过敏记录</p>
+              </div>
+            </div>
+            <ElForm v-if="isEditing" label-width="110px">
+              <ElFormItem label="基础疾病">
+                <ElInput v-model="allergyForm.diseasesText" placeholder="多个疾病用逗号分隔" />
+              </ElFormItem>
+              <ElFormItem label="过敏史">
+                <ElInput
+                  v-model="allergyForm.allergiesText"
+                  type="textarea"
+                  :rows="4"
+                  placeholder="每行填写：过敏源，反应"
+                />
+              </ElFormItem>
+              <div class="detail-edit-actions">
+                <ElButton @click="cancelEdit">
+                  <template #icon><ArtSvgIcon icon="ri:close-line" /></template>
+                  取消
+                </ElButton>
+                <ElButton type="primary" :loading="saving" @click="saveAllergies">
+                  <template #icon><ArtSvgIcon icon="ri:save-3-line" /></template>
+                  保存疾病和过敏史
+                </ElButton>
+              </div>
+            </ElForm>
+            <template v-else>
+              <div class="disease-summary">
+                <span class="disease-title">基础疾病</span>
+                <div v-if="patient.diseases?.length" class="chip-row">
+                  <ElTag v-for="disease in patient.diseases" :key="disease" effect="plain">
+                    {{ disease }}
                   </ElTag>
-                </template>
-              </ElTableColumn>
-              <ElTableColumn prop="reaction" label="反应" min-width="220" />
-            </ElTable>
+                </div>
+                <span v-else class="empty-hint">暂无基础疾病</span>
+              </div>
+              <ElTable :data="patient.allergies || []" border empty-text="暂无过敏史">
+                <ElTableColumn prop="allergenType" label="类型" width="110" />
+                <ElTableColumn prop="allergen" label="过敏源" width="150" />
+                <ElTableColumn label="严重程度" width="130">
+                  <template #default="{ row }">
+                    <ElTag :type="getAllergyType(row.severity)">
+                      {{ getAllergyLabel(row.severity) }}
+                    </ElTag>
+                  </template>
+                </ElTableColumn>
+                <ElTableColumn prop="reaction" label="反应" min-width="220" />
+              </ElTable>
+            </template>
           </ElTabPane>
 
           <ElTabPane label="用药记录" name="records">
@@ -381,9 +392,11 @@
   const router = useRouter()
   const loading = ref(false)
   const saving = ref(false)
+  const statusSaving = ref(false)
   const activeTab = ref('basic')
   const editing = ref(false)
-  const formRef = ref<FormInstance>()
+  const isEditing = computed(() => editing.value)
+  const basicFormRef = ref<FormInstance>()
   const patient = ref<Patient | null>(null)
   const plans = ref<Plan[]>([])
   const medicineRecords = ref<MedicationRecord[]>([])
@@ -399,23 +412,22 @@
     glucoseTrend: 0
   })
 
-  const editForm = reactive({
+  const basicForm = reactive({
     name: '',
     phone: '',
     gender: '男',
     birthDate: '',
-    child: '',
+    managementPharmacist: ''
+  })
+  const contactsForm = reactive({
+    contactsText: ''
+  })
+  const allergyForm = reactive({
     diseasesText: '',
-    status: '正常管理' as Patient['status'],
-    managementPharmacist: '',
-    firstConsultPharmacist: '',
-    address: '',
-    contactsText: '',
-    allergiesText: '',
-    remark: ''
+    allergiesText: ''
   })
 
-  const rules: FormRules = {
+  const basicRules: FormRules = {
     name: [{ required: true, message: '请输入患者姓名', trigger: 'blur' }],
     phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }],
     gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
@@ -464,6 +476,19 @@
 
   const disableFutureDate = (date: Date) => date.getTime() > Date.now()
 
+  const getAgeFromBirthDate = (birthDate: string) => {
+    if (!birthDate) return patient.value?.age || 0
+    const birth = new Date(birthDate)
+    if (Number.isNaN(birth.getTime())) return patient.value?.age || 0
+    const now = new Date()
+    let age = now.getFullYear() - birth.getFullYear()
+    const monthDiff = now.getMonth() - birth.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) {
+      age -= 1
+    }
+    return age
+  }
+
   const formatDateTime = () => {
     const now = new Date()
     const date = [
@@ -478,40 +503,46 @@
     return `${date} ${time}`
   }
 
-  const syncEditForm = (value?: Patient | null) => {
-    editForm.name = value?.name || ''
-    editForm.phone = value?.phone || ''
-    editForm.gender = value?.gender || '男'
-    editForm.birthDate = value?.birthDate || ''
-    editForm.child = value?.child || ''
-    editForm.diseasesText = value?.diseases?.join('，') || ''
-    editForm.status = value?.status || '正常管理'
-    editForm.managementPharmacist = value?.managementPharmacist || ''
-    editForm.firstConsultPharmacist = value?.firstConsultPharmacist || ''
-    editForm.address = value?.address || ''
-    editForm.contactsText =
+  const syncBasicForm = (value?: Patient | null) => {
+    basicForm.name = value?.name || ''
+    basicForm.phone = value?.phone || ''
+    basicForm.gender = value?.gender || '男'
+    basicForm.birthDate = value?.birthDate || ''
+    basicForm.managementPharmacist = value?.managementPharmacist || ''
+  }
+
+  const syncContactsForm = (value?: Patient | null) => {
+    contactsForm.contactsText =
       value?.contacts?.map((item) => `${item.relation}，${item.name}，${item.phone}`).join('\n') ||
       ''
-    editForm.allergiesText =
+  }
+
+  const syncAllergyForm = (value?: Patient | null) => {
+    allergyForm.diseasesText = value?.diseases?.join('，') || ''
+    allergyForm.allergiesText =
       value?.allergies?.map((item) => `${item.allergen}，${item.reaction}`).join('\n') || ''
-    editForm.remark = value?.taskRisk || ''
+  }
+
+  const syncEditForms = (value?: Patient | null) => {
+    syncBasicForm(value)
+    syncContactsForm(value)
+    syncAllergyForm(value)
   }
 
   const startEdit = () => {
     if (!patient.value) return
-    activeTab.value = 'basic'
-    syncEditForm(patient.value)
+    syncEditForms(patient.value)
     editing.value = true
   }
 
   const cancelEdit = () => {
-    syncEditForm(patient.value)
+    syncEditForms(patient.value)
     editing.value = false
-    formRef.value?.clearValidate()
+    basicFormRef.value?.clearValidate()
   }
 
   const parseContacts = () =>
-    editForm.contactsText
+    contactsForm.contactsText
       .split(/\n|；|;/)
       .map((line, index) => {
         const [relation = '', name = '', phone = ''] = line.split(/[，,]/).map((item) => item.trim())
@@ -527,8 +558,15 @@
       })
       .filter((item): item is PatientContact => Boolean(item))
 
+  const getChildInfo = (contacts: PatientContact[]) => {
+    const primaryContact = contacts.find((item) => item.isPrimary) || contacts[0]
+    return primaryContact
+      ? `${primaryContact.relation} ${primaryContact.name} ${primaryContact.phone}`
+      : '未绑定'
+  }
+
   const parseAllergies = () =>
-    editForm.allergiesText
+    allergyForm.allergiesText
       .split(/\n|；|;/)
       .map((line, index) => {
         const [allergen = '', reaction = ''] = line.split(/[，,]/).map((item) => item.trim())
@@ -544,38 +582,88 @@
       })
       .filter((item): item is PatientAllergy => Boolean(item))
 
-  const savePatient = async () => {
+  const saveBasicInfo = async () => {
     if (!patient.value) return
 
-    await formRef.value?.validate()
+    await basicFormRef.value?.validate()
     saving.value = true
     try {
       const updatedPatient = await patientApi.update({
         ...patient.value,
-        name: editForm.name,
-        phone: editForm.phone,
-        gender: editForm.gender,
-        birthDate: editForm.birthDate,
-        child: editForm.child,
-        status: editForm.status,
-        managementPharmacist: editForm.managementPharmacist,
-        firstConsultPharmacist: editForm.firstConsultPharmacist,
-        address: editForm.address,
-        contacts: parseContacts(),
-        allergies: parseAllergies(),
-        diseases: editForm.diseasesText
-          .split(/[，,]/)
-          .map((item) => item.trim())
-          .filter(Boolean),
-        taskRisk: editForm.remark || patient.value.taskRisk || '正常',
+        name: basicForm.name,
+        phone: basicForm.phone,
+        gender: basicForm.gender,
+        age: getAgeFromBirthDate(basicForm.birthDate),
+        birthDate: basicForm.birthDate,
+        managementPharmacist: basicForm.managementPharmacist,
         updatedAt: formatDateTime()
       })
       patient.value = updatedPatient
-      syncEditForm(updatedPatient)
-      editing.value = false
-      ElMessage.success('患者档案已保存')
+      syncBasicForm(updatedPatient)
+      ElMessage.success('基础信息已保存')
     } finally {
       saving.value = false
+    }
+  }
+
+  const saveContacts = async () => {
+    if (!patient.value) return
+
+    const contacts = parseContacts()
+    saving.value = true
+    try {
+      const updatedPatient = await patientApi.update({
+        ...patient.value,
+        contacts,
+        child: getChildInfo(contacts),
+        updatedAt: formatDateTime()
+      })
+      patient.value = updatedPatient
+      syncContactsForm(updatedPatient)
+      ElMessage.success('联系人已保存')
+    } finally {
+      saving.value = false
+    }
+  }
+
+  const saveAllergies = async () => {
+    if (!patient.value) return
+
+    saving.value = true
+    try {
+      const updatedPatient = await patientApi.update({
+        ...patient.value,
+        allergies: parseAllergies(),
+        diseases: allergyForm.diseasesText
+          .split(/[，,]/)
+          .map((item) => item.trim())
+          .filter(Boolean),
+        updatedAt: formatDateTime()
+      })
+      patient.value = updatedPatient
+      syncAllergyForm(updatedPatient)
+      ElMessage.success('疾病和过敏史已保存')
+    } finally {
+      saving.value = false
+    }
+  }
+
+  const toggleFocusPatient = async () => {
+    if (!patient.value) return
+    const nextStatus: Patient['status'] =
+      patient.value.status === '重点关注' ? '正常管理' : '重点关注'
+    statusSaving.value = true
+    try {
+      const updatedPatient = await patientApi.update({
+        ...patient.value,
+        status: nextStatus,
+        updatedAt: formatDateTime()
+      })
+      patient.value = updatedPatient
+      syncEditForms(updatedPatient)
+      ElMessage.success(nextStatus === '重点关注' ? '已标注为重点患者' : '已取消重点标注')
+    } finally {
+      statusSaving.value = false
     }
   }
 
@@ -593,7 +681,7 @@
         ])
 
       patient.value = patientData
-      syncEditForm(patientData)
+      syncEditForms(patientData)
       editing.value = false
       medicineRecords.value = recordData
       plans.value = planData.records
@@ -654,6 +742,48 @@
     border-top: 1px solid var(--el-border-color-lighter);
   }
 
+  .tab-toolbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+
+    h4 {
+      margin: 0 0 4px;
+      color: var(--pillbox-text-strong);
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0;
+      color: var(--pillbox-text-muted);
+      font-size: 13px;
+    }
+  }
+
+  .disease-summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    background: var(--pillbox-surface-soft);
+    border: 1px solid var(--pillbox-border);
+    border-radius: var(--pillbox-card-radius);
+  }
+
+  .disease-title {
+    color: var(--pillbox-text-strong);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .empty-hint {
+    color: var(--pillbox-text-muted);
+  }
+
   .el-select,
   .el-date-editor.el-input {
     width: 100%;
@@ -662,6 +792,12 @@
   @media (width <= 760px) {
     .routine-grid {
       grid-template-columns: 1fr;
+    }
+
+    .tab-toolbar,
+    .disease-summary {
+      align-items: stretch;
+      flex-direction: column;
     }
   }
 </style>
