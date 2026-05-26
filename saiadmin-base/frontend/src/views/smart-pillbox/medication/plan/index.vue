@@ -34,7 +34,7 @@
               <div class="smart-section-note">{{ activePatient?.name || '当前患者' }}的全天用药安排</div>
             </div>
             <a-space wrap class="plan-content-actions">
-              <a-button :disabled="!activePatientId" @click="router.push(`/doctor/patient-detail?id=${activePatientId}`)">
+              <a-button :disabled="!activePatientId" @click="router.push(`/doctor/patient-detail?patientId=${activePatientId}`)">
                 <template #icon><sa-icon icon="ri:eye-line" :size="16" /></template>
                 查看患者档案
               </a-button>
@@ -87,6 +87,10 @@
                 <a-button type="primary" @click="openDrugDialog(plan)">
                   <template #icon><sa-icon icon="ri:add-line" :size="16" /></template>
                   新增药品
+                </a-button>
+                <a-button :disabled="!plan.drugs?.length || plan.status === '已停用'" @click="dispatchPlan(plan)">
+                  <template #icon><sa-icon icon="ri:send-plane-line" :size="16" /></template>
+                  下发药盒
                 </a-button>
                 <a-popconfirm content="确定停用该计划吗？" @ok="stopPlan(plan)">
                   <a-button status="danger">
@@ -227,8 +231,8 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { Message, Modal } from '@arco-design/web-vue'
 import { useRoute, useRouter } from 'vue-router'
-import { patientApi, planApi } from '@/views/plugin/smart-pillbox/api/doctor'
-import { formatDateTime, getPayload, getRecords } from '@/views/smart-pillbox/utils'
+import { deviceApi, patientApi, planApi } from '@/views/plugin/smart-pillbox/api/doctor'
+import { formatDateTime, getPayload, getRecords, pickQueryValue } from '@/views/smart-pillbox/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -236,7 +240,7 @@ const router = useRouter()
 const patients = ref([])
 const plans = ref([])
 const patientKeyword = ref('')
-const activePatientId = ref(route.query.patientId || '')
+const activePatientId = ref(String(pickQueryValue(route.query.patientId)))
 const activePlanId = ref('')
 const planVisible = ref(false)
 const drugVisible = ref(false)
@@ -372,27 +376,45 @@ const saveCreatePlan = async () => {
     period: `${planForm.startDate} 至 ${planForm.endDate}`,
     status: planForm.status,
     dispatchStatus: patient?.deviceNo && patient.deviceNo !== '未绑定' ? '待下发 / 未下发' : '未绑定设备',
-    generatedTasks: '未生成',
-    reminderCount: 1,
+    generatedTasks: '待录入药品',
+    reminderCount: 0,
     auditSummary: '请按处方和医药师建议执行，异常情况及时联系医药师。',
-    drugs: [
-      {
-        name: '示例药品',
-        specification: '规格待补充',
-        quantity: '1盒',
-        dose: '1片/次',
-        frequency: '每日1次',
-        durationDays: 30,
-        time: '早餐后',
-        guide: '按处方执行'
-      }
-    ]
+    drugs: []
   })
   if (response.code === 200) {
-    Message.success('用药计划已创建')
+    Message.success('用药计划已创建，请继续录入药品与提醒')
     planVisible.value = false
     await loadPlans()
     activePlanId.value = String(response.data.id)
+    const savedPlan = plans.value.find((plan) => String(plan.id) === String(response.data.id))
+    if (savedPlan) openDrugDialog(savedPlan)
+  }
+}
+
+const createDraftPlan = async () => {
+  if (!activePatient.value) return
+  const patient = patients.value.find((item) => String(item.id) === String(activePatientId.value))
+  const response = await planApi.save({
+    title: '待录入用药计划',
+    source: '手动录入',
+    status: '草稿',
+    startDate: '2026-05-20',
+    endDate: '2026-06-18',
+    patientId: activePatientId.value,
+    patientName: patient?.name || '',
+    period: '2026-05-20 至 2026-06-18',
+    dispatchStatus: '待录入药品',
+    generatedTasks: '待录入药品',
+    reminderCount: 0,
+    auditSummary: '请先录入正式处方药品、剂量、频次和提醒时间。',
+    drugs: []
+  })
+  if (response.code === 200) {
+    Message.success('已创建用药计划草稿，请录入药品与提醒')
+    await loadPlans()
+    activePlanId.value = String(response.data.id)
+    const savedPlan = plans.value.find((plan) => String(plan.id) === String(response.data.id))
+    if (savedPlan) openDrugDialog(savedPlan)
   }
 }
 
@@ -451,6 +473,38 @@ const saveDrugEdit = async () => {
   if (response.code === 200) {
     Message.success(drugDialogMode.value === 'add' ? '药品已添加' : '用药与提醒已保存')
     drugVisible.value = false
+    await loadPlans()
+  }
+}
+
+const dispatchPlan = async (plan) => {
+  if (!activePatient.value?.deviceNo || activePatient.value.deviceNo === '未绑定') {
+    Message.warning('当前患者未绑定药盒，请先绑定设备')
+    return
+  }
+  if (activePatient.value.deviceStatus !== '在线') {
+    Message.warning('当前药盒不在线，请恢复在线后再下发计划')
+    return
+  }
+  const reminderCount = getPlanReminderCount(plan)
+  const response = await planApi.update({
+    ...plan,
+    dispatchStatus: '已下发药盒',
+    generatedTasks: `${reminderCount} 条任务已生成`,
+    reminderCount,
+    updatedAt: formatDateTime()
+  })
+  if (response.code === 200) {
+    const deviceResponse = await deviceApi.list({ sn: activePatient.value.deviceNo, limit: 20 })
+    const device = getRecords(deviceResponse).find((item) => item.sn === activePatient.value.deviceNo)
+    if (device) {
+      await deviceApi.update({
+        ...device,
+        dispatchStatus: '计划已同步',
+        lastDispatchAt: formatDateTime()
+      })
+    }
+    Message.success('计划已下发药盒，今日任务已生成')
     await loadPlans()
   }
 }
@@ -533,5 +587,8 @@ watch(activePatientId, () => {
 onMounted(async () => {
   await loadPatients()
   await loadPlans()
+  if (pickQueryValue(route.query.action) === 'create' && activePatientId.value) {
+    await createDraftPlan()
+  }
 })
 </script>

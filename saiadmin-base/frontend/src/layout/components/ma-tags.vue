@@ -350,11 +350,18 @@ onMounted(() => {
   }
 
   .menu-tags-wrapper {
-
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: calc(100% - 48px);
     box-sizing: border-box;
     overflow: hidden;
     position: relative;
     display: inline-flex;
+
+    .tags {
+      width: 100%;
+      min-width: 0;
+    }
 
     .ma-tag-next,
     .ma-tag-prev {
@@ -386,6 +393,7 @@ onMounted(() => {
   }
 
   .ma-tags-more {
+    flex: 0 0 40px;
     position: relative;
     box-sizing: border-box;
     display: flex;

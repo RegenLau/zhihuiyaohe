@@ -30,6 +30,7 @@ const homePageRoutes = [
       title: '新增患者建档',
       icon: 'ri:user-add-line',
       type: 'M',
+      activeMenu: 'SmartPatients',
       hidden: true
     },
     component: () => import('@/views/smart-pillbox/patient/create/index.vue')
@@ -42,6 +43,7 @@ const homePageRoutes = [
       title: '患者详情',
       icon: 'ri:file-user-line',
       type: 'M',
+      activeMenu: 'SmartPatients',
       hidden: true
     },
     component: () => import('@/views/smart-pillbox/patient/detail/index.vue')
@@ -54,6 +56,7 @@ const homePageRoutes = [
       title: '健康数据',
       icon: 'ri:pulse-line',
       type: 'M',
+      activeMenu: 'SmartPatients',
       hidden: true
     },
     component: () => import('@/views/smart-pillbox/health/data/index.vue')

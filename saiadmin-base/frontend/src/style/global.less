@@ -184,7 +184,7 @@ html, body {
 }
 
 .button-menu {
-  position: fixed; bottom: 30px; left: 20px; z-index: 100;
+  position: fixed; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); z-index: 100;
   .button-trigger {
     display: flex;
     align-items: center;
@@ -205,6 +205,17 @@ html, body {
   }
   .button-trigger:nth-child(1).button-trigger-active {
     background-color: rgb(var(--primary-6));
+  }
+}
+
+@media (max-width: 1023px) {
+  .work-area {
+    padding-bottom: 96px;
+  }
+
+  .button-menu {
+    right: 18px;
+    bottom: max(24px, env(safe-area-inset-bottom));
   }
 }
 

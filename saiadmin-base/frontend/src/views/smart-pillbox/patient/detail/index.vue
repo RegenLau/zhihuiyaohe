@@ -122,7 +122,7 @@
                 <div><h4>联系人</h4><p>维护家属联系人和主要联系人信息</p></div>
               </div>
               <div v-if="isEditing" class="edit-stack">
-                <a-table v-if="contactDrafts.length" :data="contactDrafts" :pagination="false" bordered>
+                <a-table v-if="contactDrafts.length" row-key="id" :data="contactDrafts" :pagination="false" :scroll="{ x: 560 }" bordered>
                   <template #columns>
                     <a-table-column title="关系" data-index="relation" :width="120" />
                     <a-table-column title="姓名" data-index="name" :width="140" />
@@ -165,7 +165,7 @@
                   <a-button type="primary" :loading="saving" @click="saveContacts">保存联系人</a-button>
                 </div>
               </div>
-              <a-table v-else :data="patient.contacts || []" :pagination="false" bordered>
+              <a-table v-else row-key="id" :data="patient.contacts || []" :pagination="false" :scroll="{ x: 520 }" bordered>
                 <template #columns>
                   <a-table-column title="关系" data-index="relation" :width="120" />
                   <a-table-column title="姓名" data-index="name" :width="140" />
@@ -251,7 +251,7 @@
             </a-tab-pane>
 
             <a-tab-pane key="records" title="用药记录">
-              <a-table :data="medicineRecords" :pagination="false" bordered>
+              <a-table row-key="id" :data="medicineRecords" :pagination="false" :scroll="{ x: 700 }" bordered>
                 <template #columns>
                   <a-table-column title="时间" data-index="time" :width="170" />
                   <a-table-column title="药品" data-index="commonName" />
@@ -276,7 +276,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { patientApi } from '@/views/plugin/smart-pillbox/api/doctor'
-import { calculateAge, formatDateTime, getPayload, getRecords, statusColor, unwrapAllergyNames } from '@/views/smart-pillbox/utils'
+import { calculateAge, formatDateTime, getPayload, getRecords, pickQueryValue, statusColor, unwrapAllergyNames } from '@/views/smart-pillbox/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -301,7 +301,10 @@ const newAllergy = ref('')
 const chronicDiseasePresets = ['高血压', '糖尿病', '高血脂', '冠心病', '高尿酸']
 const allergyPresets = ['青霉素', '头孢菌素', '磺胺类', '阿司匹林', '他汀类']
 
-const patientId = computed(() => (route.query.id ? String(route.query.id) : ''))
+const patientId = computed(() => {
+  const value = pickQueryValue(route.query.patientId, route.query.id)
+  return value ? String(value) : ''
+})
 const riskSummaryClass = computed(() => {
   if (!patient.taskRisk) return ''
   if (String(patient.taskRisk).includes('漏服') || String(patient.taskRisk).includes('异常')) return 'is-danger'
@@ -477,6 +480,6 @@ const loadAll = async () => {
   }
 }
 
-watch(() => route.query.id, loadAll)
+watch(() => [route.query.patientId, route.query.id], loadAll)
 onMounted(loadAll)
 </script>

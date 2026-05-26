@@ -34,12 +34,13 @@
     const tagStore = useTagStore()
     const route = useRoute()
     const actives = ref([])
+    const getActiveMenuName = () => route.meta?.activeMenu || route.name
     onMounted(() => {
-      actives.value = [route.name]
+      actives.value = [getActiveMenuName()]
     })
   
     watch(() => route, v => {
-      actives.value = [v.name]
+      actives.value = [v.meta?.activeMenu || v.name]
     }, { deep: true })
     const routerPush = (menu) => {
       if (menu.meta && menu.meta.type === 'L') {

@@ -935,6 +935,7 @@ export const dashboard = {
       level: '高风险',
       action: '联系家属',
       route: '/doctor/messages',
+      query: { patient: '王秀兰', type: '子女提醒', status: '待处理' },
       icon: 'ri:alarm-warning-line'
     },
     {
@@ -947,6 +948,7 @@ export const dashboard = {
       level: '中风险',
       action: '查看设备',
       route: '/doctor/devices',
+      query: { status: '离线' },
       icon: 'ri:wifi-off-line'
     },
     {
@@ -959,6 +961,7 @@ export const dashboard = {
       level: '待确认',
       action: '创建提醒',
       route: '/doctor/messages',
+      query: { patient: '李桂芳', type: '复诊提醒' },
       icon: 'ri:calendar-check-line'
     }
   ],

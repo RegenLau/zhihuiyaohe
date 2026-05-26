@@ -317,6 +317,10 @@ app.post('/app/smart-pillbox/admin/doctor/conversation/export', (req, res) => {
   res.json(ok(null, 'exported'))
 })
 
+app.put('/app/smart-pillbox/admin/doctor/conversation/update', (req, res) => {
+  res.json(ok(updateRecord(conversations, req.body), 'updated'))
+})
+
 app.get('/app/smart-pillbox/admin/doctor/health/list', (req, res) => {
   const { patientId, keyword, riskLevel } = req.query
   const records = healthRecords.filter((item) => {
@@ -330,6 +334,10 @@ app.get('/app/smart-pillbox/admin/doctor/health/list', (req, res) => {
 
 app.get('/app/smart-pillbox/admin/doctor/health/summary', (req, res) => {
   res.json(ok(buildHealthSummary(req.query.patientId)))
+})
+
+app.put('/app/smart-pillbox/admin/doctor/health/update', (req, res) => {
+  res.json(ok(updateRecord(healthRecords, req.body), 'updated'))
 })
 
 app.get('/app/smart-pillbox/admin/doctor/settings/read', (req, res) => {

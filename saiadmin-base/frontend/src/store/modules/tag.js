@@ -18,8 +18,14 @@ const normalizeTags = (tags = []) => {
 
   const uniqueTags = []
   nextTags.forEach(item => {
-    if (!uniqueTags.some(tag => tag.path === item.path)) {
+    const key = item.name || item.path
+    if (!uniqueTags.some(tag => (tag.name || tag.path) === key)) {
       uniqueTags.push(item)
+      return
+    }
+    const index = uniqueTags.findIndex(tag => (tag.name || tag.path) === key)
+    if (index >= 0) {
+      uniqueTags[index] = { ...uniqueTags[index], ...item, affix: uniqueTags[index].affix || item.affix }
     }
   })
 
@@ -55,9 +61,11 @@ const useTagStore = defineStore('tag', {
   actions: {
 
     addTag(tag) {
-      const target = this.tags.find( item => item.path === tag.path )
-      if (! target && tag.path ) {
+      const targetIndex = this.tags.findIndex(item => (item.name && item.name === tag.name) || item.path === tag.path)
+      if (targetIndex < 0 && tag.path ) {
         this.tags.push(tag)
+      } else if (targetIndex >= 0) {
+        this.tags[targetIndex] = { ...this.tags[targetIndex], ...tag, affix: this.tags[targetIndex].affix || tag.affix }
       }
       this.updateTagsToLocal()
     },

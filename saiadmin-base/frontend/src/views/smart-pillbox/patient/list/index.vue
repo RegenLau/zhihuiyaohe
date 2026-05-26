@@ -81,7 +81,7 @@
             </a-button>
           </a-tooltip>
           <a-tooltip content="详情">
-            <a-button size="mini" @click="router.push(`/doctor/patient-detail?id=${record.id}`)">
+            <a-button size="mini" @click="router.push(`/doctor/patient-detail?patientId=${record.id}`)">
               <template #icon><sa-icon icon="ri:eye-line" :size="14" /></template>
             </a-button>
           </a-tooltip>
@@ -98,6 +98,41 @@
         </a-space>
       </template>
     </sa-table>
+
+    <div class="smart-mobile-card-list">
+      <a-card v-for="record in patients" :key="record.id" class="smart-mobile-card" :bordered="false">
+        <div class="smart-mobile-card-head">
+          <div>
+            <strong>{{ record.name }}</strong>
+            <div class="smart-muted">{{ record.recordNo || `MR-${record.id}` }}</div>
+          </div>
+          <a-tag :color="statusColor(record.deviceStatus)">{{ record.deviceStatus }}</a-tag>
+        </div>
+        <div class="smart-mobile-meta-grid">
+          <span>{{ record.phone }}</span>
+          <span>{{ getChildStatus(record.child) }}</span>
+          <span>完成率 {{ getCompletionRate(record.completionRate) }}%</span>
+        </div>
+        <a-space wrap>
+          <a-button v-if="!isDeviceBound(record)" size="small" type="primary" @click="openBindDialog(record)">
+            <template #icon><sa-icon icon="ri:link-m" :size="14" /></template>
+            绑定设备
+          </a-button>
+          <a-button size="small" @click="router.push(`/doctor/patient-detail?patientId=${record.id}`)">
+            <template #icon><sa-icon icon="ri:eye-line" :size="14" /></template>
+            详情
+          </a-button>
+          <a-button size="small" @click="router.push(`/doctor/plans?patientId=${record.id}`)">
+            <template #icon><sa-icon icon="ri:file-list-3-line" :size="14" /></template>
+            计划
+          </a-button>
+          <a-button size="small" @click="router.push(`/doctor/messages?patient=${record.name}`)">
+            <template #icon><sa-icon icon="ri:message-2-line" :size="14" /></template>
+            提醒
+          </a-button>
+        </a-space>
+      </a-card>
+    </div>
 
     <a-modal v-model:visible="createVisible" title="新增患者建档" width="min(720px, calc(100vw - 32px))" :footer="false">
       <a-alert v-if="createdPatient" type="success" show-icon style="margin-bottom: 16px">

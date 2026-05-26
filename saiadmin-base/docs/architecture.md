@@ -2,13 +2,13 @@
 
 ## Goal
 
-Set up the SaiAdmin v6 frontend and local mock API foundation before product modules are defined.
+Set up the SaiAdmin 5.x frontend and local mock API foundation before product modules are defined.
 
 ## Decisions
 
-- SaiAdmin v6 is used as the frontend base.
+- SaiAdmin 5.x is used as the frontend base.
 - `VITE_ACCESS_MODE` is set to `frontend`.
-- Future product pages should live under `frontend/src/views/plugin/t2`.
+- Product pages should live under `frontend/src/views/smart-pillbox`.
 - Future pages should call API modules only.
 - Mock API uses SaiAdmin-style response envelopes.
 - System management modules are hidden from the frontend route registry.
@@ -16,7 +16,7 @@ Set up the SaiAdmin v6 frontend and local mock API foundation before product mod
 ## Frontend Modules
 
 ```txt
-frontend/src/views/plugin/t2/
+frontend/src/views/smart-pillbox/
   api/
   modules/
 ```

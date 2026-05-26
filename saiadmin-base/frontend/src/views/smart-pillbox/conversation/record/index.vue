@@ -97,6 +97,16 @@
                 <span>{{ message.time }}</span>
                 <a-tag color="blue">{{ message.type }}</a-tag>
                 <a-tag :color="statusColor(message.status)">{{ message.status }}</a-tag>
+                <a-space v-if="isPendingMessage(message)" size="mini" class="conversation-message-actions">
+                  <a-button size="mini" type="primary" @click="markMessageClosed(message)">
+                    <template #icon><sa-icon icon="ri:check-line" :size="14" /></template>
+                    标记已处理
+                  </a-button>
+                  <a-button size="mini" @click="createReminder(message)">
+                    <template #icon><sa-icon icon="ri:notification-3-line" :size="14" /></template>
+                    创建提醒
+                  </a-button>
+                </a-space>
               </div>
 
               <div v-if="message.patientText" class="conversation-bubble conversation-bubble-patient">
@@ -122,12 +132,13 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { conversationApi } from '@/views/plugin/smart-pillbox/api/doctor'
+import { pickQueryValue } from '@/views/smart-pillbox/utils'
 
 const route = useRoute()
 const router = useRouter()
 const loading = ref(false)
 const conversations = ref([])
-const activePatientId = ref(route.query.patientId || '')
+const activePatientId = ref(String(pickQueryValue(route.query.patientId)))
 
 const filters = reactive({
   keyword: '',
@@ -195,7 +206,29 @@ const selectPatient = (patientId) => {
 }
 
 const openPatient = (patientId) => {
-  router.push(`/doctor/patient-detail?id=${patientId}`)
+  router.push(`/doctor/patient-detail?patientId=${patientId}`)
+}
+
+const isPendingMessage = (message) => ['待人工跟进', '待处理', '未响应'].includes(message.status)
+
+const markMessageClosed = async (message) => {
+  await conversationApi.update({ ...message, status: '已闭环', handledAt: new Date().toISOString().slice(0, 16).replace('T', ' ') })
+  Message.success('对话已标记处理')
+  await fetchConversations()
+}
+
+const createReminder = (message) => {
+  router.push({
+    path: '/doctor/messages',
+    query: {
+      action: 'create',
+      patient: message.patient,
+      type: '系统提醒',
+      receiver: '患者 / 子女',
+      title: `${message.patient}对话跟进提醒`,
+      content: message.note || message.deviceText || message.patientText || '请根据对话记录完成跟进。'
+    }
+  })
 }
 
 const statusColor = (status) => {

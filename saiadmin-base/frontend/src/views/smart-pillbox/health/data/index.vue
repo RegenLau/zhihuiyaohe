@@ -54,7 +54,7 @@
       </template>
 
       <template #patient="{ record }">
-        <a-link @click="router.push(`/doctor/patient-detail?id=${record.patientId}`)">{{ record.patient }}</a-link>
+        <a-link @click="router.push(`/doctor/patient-detail?patientId=${record.patientId}`)">{{ record.patient }}</a-link>
       </template>
       <template #bloodPressure="{ record }">
         <strong>晨 {{ record.morningBP || '未上报' }}</strong>
@@ -69,6 +69,25 @@
       <template #riskLevel="{ record }">
         <a-tag :color="statusColor(record.riskLevel)">{{ record.riskLevel }}</a-tag>
       </template>
+      <template #operationCell="{ record }">
+        <a-space size="mini">
+          <a-tooltip content="标记已响应">
+            <a-button size="mini" type="primary" :disabled="record.responded" @click="markResponded(record)">
+              <template #icon><sa-icon icon="ri:check-line" :size="14" /></template>
+            </a-button>
+          </a-tooltip>
+          <a-tooltip content="创建提醒">
+            <a-button size="mini" @click="createReminder(record)">
+              <template #icon><sa-icon icon="ri:notification-3-line" :size="14" /></template>
+            </a-button>
+          </a-tooltip>
+          <a-tooltip content="患者详情">
+            <a-button size="mini" @click="router.push(`/doctor/patient-detail?patientId=${record.patientId}`)">
+              <template #icon><sa-icon icon="ri:eye-line" :size="14" /></template>
+            </a-button>
+          </a-tooltip>
+        </a-space>
+      </template>
     </sa-table>
   </div>
 </template>
@@ -77,20 +96,22 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { healthApi } from '@/views/plugin/smart-pillbox/api/doctor'
-import { getPayload, getRecords, statusColor } from '@/views/smart-pillbox/utils'
+import { getPayload, getRecords, pickQueryValue, statusColor } from '@/views/smart-pillbox/utils'
 
 const route = useRoute()
 const router = useRouter()
 const loading = ref(false)
 const crudRef = ref()
 const records = ref([])
-const searchForm = reactive({ keyword: '', riskLevel: '', patientId: String(route.query.patientId || '') })
+const searchForm = reactive({ keyword: '', riskLevel: '', patientId: String(pickQueryValue(route.query.patientId)) })
 const tableOptions = reactive({
   api: loadData,
   pageLayout: 'normal',
   showTools: true,
   showIndex: false,
-  operationColumn: false,
+  operationColumn: true,
+  operationColumnText: '操作',
+  operationColumnWidth: 132,
   add: { show: false },
   edit: { show: false },
   delete: { show: false }
@@ -139,6 +160,23 @@ const handleResetSearch = () => {
 }
 const refreshData = () => {
   crudRef.value?.refresh()
+}
+const markResponded = async (record) => {
+  await healthApi.update({ ...record, responded: true, responseTime: new Date().toISOString().slice(0, 16).replace('T', ' ') })
+  refreshData()
+}
+const createReminder = (record) => {
+  router.push({
+    path: '/doctor/messages',
+    query: {
+      action: 'create',
+      patient: record.patient,
+      type: '系统提醒',
+      receiver: '患者 / 子女',
+      title: `${record.patient}健康数据跟进`,
+      content: `${record.date} 上报数据为 ${record.riskLevel}，请确认血压、血糖和用药情况。`
+    }
+  })
 }
 onMounted(refreshData)
 </script>

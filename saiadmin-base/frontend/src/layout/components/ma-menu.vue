@@ -38,12 +38,12 @@
   const title = ref('')
 
   onMounted(() => {
-    actives.value = [ route.name ]
+    syncMenuState()
     findTopMenuName()
   })
 
   watch(() => route.fullPath, () => {
-    actives.value = [ route.name ]
+    syncMenuState()
     findTopMenuName()
   })
 
@@ -55,10 +55,39 @@
       } else {
         title.value = t('menus.' + obj.name).indexOf('.') > 0 ? obj.meta.title : t('menus.' + obj.name)
       }
+      findTopMenuName()
     }
   }
 
+  const getActiveMenuName = () => route.meta?.activeMenu || route.name
+
+  const syncMenuState = () => {
+    const activeName = getActiveMenuName()
+    actives.value = activeName ? [ activeName ] : []
+  }
+
+  const findMenuPath = (items = [], targetName, parents = []) => {
+    if (!targetName) return []
+    for (const item of items) {
+      const currentPath = [ ...parents, item.name ]
+      if (item.name === targetName) {
+        return currentPath
+      }
+      if (item.children && item.children.length > 0) {
+        const childPath = findMenuPath(item.children, targetName, currentPath)
+        if (childPath.length > 0) return childPath
+      }
+    }
+    return []
+  }
+
   const findTopMenuName = () => {
+    const activeMenuPath = findMenuPath(menus.value, getActiveMenuName())
+    if (activeMenuPath.length > 1) {
+      openKeys.value = activeMenuPath.slice(0, -1)
+      return
+    }
+
     const matchedParents = route.matched
       .slice(1, -1)
       .filter(item => item.name && item.children && item.children.length > 0)

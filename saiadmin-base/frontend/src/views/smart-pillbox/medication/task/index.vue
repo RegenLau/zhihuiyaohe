@@ -128,12 +128,12 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { patientApi, taskApi } from '@/views/plugin/smart-pillbox/api/doctor'
-import { getRecords, statusColor } from '@/views/smart-pillbox/utils'
+import { getRecords, pickQueryValue, statusColor } from '@/views/smart-pillbox/utils'
 
 const route = useRoute()
 const router = useRouter()
 const keyword = ref('')
-const selectedPatientId = ref(route.query.patientId || 1)
+const selectedPatientId = ref(pickQueryValue(route.query.patientId) || 1)
 const taskView = ref('今日任务')
 const drugFilter = ref('全部用药')
 const statusFilter = ref('全部状态')

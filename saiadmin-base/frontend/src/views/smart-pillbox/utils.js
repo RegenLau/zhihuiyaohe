@@ -8,6 +8,13 @@ export const getRecords = (response) => {
 
 export const getPayload = (response) => response?.data || response || {}
 
+export const pickQueryValue = (...values) => {
+  for (const value of values.flat()) {
+    if (value !== undefined && value !== null && String(value).trim() !== '') return value
+  }
+  return ''
+}
+
 export const formatDateTime = () => {
   const now = new Date()
   const pad = (value) => String(value).padStart(2, '0')

@@ -82,6 +82,38 @@
       </template>
     </sa-table>
 
+    <div class="smart-mobile-card-list">
+      <a-card v-for="record in messages" :key="record.id" class="smart-mobile-card" :bordered="false">
+        <div class="smart-mobile-card-head">
+          <div>
+            <strong>{{ record.title }}</strong>
+            <div class="smart-muted">{{ record.patient }} · {{ record.receiver }}</div>
+          </div>
+          <a-tag :color="statusColor(record.status)">{{ record.status }}</a-tag>
+        </div>
+        <div class="smart-muted">{{ record.content }}</div>
+        <div class="smart-mobile-meta-grid">
+          <span>{{ record.type }}</span>
+          <span>{{ record.channel }}</span>
+          <span>{{ record.createTime }}</span>
+        </div>
+        <a-space wrap>
+          <a-button size="small" @click="viewMessage(record)">
+            <template #icon><sa-icon icon="ri:eye-line" :size="14" /></template>
+            查看
+          </a-button>
+          <a-button size="small" @click="showDialog('edit', record)">
+            <template #icon><sa-icon icon="ri:edit-2-line" :size="14" /></template>
+            编辑
+          </a-button>
+          <a-button size="small" type="primary" @click="markHandled(record)">
+            <template #icon><sa-icon icon="ri:check-line" :size="14" /></template>
+            处理
+          </a-button>
+        </a-space>
+      </a-card>
+    </div>
+
     <a-modal v-model:visible="dialogVisible" :title="dialogType === 'add' ? '创建提醒' : '编辑提醒'" width="min(760px, calc(100vw - 32px))" @ok="saveMessage">
       <a-form :model="formData" layout="vertical">
         <a-row :gutter="16">
@@ -128,7 +160,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { useRoute } from 'vue-router'
 import { messageApi } from '@/views/plugin/smart-pillbox/api/doctor'
-import { getPayload, getRecords, statusColor } from '@/views/smart-pillbox/utils'
+import { getPayload, getRecords, pickQueryValue, statusColor } from '@/views/smart-pillbox/utils'
 
 const route = useRoute()
 const loading = ref(false)
@@ -139,9 +171,9 @@ const viewVisible = ref(false)
 const dialogType = ref('add')
 const currentMessage = reactive({})
 const searchForm = reactive({
-  type: String(route.query.type || ''),
-  patient: String(route.query.patient || ''),
-  status: '',
+  type: String(pickQueryValue(route.query.type)),
+  patient: String(pickQueryValue(route.query.patient)),
+  status: String(pickQueryValue(route.query.status)),
   keyword: ''
 })
 const tableOptions = reactive({
@@ -201,6 +233,21 @@ const handleResetSearch = () => {
 const refreshMessages = () => {
   crudRef.value?.refresh()
 }
+
+const routeDraft = () => {
+  return {
+    type: String(pickQueryValue(route.query.type) || '系统提醒'),
+    patient: String(pickQueryValue(route.query.patient)),
+    receiver: String(pickQueryValue(route.query.receiver) || '患者 / 子女'),
+    channel: String(pickQueryValue(route.query.channel) || '小程序消息中心'),
+    title: String(pickQueryValue(route.query.title) || '用药风险跟进提醒'),
+    content: String(pickQueryValue(route.query.content) || '请根据当前风险记录完成确认和跟进。'),
+    status: '已创建',
+    statusType: 'success',
+    createTime: '今日'
+  }
+}
+
 const showDialog = (type, record = {}) => {
   dialogType.value = type
   Object.assign(formData, {
@@ -246,5 +293,10 @@ const markHandled = async (record) => {
   refreshMessages()
 }
 
-onMounted(refreshMessages)
+onMounted(() => {
+  refreshMessages()
+  if (pickQueryValue(route.query.action) === 'create') {
+    showDialog('add', routeDraft())
+  }
+})
 </script>

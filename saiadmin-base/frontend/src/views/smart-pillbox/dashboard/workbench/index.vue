@@ -82,7 +82,7 @@
                     </span>
                   </span>
                 </span>
-                <a-button :status="buttonStatus(risk.type)" @click="router.push(risk.route || '/doctor/messages')">
+                <a-button :status="buttonStatus(risk.type)" @click="openRisk(risk)">
                   {{ risk.action || '处理' }}
                 </a-button>
               </div>
@@ -194,6 +194,14 @@ const buttonStatus = (type) => {
   if (type === 'danger') return 'danger'
   if (type === 'warning') return 'warning'
   return undefined
+}
+
+const openRisk = (risk) => {
+  if (risk.query) {
+    router.push({ path: risk.route || '/doctor/messages', query: risk.query })
+    return
+  }
+  router.push(risk.route || '/doctor/messages')
 }
 
 const loadDashboard = async () => {

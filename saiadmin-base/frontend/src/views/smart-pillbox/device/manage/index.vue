@@ -129,7 +129,7 @@
 
     <a-modal
       v-model:visible="editVisible"
-      :title="dialogType === 'add' ? '绑定药盒' : '编辑设备'"
+      :title="guidedBinding || dialogType === 'add' ? '绑定药盒' : '编辑设备'"
       width="min(640px, calc(100vw - 32px))"
       @ok="saveDevice"
     >
@@ -169,7 +169,7 @@
           支持 .xlsx、.xls、.csv，至少包含设备 SN。已识别 {{ previewRows.length }} 台设备
         </a-alert>
       </div>
-      <a-table v-if="previewRows.length" :data="previewRows" :pagination="false" style="margin-top: 16px">
+      <a-table v-if="previewRows.length" row-key="sn" :data="previewRows" :pagination="false" :scroll="{ x: 760 }" style="margin-top: 16px">
         <template #columns>
           <a-table-column title="设备SN" data-index="sn" />
           <a-table-column title="绑定患者" data-index="patient" />
@@ -195,7 +195,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { Message, Modal } from '@arco-design/web-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { deviceApi, patientApi } from '@/views/plugin/smart-pillbox/api/doctor'
-import { formatDateTime, getPayload, getRecords, statusColor } from '@/views/smart-pillbox/utils'
+import { formatDateTime, getPayload, getRecords, pickQueryValue, statusColor } from '@/views/smart-pillbox/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -211,7 +211,7 @@ const importText = ref('')
 
 const filters = reactive({
   sn: '',
-  status: ''
+  status: String(pickQueryValue(route.query.status))
 })
 const deviceForm = reactive({
   id: undefined,
@@ -286,7 +286,7 @@ const batteryPercent = (device) => {
 
 const openPatient = (device) => {
   if (!device.bindPatientId) return
-  router.push(`/doctor/patient-detail?id=${device.bindPatientId}`)
+  router.push(`/doctor/patient-detail?patientId=${device.bindPatientId}`)
 }
 
 const isDeviceBound = (device) => {
@@ -310,28 +310,34 @@ const openEditDialog = (device) => {
 }
 
 const openGuidedBindDialog = async () => {
-  if (route.query.action !== 'bind') return
-  const patientId = Number(route.query.patientId)
+  if (pickQueryValue(route.query.action) !== 'bind') return
+  filters.status = ''
+  await fetchDevices()
+  const patientId = Number(pickQueryValue(route.query.patientId))
   if (!patientId) return
-  let patientName = String(route.query.patientName || '')
+  let patientName = String(pickQueryValue(route.query.patientName))
   if (!patientName) {
     const patientResponse = await patientApi.read(patientId)
     patientName = getPayload(patientResponse).name
   }
-  dialogType.value = 'add'
+  const availableDevice = devices.value.find((device) => !isDeviceBound(device) || device.status === '待分配')
+  if (!availableDevice) {
+    Message.warning('暂无待分配设备，请先导入设备')
+    router.replace({ path: '/doctor/devices' })
+    return
+  }
+  dialogType.value = 'edit'
   guidedBinding.value = true
   Object.assign(deviceForm, {
-    id: undefined,
+    ...availableDevice,
     bindPatientId: patientId,
     patient: patientName,
-    sn: '',
     status: '在线',
-    batteryLevel: 100,
-    firmware: latestFirmwareVersion,
+    batteryLevel: batteryPercent(availableDevice) || 100,
+    firmware: availableDevice.firmware || latestFirmwareVersion,
     bindDate: new Date().toISOString().slice(0, 10)
   })
   editVisible.value = true
-  router.replace({ path: '/doctor/devices' })
 }
 
 const saveDevice = async () => {
@@ -445,7 +451,14 @@ const submitImport = async () => {
   }
 }
 
-watch(() => route.fullPath, openGuidedBindDialog)
+watch(
+  () => route.fullPath,
+  async () => {
+    filters.status = String(pickQueryValue(route.query.status))
+    await fetchDevices()
+    await openGuidedBindDialog()
+  }
+)
 
 onMounted(async () => {
   await fetchDevices()

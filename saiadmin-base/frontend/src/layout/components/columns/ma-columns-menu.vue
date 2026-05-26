@@ -61,17 +61,32 @@ watch(
 )
 
 const initMenu = () => {
-  let current
-  if (route.matched[1]?.meta?.breadcrumb) {
-    current = route.matched[1].meta.breadcrumb[0].name
-  } else {
-    current = 'home'
-  }
+  let current = getActiveTopMenuName()
   if (userStore.routers && userStore.routers.length > 0) {
     userStore.routers.map((item, index) => {
       if (item.name == current) loadMenu(item, index)
     })
   }
+}
+
+const findMenuPath = (items = [], targetName, parents = []) => {
+  if (!targetName) return []
+  for (const item of items) {
+    const currentPath = [...parents, item.name]
+    if (item.name === targetName) return currentPath
+    if (item.children && item.children.length > 0) {
+      const childPath = findMenuPath(item.children, targetName, currentPath)
+      if (childPath.length > 0) return childPath
+    }
+  }
+  return []
+}
+
+const getActiveTopMenuName = () => {
+  const activeName = route.meta?.activeMenu || route.name
+  const activePath = findMenuPath(userStore.routers || [], activeName)
+  if (activePath.length > 0) return activePath[0]
+  return route.matched[1]?.meta?.breadcrumb?.[0]?.name || 'home'
 }
 
 const loadMenu = (bigMenu, index) => {
