@@ -1,142 +1,136 @@
 <template>
-  <div class="art-full-height">
-    <!-- 搜索面板 -->
-    <TableSearch v-model="searchForm" @search="handleSearch" @reset="resetSearchParams" />
+  <div class="ma-content-block lg:flex justify-between">
+    <!-- CRUD 组件 -->
+    <sa-table ref="crudRef" :options="options" :columns="columns" :searchForm="searchForm">
+      <!-- 搜索区 tableSearch -->
+      <template #tableSearch>
+        <a-col :sm="8" :xs="24">
+          <a-form-item field="name" label="岗位名称">
+            <a-input v-model="searchForm.name" placeholder="请输入岗位名称" allow-clear />
+          </a-form-item>
+        </a-col>
+        <a-col :sm="8" :xs="24">
+          <a-form-item field="status" label="状态">
+            <sa-select v-model="searchForm.status" dict="data_status" placeholder="请选择状态" />
+          </a-form-item>
+        </a-col>
+        <a-col :sm="8" :xs="24">
+          <a-form-item field="create_time" label="时间范围">
+            <a-range-picker v-model="searchForm.create_time" style="width: 100%" />
+          </a-form-item>
+        </a-col>
+      </template>
 
-    <ElCard class="art-table-card" shadow="never">
-      <!-- 表格头部 -->
-      <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
-        <template #left>
-          <ElSpace wrap>
-            <ElButton v-permission="'core:post:save'" @click="showDialog('add')" v-ripple>
-              <template #icon>
-                <ArtSvgIcon icon="ri:add-fill" />
-              </template>
-              新增
-            </ElButton>
-            <ElButton
-              v-permission="'core:post:destroy'"
-              :disabled="selectedRows.length === 0"
-              @click="deleteSelectedRows(api.delete, refreshData)"
-              v-ripple
-            >
-              <template #icon>
-                <ArtSvgIcon icon="ri:delete-bin-5-line" />
-              </template>
-              删除
-            </ElButton>
-            <SaImport
-              v-permission="'core:post:import'"
-              download-url="/core/post/downloadTemplate"
-              upload-url="/core/post/import"
-              @success="refreshData"
-            />
-            <SaExport v-permission="'core:post:export'" url="/core/post/export" />
-          </ElSpace>
-        </template>
-      </ArtTableHeader>
+      <!-- Table 自定义渲染 -->
+      <!-- 状态列 -->
+      <template #status="{ record }">
+        <sa-switch v-model="record.status" @change="changeStatus($event, record.id)"></sa-switch>
+      </template>
+    </sa-table>
 
-      <!-- 表格 -->
-      <ArtTable
-        ref="tableRef"
-        rowKey="id"
-        :loading="loading"
-        :data="data"
-        :columns="columns"
-        :pagination="pagination"
-        @sort-change="handleSortChange"
-        @selection-change="handleSelectionChange"
-        @pagination:size-change="handleSizeChange"
-        @pagination:current-change="handleCurrentChange"
-      >
-        <!-- 操作列 -->
-        <template #operation="{ row }">
-          <div class="flex gap-2">
-            <SaButton
-              v-permission="'core:post:update'"
-              type="secondary"
-              @click="showDialog('edit', row)"
-            />
-            <SaButton
-              v-permission="'core:post:destroy'"
-              type="error"
-              @click="deleteRow(row, api.delete, refreshData)"
-            />
-          </div>
-        </template>
-      </ArtTable>
-    </ElCard>
+    <!-- 编辑表单 -->
+    <edit-form ref="editRef" @success="refresh" />
 
-    <!-- 编辑弹窗 -->
-    <EditDialog
-      v-model="dialogVisible"
-      :dialog-type="dialogType"
-      :data="dialogData"
-      @success="refreshData"
-    />
+    <!-- 查看表单 -->
+    <view-form ref="viewRef" @success="refresh" />
   </div>
 </template>
 
-<script setup lang="ts">
-  import { useTable } from '@/hooks/core/useTable'
-  import { useSaiAdmin } from '@/composables/useSaiAdmin'
-  import api from '@/api/system/post'
-  import TableSearch from './modules/table-search.vue'
-  import EditDialog from './modules/edit-dialog.vue'
+<script setup>
+import { onMounted, ref, reactive } from 'vue'
+import { Message } from '@arco-design/web-vue'
+import EditForm from './edit.vue'
+import ViewForm from './view.vue'
+import api from '@/api/system/post'
 
-  // 搜索表单
-  const searchForm = ref({
-    name: undefined,
-    code: undefined,
-    status: undefined
-  })
+const crudRef = ref()
+const editRef = ref()
+const viewRef = ref()
 
-  // 搜索处理
-  const handleSearch = (params: Record<string, any>) => {
-    Object.assign(searchParams, params)
-    getData()
+// 搜索表单
+const searchForm = ref({
+  name: '',
+  status: '',
+  create_time: [],
+})
+
+// 修改状态
+const changeStatus = async (status, id) => {
+  const response = await api.changeStatus({ id, status })
+  if (response.code === 200) {
+    Message.success(response.message)
+    crudRef.value.refresh()
   }
+}
 
-  // 表格配置
-  const {
-    columns,
-    columnChecks,
-    data,
-    loading,
-    getData,
-    searchParams,
-    pagination,
-    resetSearchParams,
-    handleSortChange,
-    handleSizeChange,
-    handleCurrentChange,
-    refreshData
-  } = useTable({
-    core: {
-      apiFn: api.list,
-      columnsFactory: () => [
-        { type: 'selection' },
-        { prop: 'id', label: '编号', width: 100, align: 'center' },
-        { prop: 'name', label: '岗位名称', minWidth: 120 },
-        { prop: 'code', label: '岗位编码', minWidth: 120 },
-        { prop: 'remark', label: '描述', minWidth: 150, showOverflowTooltip: true },
-        { prop: 'sort', label: '排序', width: 100 },
-        { prop: 'status', label: '状态', saiType: 'dict', saiDict: 'data_status', width: 100 },
-        { prop: 'create_time', label: '创建日期', width: 180, sortable: true },
-        { prop: 'operation', label: '操作', width: 100, fixed: 'right', useSlot: true }
-      ]
-    }
-  })
+// SaTable 基础配置
+const options = reactive({
+  api: api.getPageList,
+  rowSelection: { showCheckedAll: true },
+  view: {
+    show: true,
+    auth: ['/core/post/read'],
+    func: async (record) => {
+      viewRef.value?.open(record)
+    },
+  },
+  add: {
+    show: true,
+    auth: ['/core/post/save'],
+    func: async () => {
+      editRef.value?.open()
+    },
+  },
+  edit: {
+    show: true,
+    auth: ['/core/post/update'],
+    func: async (record) => {
+      editRef.value?.open('edit')
+      editRef.value?.setFormData(record)
+    },
+  },
+  delete: {
+    show: true,
+    auth: ['/core/post/destroy'],
+    func: async (params) => {
+      const resp = await api.destroy(params)
+      if (resp.code === 200) {
+        Message.success(`删除成功！`)
+        crudRef.value?.refresh()
+      }
+    },
+  },
+  import: {
+    show: true,
+    url: '/core/post/import',
+    templateUrl: '/core/post/downloadTemplate',
+    auth: ['/core/post/import'],
+  },
+  export: { show: true, url: '/core/post/export', auth: ['/core/post/export'] },
+})
 
-  // 编辑配置
-  const {
-    dialogType,
-    dialogVisible,
-    dialogData,
-    showDialog,
-    deleteRow,
-    deleteSelectedRows,
-    handleSelectionChange,
-    selectedRows
-  } = useSaiAdmin()
+// SaTable 列配置
+const columns = reactive([
+  { title: 'ID', dataIndex: 'id', width: 80 },
+  { title: '岗位名称', dataIndex: 'name', width: 120 },
+  { title: '岗位标识', dataIndex: 'code', width: 180 },
+  { title: '排序', dataIndex: 'sort', width: 180 },
+  { title: '状态', dataIndex: 'status', type: 'dict', dict: 'data_status', width: 120 },
+  { title: '备注', dataIndex: 'remark', width: 180 },
+  { title: '创建时间', dataIndex: 'create_time', width: 180 },
+])
+
+// 页面数据初始化
+const initPage = async () => {}
+
+// SaTable 数据请求
+const refresh = async () => {
+  crudRef.value?.refresh()
+}
+
+// 页面加载完成执行
+onMounted(async () => {
+  initPage()
+  refresh()
+})
 </script>

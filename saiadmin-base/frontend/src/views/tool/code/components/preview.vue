@@ -1,111 +1,48 @@
 <template>
-  <el-drawer v-model="visible" title="预览代码" size="100%" destroy-on-close @close="handleClose">
-    <el-tabs v-model="activeTab" type="card">
-      <el-tab-pane
-        v-for="item in previewCode"
-        :key="item.name"
-        :label="item.tab_name"
-        :name="item.name"
-      >
+  <a-modal width="1000px" v-model:visible="visible" :footer="false">
+    <template #title>预览代码</template>
+    <a-tabs v-model:active-key="activeTab">
+      <a-tab-pane v-for="item in previewCode" :key="item.name" :title="item.tab_name">
         <div class="relative">
-          <SaCode :code="item.code" :language="item.lang" />
-          <el-button class="copy-button" type="primary" @click="handleCopy(item.code)">
-            <template #icon>
-              <ArtSvgIcon icon="ri:file-copy-line" />
-            </template>
-            复制
-          </el-button>
+          <ma-code-editor v-model="item.code" readonly miniMap :language="item.lang" :height="600" />
+          <a-button class="copy-button" type="primary" @click="copyCode(item.code)"><icon-copy /> 复制</a-button>
         </div>
-      </el-tab-pane>
-    </el-tabs>
-  </el-drawer>
+      </a-tab-pane>
+    </a-tabs>
+  </a-modal>
 </template>
 
-<script setup lang="ts">
-  import { useClipboard } from '@vueuse/core'
-  import { ElMessage } from 'element-plus'
-  import generate from '@/api/tool/generate'
+<script setup>
+import { ref } from 'vue'
+import generate from '@/api/tool/generate'
+import { copy } from '@/utils/common'
+import { Message } from '@arco-design/web-vue'
+import MaCodeEditor from '@/components/ma-codeEditor/index.vue'
 
-  interface Props {
-    modelValue: boolean
-    data?: Record<string, any>
+const activeTab = ref('controller')
+const visible = ref(false)
+const previewCode = ref([])
+
+const open = async (id) => {
+  const response = await generate.preview(id)
+  if (response.code === 200) {
+    previewCode.value = response.data
+    visible.value = true
   }
+}
 
-  interface Emits {
-    (e: 'update:modelValue', value: boolean): void
-    (e: 'success'): void
-  }
+const copyCode = async (code) => {
+  await copy(code)
+}
 
-  const props = withDefaults(defineProps<Props>(), {
-    modelValue: false,
-    data: undefined
-  })
-
-  const emit = defineEmits<Emits>()
-
-  const activeTab = ref('controller')
-  const previewCode = ref<any[]>([])
-
-  /**
-   * 弹窗显示状态双向绑定
-   */
-  const visible = computed({
-    get: () => props.modelValue,
-    set: (value) => emit('update:modelValue', value)
-  })
-
-  /**
-   * 监听弹窗打开，初始化表单数据
-   */
-  watch(
-    () => props.modelValue,
-    (newVal) => {
-      if (newVal) {
-        initPage()
-      }
-    }
-  )
-
-  /**
-   * 打开弹窗
-   */
-  const initPage = async () => {
-    try {
-      const response = await generate.preview({ id: props.data?.id })
-      previewCode.value = response
-      activeTab.value = previewCode.value[0]?.name || 'controller'
-    } catch (error) {
-      console.error(error)
-      handleClose()
-    }
-  }
-
-  /**
-   * 关闭弹窗
-   */
-  const handleClose = () => {
-    visible.value = false
-  }
-
-  /**
-   * 复制代码到剪贴板
-   */
-  const { copy } = useClipboard()
-  const handleCopy = async (code: string) => {
-    try {
-      await copy(code)
-      ElMessage.success('代码已复制到剪贴板')
-    } catch {
-      ElMessage.error('复制失败，请手动复制')
-    }
-  }
+defineExpose({ open })
 </script>
 
-<style lang="scss" scoped>
-  .copy-button {
-    position: absolute;
-    right: 15px;
-    top: 0px;
-    z-index: 999;
-  }
+<style scoped>
+.copy-button {
+  position: absolute;
+  right: 15px;
+  top: 0px;
+  z-index: 999;
+}
 </style>

@@ -3,9 +3,5 @@ node_modules
 dist
 dist-ssr
 *.local
-.cursorrules
-
-# Auto-generated files
-src/types/import/auto-imports.d.ts
-src/types/import/components.d.ts
-.auto-import.json
+.idea
+stats.html

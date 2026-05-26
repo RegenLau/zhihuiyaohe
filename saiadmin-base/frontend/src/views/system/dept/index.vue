@@ -1,143 +1,126 @@
 <template>
-  <div class="art-full-height">
-    <!-- 搜索面板 -->
-    <TableSearch v-model="searchForm" @search="handleSearch" @reset="resetSearchParams" />
+  <div class="ma-content-block">
+    <!-- CRUD 组件 -->
+    <sa-table ref="crudRef" :options="options" :columns="columns" :searchForm="searchForm">
+      <!-- 搜索区 tableSearch -->
+      <template #tableSearch>
+        <a-col :sm="8" :xs="24">
+          <a-form-item field="name" label="部门名称">
+            <a-input v-model="searchForm.name" placeholder="请输入部门名称" allow-clear />
+          </a-form-item>
+        </a-col>
+        <a-col :sm="8" :xs="24">
+          <a-form-item field="create_time" label="时间范围">
+            <a-range-picker v-model="searchForm.create_time" />
+          </a-form-item>
+        </a-col>
+      </template>
+      <!-- 搜索区 end -->
 
-    <ElCard class="art-table-card" shadow="never">
-      <!-- 表格头部 -->
-      <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
-        <template #left>
-          <ElSpace wrap>
-            <ElButton v-permission="'core:dept:save'" @click="showDialog('add')" v-ripple>
-              <template #icon>
-                <ArtSvgIcon icon="ri:add-fill" />
-              </template>
-              新增
-            </ElButton>
-            <ElButton @click="toggleExpand" v-ripple>
-              <template #icon>
-                <ArtSvgIcon v-if="isExpanded" icon="ri:collapse-diagonal-line" />
-                <ArtSvgIcon v-else icon="ri:expand-diagonal-line" />
-              </template>
-              {{ isExpanded ? '收起' : '展开' }}
-            </ElButton>
-          </ElSpace>
-        </template>
-      </ArtTableHeader>
+      <!-- Table 自定义渲染 -->
+      <template #leader="{ record }">
+        <div v-if="record.leader.length > 0">
+          <a-tag v-for="item in record.leader" :key="item.id" class="ml-2">{{ item.username }}</a-tag>
+        </div>
+        <div v-else></div>
+      </template>
+      <!-- 操作列 -->
+      <template #operationCell="{ record }">
+        <div v-if="record.disabled"></div>
+      </template>
+      <!-- 操作前置扩展 -->
+      <template #operationBeforeExtend="{ record }">
+        <a-link v-if="!record.disabled" v-auth="['/core/dept/leaders']" @click="openLeaderModal(record)">
+          <icon-user /> 领导列表
+        </a-link>
+      </template>
+    </sa-table>
 
-      <!-- 表格 -->
-      <ArtTable
-        ref="tableRef"
-        rowKey="id"
-        :loading="loading"
-        :data="data"
-        :columns="columns"
-        :default-expand-all="true"
-        @sort-change="handleSortChange"
-        @pagination:size-change="handleSizeChange"
-        @pagination:current-change="handleCurrentChange"
-      >
-        <!-- 操作列 -->
-        <template #operation="{ row }">
-          <div class="flex gap-2">
-            <SaButton
-              v-permission="'core:dept:update'"
-              type="secondary"
-              @click="showDialog('edit', row)"
-            />
-            <SaButton
-              v-permission="'core:dept:destroy'"
-              type="error"
-              @click="deleteRow(row, api.delete, refreshData)"
-            />
-          </div>
-        </template>
-      </ArtTable>
-    </ElCard>
+    <!-- 编辑表单 -->
+    <edit-form ref="editRef" @success="refresh" />
 
-    <!-- 编辑弹窗 -->
-    <EditDialog
-      v-model="dialogVisible"
-      :dialog-type="dialogType"
-      :data="dialogData"
-      @success="refreshData"
-    />
+    <!-- 领导列表 -->
+    <leader-list ref="leaderRef" @success="refresh" />
   </div>
 </template>
 
-<script setup lang="ts">
-  import { useTable } from '@/hooks/core/useTable'
-  import { useSaiAdmin } from '@/composables/useSaiAdmin'
-  import api from '@/api/system/dept'
-  import TableSearch from './modules/table-search.vue'
-  import EditDialog from './modules/edit-dialog.vue'
+<script setup>
+import { onMounted, ref, reactive, computed } from 'vue'
+import { Message } from '@arco-design/web-vue'
+import EditForm from './edit.vue'
+import LeaderList from './leader.vue'
+import api from '@/api/system/dept'
 
-  // 状态管理
-  const isExpanded = ref(true)
-  const tableRef = ref()
+// 引用定义
+const crudRef = ref()
+const editRef = ref()
+const leaderRef = ref()
 
-  // 搜索表单
-  const searchForm = ref({
-    name: undefined,
-    code: undefined,
-    status: undefined
-  })
+// 打开领导列表设置
+const openLeaderModal = (record) => {
+  leaderRef.value.open(record)
+}
 
-  // 搜索处理
-  const handleSearch = (params: Record<string, any>) => {
-    Object.assign(searchParams, params)
-    getData()
-  }
+// 搜索表单
+const searchForm = ref({
+  name: '',
+  create_time: [],
+})
 
-  // 表格配置
-  const {
-    columns,
-    columnChecks,
-    data,
-    loading,
-    getData,
-    searchParams,
-    resetSearchParams,
-    handleSortChange,
-    handleSizeChange,
-    handleCurrentChange,
-    refreshData
-  } = useTable({
-    core: {
-      apiFn: api.list,
-      columnsFactory: () => [
-        { prop: 'name', label: '部门名称', minWidth: 200 },
-        { prop: 'code', label: '部门编码', minWidth: 120 },
-        { prop: 'leader.username', label: '部门领导', minWidth: 120 },
-        { prop: 'remark', label: '描述', minWidth: 150, showOverflowTooltip: true },
-        { prop: 'sort', label: '排序', width: 100 },
-        { prop: 'status', label: '状态', saiType: 'dict', saiDict: 'data_status', width: 100 },
-        { prop: 'create_time', label: '创建日期', width: 180, sortable: true },
-        { prop: 'operation', label: '操作', width: 100, fixed: 'right', useSlot: true }
-      ]
-    }
-  })
-
-  // 编辑配置
-  const { dialogType, dialogVisible, dialogData, showDialog, deleteRow } = useSaiAdmin()
-
-  /**
-   * 切换展开/收起所有菜单
-   */
-  const toggleExpand = (): void => {
-    isExpanded.value = !isExpanded.value
-    nextTick(() => {
-      if (tableRef.value?.elTableRef && data.value) {
-        const processRows = (rows: any[]) => {
-          rows.forEach((row) => {
-            if (row.children?.length) {
-              tableRef.value.elTableRef.toggleRowExpansion(row, isExpanded.value)
-              processRows(row.children)
-            }
-          })
-        }
-        processRows(data.value)
+// SaTable 基础配置
+const options = reactive({
+  api: api.getPageList,
+  rowSelection: { showCheckedAll: true },
+  isExpand: true,
+  operationColumnWidth: 220,
+  add: {
+    show: true,
+    auth: ['/core/dept/save'],
+    func: async () => {
+      editRef.value?.open()
+    },
+  },
+  edit: {
+    show: true,
+    auth: ['/core/dept/update'],
+    func: async (record) => {
+      editRef.value?.open('edit')
+      editRef.value?.setFormData(record)
+    },
+  },
+  delete: {
+    show: true,
+    auth: ['/core/dept/destroy'],
+    func: async (params) => {
+      const resp = await api.destroy(params)
+      if (resp.code === 200) {
+        Message.success(`删除成功！`)
+        crudRef.value?.refresh()
       }
-    })
-  }
+    },
+  },
+})
+
+// SaTable 列配置
+const columns = reactive([
+  { title: '部门名称', dataIndex: 'name', width: 180 },
+  { title: '领导列表', dataIndex: 'leader' },
+  { title: '排序', dataIndex: 'sort', width: 100 },
+  { title: '状态', dataIndex: 'status', type: 'dict', dict: 'data_status', width: 120 },
+  { title: '创建时间', dataIndex: 'create_time', width: 180 },
+])
+
+// 页面数据初始化
+const initPage = async () => {}
+
+// SaTable 数据请求
+const refresh = async () => {
+  crudRef.value?.refresh()
+}
+
+// 页面加载完成执行
+onMounted(async () => {
+  initPage()
+  refresh()
+})
 </script>

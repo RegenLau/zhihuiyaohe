@@ -1,53 +1,33 @@
 <template>
-  <div class="pillbox-page page-content">
-    <div class="page-header">
-      <div>
-        <h2>工作台</h2>
-        <p>查看患者服药风险、药盒状态和待处理提醒</p>
-      </div>
-      <ElSpace wrap>
-        <ElButton @click="router.push('/doctor/tasks')">
-          <template #icon><ArtSvgIcon icon="ri:checkbox-circle-line" /></template>
-          查看任务
-        </ElButton>
-        <ElButton type="primary" @click="router.push('/doctor/patient-create')">
-          <template #icon><ArtSvgIcon icon="ri:user-add-line" /></template>
-          新增患者建档
-        </ElButton>
-      </ElSpace>
-    </div>
-
-    <ElRow :gutter="16">
-      <ElCol v-for="item in statCards" :key="item.label" :xs="24" :sm="12" :lg="6" :xl="6">
-        <ElCard class="stat-card" shadow="never">
-          <div class="flex justify-between items-center muted">
-            <span>{{ item.label }}</span>
-            <ArtSvgIcon :icon="item.icon" />
+  <div class="smart-page">
+    <a-spin :loading="loading">
+      <div class="dashboard-content">
+        <div class="smart-stat-grid">
+        <a-card v-for="item in dashboard.statCards" :key="item.label" class="smart-stat-card" :bordered="false">
+          <div class="smart-row" style="justify-content: space-between">
+            <span class="smart-muted">{{ item.label }}</span>
+            <sa-icon :icon="item.icon || 'ri:dashboard-line'" :size="18" />
           </div>
-          <div class="stat-value">{{ item.value }}</div>
-          <div class="muted">{{ item.note }}</div>
-        </ElCard>
-      </ElCol>
-    </ElRow>
+          <div class="smart-stat-value">{{ item.value }}</div>
+          <div class="smart-muted">{{ item.note }}</div>
+        </a-card>
+        </div>
 
-    <div class="dashboard-layout mt-4">
-      <div class="dashboard-main">
-        <div class="dashboard-insight-grid">
-          <ElCard shadow="never">
-            <template #header>
-              <div class="panel-header">
-                <div>
-                  <b>近 7 天服药完成趋势</b>
-                  <div class="muted text-sm mt-1">蓝色为完成任务，红色为漏服任务</div>
-                </div>
-                <ElButton @click="router.push('/doctor/tasks')">
-                  <template #icon><ArtSvgIcon icon="ri:checkbox-circle-line" /></template>
-                  查看任务
-                </ElButton>
+        <div class="dashboard-layout">
+        <div class="dashboard-main">
+          <a-card class="smart-panel" :bordered="false">
+            <div class="smart-card-heading">
+              <div>
+                <strong>近 7 天服药完成趋势</strong>
+                <div class="smart-section-note">蓝色为完成任务，红色为漏服任务</div>
               </div>
-            </template>
+              <a-button @click="router.push('/doctor/tasks')">
+                <template #icon><sa-icon icon="ri:checkbox-circle-line" :size="16" /></template>
+                查看任务
+              </a-button>
+            </div>
             <div class="chart-bars">
-              <div v-for="bar in trendBars" :key="bar.label" class="chart-bar-item">
+              <div v-for="bar in dashboard.trendBars" :key="bar.label" class="chart-bar-item">
                 <div
                   class="chart-bar-stack"
                   :style="{ '--done-height': `${bar.done}%`, '--miss-height': `${bar.miss}%` }"
@@ -55,199 +35,176 @@
                   <div class="chart-bar is-done"></div>
                   <div class="chart-bar is-miss"></div>
                 </div>
-                <div class="text-xs muted mt-2">{{ bar.label }}</div>
+                <div class="smart-muted" style="margin-top: 8px">{{ bar.label }}</div>
               </div>
             </div>
-          </ElCard>
+          </a-card>
+
+          <a-card class="smart-panel" :bordered="false">
+            <div class="smart-card-heading">
+              <div>
+                <strong>待处理风险</strong>
+                <div class="smart-section-note">按漏服、离线和复诊规则聚合</div>
+              </div>
+              <a-button @click="router.push('/doctor/messages')">
+                <template #icon><sa-icon icon="ri:notification-3-line" :size="16" /></template>
+                查看提醒
+              </a-button>
+            </div>
+            <div class="risk-board">
+              <div
+                v-for="risk in dashboard.risks"
+                :key="risk.title"
+                class="risk-board-item"
+                :class="`is-${risk.type || 'primary'}`"
+              >
+                <span class="risk-board-icon" :class="`is-${risk.type || 'primary'}`">
+                  <sa-icon :icon="risk.icon || 'ri:alarm-warning-line'" :size="20" />
+                </span>
+                <span class="risk-board-content">
+                  <span class="risk-board-title">
+                    <strong>{{ risk.title }}</strong>
+                    <a-tag :color="statusColor(risk.type)">{{ risk.level || '待处理' }}</a-tag>
+                  </span>
+                  <span class="risk-board-note">{{ risk.note }}</span>
+                  <span class="risk-board-meta">
+                    <span v-if="risk.patient" class="risk-meta-chip">
+                      <sa-icon icon="ri:user-heart-line" :size="13" />
+                      {{ risk.patient }}
+                    </span>
+                    <span v-if="risk.source" class="risk-meta-chip">
+                      <sa-icon icon="ri:flag-line" :size="13" />
+                      {{ risk.source }}
+                    </span>
+                    <span class="risk-meta-chip">
+                      <sa-icon icon="ri:time-line" :size="13" />
+                      {{ risk.timestamp }}
+                    </span>
+                  </span>
+                </span>
+                <a-button :status="buttonStatus(risk.type)" @click="router.push(risk.route || '/doctor/messages')">
+                  {{ risk.action || '处理' }}
+                </a-button>
+              </div>
+            </div>
+          </a-card>
         </div>
 
-        <ElCard class="risk-board-card" shadow="never">
-          <template #header>
-            <div class="panel-header">
-              <div>
-                <b>待处理风险</b>
-                <div class="muted text-sm mt-1">按漏服、离线和复诊规则聚合</div>
+        <aside class="dashboard-side">
+          <a-card class="smart-panel" :bordered="false">
+            <template #title>
+              <div class="side-card-header">
+                <strong>今日管理成效</strong>
+                <a-link @click="router.push('/doctor/tasks')">
+                  更多数据
+                  <sa-icon icon="ri:arrow-right-s-line" :size="16" />
+                </a-link>
               </div>
-              <ElButton @click="router.push('/doctor/messages')">
-                <template #icon><ArtSvgIcon icon="ri:notification-3-line" /></template>
-                查看提醒
-              </ElButton>
-            </div>
-          </template>
-          <div v-loading="dashboardLoading" class="risk-board">
-            <div
-              v-for="risk in risks"
-              :key="risk.title"
-              class="risk-board-item"
-              :class="`is-${risk.type}`"
-            >
-              <span class="risk-board-icon">
-                <ArtSvgIcon :icon="risk.icon || 'ri:alarm-warning-line'" />
-              </span>
-              <span class="risk-board-content">
-                <span class="risk-board-title">
-                  <b>{{ risk.title }}</b>
-                  <ElTag :type="risk.type" effect="light">{{ risk.level || '待处理' }}</ElTag>
-                </span>
-                <span class="risk-board-note">{{ risk.note }}</span>
-                <span class="risk-board-meta">
-                  <span v-if="risk.patient">
-                    <ArtSvgIcon icon="ri:user-heart-line" />
-                    {{ risk.patient }}
-                  </span>
-                  <span v-if="risk.source">
-                    <ArtSvgIcon icon="ri:flag-line" />
-                    {{ risk.source }}
-                  </span>
-                  <span>
-                    <ArtSvgIcon icon="ri:time-line" />
-                    {{ risk.timestamp }}
-                  </span>
-                </span>
-              </span>
-              <ElButton
-                :type="risk.type"
-                plain
-                @click="router.push(risk.route || '/doctor/messages')"
-              >
-                {{ risk.action || '处理' }}
-              </ElButton>
-            </div>
-          </div>
-        </ElCard>
-      </div>
+            </template>
+            <div class="side-card-body">
+              <div class="progress-metric-stack">
+                <button
+                  v-for="metric in dashboard.sidePanel.metrics"
+                  :key="metric.label"
+                  type="button"
+                  class="progress-metric"
+                  @click="router.push(metric.route)"
+                >
+                  <div class="progress-metric-top">
+                    <span>{{ metric.label }}</span>
+                    <strong>{{ metric.value }}</strong>
+                  </div>
+                  <a-progress :percent="metric.percent / 100" :show-text="false" size="small" />
+                  <div class="smart-muted">{{ metric.note }}</div>
+                </button>
+              </div>
 
-      <aside class="dashboard-side">
-        <ElCard class="side-card" shadow="never">
-          <template #header>
-            <div class="side-card-header">
-              <b>今日管理成效</b>
-              <ElButton link type="primary" @click="router.push('/doctor/tasks')">
-                更多数据
-                <ArtSvgIcon icon="ri:arrow-right-s-line" />
-              </ElButton>
+              <div class="side-action-grid">
+                <button
+                  v-for="action in dashboard.sidePanel.actions"
+                  :key="action.label"
+                  type="button"
+                  :class="['side-action', `is-${action.tone || 'info'}`]"
+                  @click="router.push(action.route)"
+                >
+                  <sa-icon :icon="action.icon" :size="18" />
+                  <span>{{ action.label }}</span>
+                </button>
+              </div>
             </div>
-          </template>
-          <div v-loading="dashboardLoading" class="side-card-body">
-            <div class="progress-metric-stack">
-              <button
-                v-for="metric in sidePanel.metrics"
-                :key="metric.label"
-                type="button"
-                class="progress-metric"
-                @click="router.push(metric.route)"
-              >
-                <div class="progress-metric-top">
-                  <span>{{ metric.label }}</span>
-                  <b>{{ metric.value }}</b>
-                </div>
-                <ElProgress :percentage="metric.percent" :show-text="false" :stroke-width="8" />
-                <div class="muted text-xs">{{ metric.note }}</div>
-              </button>
-            </div>
+          </a-card>
 
-            <div class="side-action-grid">
-              <button
-                v-for="action in sidePanel.actions"
-                :key="action.label"
-                type="button"
-                :class="['side-action', `is-${action.tone}`]"
-                @click="router.push(action.route)"
-              >
-                <ArtSvgIcon :icon="action.icon" />
-                <span>{{ action.label }}</span>
-              </button>
-            </div>
-          </div>
-        </ElCard>
-
-        <ElCard class="side-card weekly-card" shadow="never">
-          <template #header>
-            <div class="side-card-header">
-              <b>本周服药达标</b>
-              <ElButton class="period-chip" size="small">
-                7天
-                <ArtSvgIcon icon="ri:arrow-down-s-line" />
-              </ElButton>
-            </div>
-          </template>
-          <div v-loading="dashboardLoading" class="weekly-chart">
-            <div class="weekly-scale">
-              <span>100</span>
-              <span>75</span>
-              <span>50</span>
-              <span>25</span>
-              <span>0</span>
-            </div>
-            <div class="weekly-bars">
+          <a-card class="smart-panel" :bordered="false">
+            <template #title>
+              <div class="side-card-header">
+                <strong>本周服药达标</strong>
+                <a-tag color="green">7天</a-tag>
+              </div>
+            </template>
+            <div class="weekly-list">
               <div
-                v-for="bar in sidePanel.weeklyBars"
+                v-for="bar in dashboard.sidePanel.weeklyBars"
                 :key="bar.label"
-                class="weekly-bar-item"
+                class="weekly-list-row"
                 :class="{ 'is-active': bar.active }"
               >
-                <div class="weekly-bar-track">
-                  <div class="weekly-bar" :style="{ '--bar-value': `${bar.value}%` }"></div>
+                <span class="weekly-list-day">{{ bar.label }}</span>
+                <div class="weekly-list-track">
+                  <span class="weekly-list-bar" :style="{ width: `${bar.value}%` }"></span>
                 </div>
-                <div class="weekly-label">{{ bar.label }}</div>
-                <div class="weekly-count">{{ bar.count }}</div>
+                <strong>{{ bar.value }}%</strong>
+                <span class="smart-muted">{{ bar.count }}</span>
+              </div>
+              <div class="weekly-list-summary">
+                <strong>{{ dashboard.sidePanel.weeklySummary.value }}</strong>
+                <span>{{ dashboard.sidePanel.weeklySummary.note }}</span>
               </div>
             </div>
-            <div class="weekly-summary">
-              <b>{{ sidePanel.weeklySummary.value }}</b>
-              <span>{{ sidePanel.weeklySummary.note }}</span>
-            </div>
-          </div>
-        </ElCard>
-      </aside>
-    </div>
+          </a-card>
+        </aside>
+        </div>
+      </div>
+    </a-spin>
   </div>
 </template>
 
-<script setup lang="ts">
-  import dashboardApi from '@/views/plugin/smart-pillbox/api/doctor/dashboard'
-  import type {
-    DashboardStatCard,
-    DashboardSidePanel,
-    RiskItem,
-    TrendBar
-  } from '@/views/plugin/smart-pillbox/api/doctor/types'
+<script setup>
+import { onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { dashboardApi } from '@/views/plugin/smart-pillbox/api/doctor'
+import { statusColor as mapStatusColor } from '@/views/smart-pillbox/utils'
 
-  defineOptions({ name: 'SmartPillboxWorkbench' })
-
-  const router = useRouter()
-  const dashboardLoading = ref(false)
-  const statCards = ref<DashboardStatCard[]>([])
-  const trendBars = ref<TrendBar[]>([])
-  const risks = ref<RiskItem[]>([])
-  const sidePanel = ref<DashboardSidePanel>({
+const router = useRouter()
+const loading = ref(false)
+const dashboard = reactive({
+  statCards: [],
+  trendBars: [],
+  risks: [],
+  sidePanel: {
     metrics: [],
     actions: [],
     weeklyBars: [],
-    weeklySummary: {
-      value: '',
-      note: ''
-    }
-  })
-
-  const loadDashboard = async () => {
-    dashboardLoading.value = true
-    try {
-      const dashboardData = await dashboardApi.read()
-      statCards.value = dashboardData.statCards
-      trendBars.value = dashboardData.trendBars
-      risks.value = dashboardData.risks
-      sidePanel.value = dashboardData.sidePanel
-    } finally {
-      dashboardLoading.value = false
-    }
+    weeklySummary: { value: '', note: '' }
   }
+})
 
-  onMounted(() => {
-    loadDashboard()
-  })
+const statusColor = (type) => mapStatusColor(type, 'arcoblue')
+
+const buttonStatus = (type) => {
+  if (type === 'danger') return 'danger'
+  if (type === 'warning') return 'warning'
+  return undefined
+}
+
+const loadDashboard = async () => {
+  loading.value = true
+  try {
+    const response = await dashboardApi.read()
+    Object.assign(dashboard, response.data || {})
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadDashboard)
 </script>
-
-<style lang="scss" scoped>
-  @use '../../style';
-</style>

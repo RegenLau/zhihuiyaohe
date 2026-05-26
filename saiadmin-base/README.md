@@ -1,12 +1,12 @@
-# T2 SaiAdmin Prototype
+# 智慧药盒 SaiAdmin 5.x Prototype
 
-This project uses SaiAdmin v6 frontend as the admin shell and a local mock API for bootstrap endpoints.
+This project uses SaiAdmin 5.x frontend as the admin shell and a local mock API for bootstrap endpoints.
 
 ## Structure
 
 ```txt
-saiadmin/
-  frontend/      SaiAdmin v6 frontend, configured for local mock API
+saiadmin-base/
+  frontend/      SaiAdmin 5.x frontend, configured for local mock API
   mock-api/      Express mock API scaffold
   docs/          Architecture notes and API contract placeholders
 ```

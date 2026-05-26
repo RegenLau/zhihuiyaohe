@@ -1,113 +1,120 @@
 <template>
-  <el-dialog
-    v-model="visible"
-    :title="`设置组件 - ${row?.column_comment}`"
-    width="600px"
-    draggable
-    destroy-on-close
-    @close="handleClose"
-  >
-    <el-form :model="form" label-width="120px">
+  <a-modal v-model:visible="visible" :on-before-ok="save" width="600px" draggable top="50px" :align-center="false">
+    <template #title>设置组件 - {{ row?.column_comment }}</template>
+    <a-form :model="form">
       <!-- 编辑器相关 -->
-      <template v-if="row.view_type === 'editor'">
-        <el-form-item label="编辑器高度" prop="height">
-          <el-input-number v-model="form.height" :max="1000" :min="100" />
-        </el-form-item>
-      </template>
-
+      <div v-if="['codeEditor', 'editor', 'wangEditor'].includes(row.view_type)">
+        <a-form-item label="编辑器高度" field="height" label-col-flex="auto" :label-col-style="{ width: '120px' }">
+          <a-input-number v-model="form.height" :max="1000" :min="100" />
+        </a-form-item>
+      </div>
       <!-- 上传、资源选择器相关 -->
-      <template
-        v-if="['uploadImage', 'imagePicker', 'uploadFile', 'chunkUpload'].includes(row.view_type)"
-      >
-        <el-form-item label="是否多选" prop="multiple">
-          <el-radio-group v-model="form.multiple">
-            <el-radio :value="true">是</el-radio>
-            <el-radio :value="false">否</el-radio>
-          </el-radio-group>
-          <div class="text-xs text-gray-400 ml-2">多个文件必须选是，字段自动处理为数组</div>
-        </el-form-item>
-        <el-form-item label="数量限制" prop="limit">
-          <el-input-number v-model="form.limit" :max="10" :min="1" />
-          <div class="text-xs text-gray-400 ml-2">限制上传数量</div>
-        </el-form-item>
-      </template>
-
-      <!-- 用户选择器 -->
-      <template v-if="row.view_type === 'userSelect'">
-        <el-form-item label="是否多选" prop="multiple">
-          <el-radio-group v-model="form.multiple">
-            <el-radio :value="true">是</el-radio>
-            <el-radio :value="false">否</el-radio>
-          </el-radio-group>
-          <div class="text-xs text-gray-400 ml-2">多个用户，字段自动处理为数组</div>
-        </el-form-item>
-      </template>
-
+      <div v-if="['uploadImage', 'uploadFile'].includes(row.view_type)">
+        <a-form-item label="是否可多选" field="multiple" label-col-flex="auto" :label-col-style="{ width: '100px' }">
+          <a-radio-group v-model="form.multiple">
+            <a-radio :value="true">是</a-radio>
+            <a-radio :value="false">否</a-radio>
+          </a-radio-group>
+        </a-form-item>
+        <a-form-item
+          v-if="form.multiple"
+          label="数量限制"
+          field="limit"
+          label-col-flex="auto"
+          :label-col-style="{ width: '100px' }"
+          :extra="`多选模式下生效,限制上传数量`">
+          <a-input-number v-model="form.limit" :max="10" :min="1" />
+        </a-form-item>
+      </div>
+      <!-- 省市区联动 -->
+      <div v-if="row.view_type == 'cityLinkage'">
+        <a-alert title="提示">
+          <p>级联选择器返回的数据类型为 String</p>
+          <p>下拉框联动返回的数据类型为 Array</p>
+        </a-alert>
+        <a-form-item class="mt-3" label="组件类型" field="type" label-col-flex="auto" :label-col-style="{ width: '100px' }">
+          <a-select v-model="form.type" placeholder="默认为下拉框联动" allow-clear>
+            <a-option value="select">下拉框联动</a-option>
+            <a-option value="cascader">级联选择器</a-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item class="mt-3" label="返回数据" field="mode" label-col-flex="auto" :label-col-style="{ width: '100px' }">
+          <a-select v-model="form.mode" placeholder="默认为省市名称" allow-clear>
+            <a-option value="name">省市名称</a-option>
+            <a-option value="code">省市编码</a-option>
+          </a-select>
+        </a-form-item>
+      </div>
       <!-- 日期、时间选择器 -->
-      <template v-if="['date'].includes(row.view_type)">
-        <el-form-item label="选择器类型" prop="mode">
-          <el-select v-model="form.mode" clearable>
-            <el-option label="日期选择器" value="date" />
-            <el-option label="日期时间择器" value="datetime" />
-          </el-select>
-        </el-form-item>
-      </template>
-    </el-form>
+      <div v-if="['date'].includes(row.view_type)">
+        <a-form-item
+          class="mt-3"
+          label="选择器类型"
+          field="formType"
+          label-col-flex="auto"
+          :label-col-style="{ width: '120px' }"
+          v-if="row.view_type == 'date'">
+          <a-select v-model="form.mode" allow-clear>
+            <a-option value="date">日期选择器</a-option>
+            <a-option value="week">周选择器</a-option>
+            <a-option value="month">月选择器</a-option>
+            <a-option value="quarter">季度选择器</a-option>
+            <a-option value="year">年选择器</a-option>
+          </a-select>
+        </a-form-item>
 
-    <template #footer>
-      <el-button @click="handleClose">取消</el-button>
-      <el-button type="primary" @click="save">确定</el-button>
-    </template>
-  </el-dialog>
+        <a-form-item
+          class="mt-3"
+          label="是否显示时间"
+          field="showTime"
+          label-col-flex="auto"
+          :label-col-style="{ width: '120px' }"
+          v-if="form.mode == 'date'">
+          <a-radio-group v-model="form.showTime">
+            <a-radio :value="true">是</a-radio>
+            <a-radio :value="false">否</a-radio>
+          </a-radio-group>
+        </a-form-item>
+      </div>
+    </a-form>
+  </a-modal>
 </template>
 
-<script setup lang="ts">
-  const emit = defineEmits<{
-    (e: 'confirm', name: string, value: any): void
-  }>()
+<script setup>
+import { ref } from 'vue'
 
-  const visible = ref(false)
-  const row = ref<any>({})
-  const form = ref<any>({})
+const emit = defineEmits(['confrim'])
+const visible = ref(false)
+const row = ref({})
+const form = ref({})
 
-  /**
-   * 打开弹窗
-   */
-  const open = (record: any) => {
-    row.value = record
-    if (
-      record.view_type === 'uploadImage' ||
-      record.view_type === 'imagePicker' ||
-      record.view_type === 'uploadFile' ||
-      record.view_type === 'chunkUpload'
-    ) {
-      form.value = record.options ? { ...record.options } : { multiple: false }
-    } else if (record.view_type === 'editor') {
-      form.value = record.options ? { ...record.options } : { height: 400 }
-    } else if (record.view_type === 'date' || record.view_type === 'datetime') {
-      form.value = record.options ? { ...record.options } : { mode: record.view_type }
-    } else if (record.view_type === 'userSelect') {
-      form.value = record.options ? { ...record.options } : { multiple: false }
-    } else {
-      form.value = record.options ? { ...record.options } : {}
-    }
-    visible.value = true
+const open = (record) => {
+  row.value = record
+  if (record.view_type == 'uploadImage' || record.view_type == 'uploadFile') {
+    form.value = record.options ? record.options : { multiple: false }
+  } else if (record.view_type == 'codeEditor' || record.view_type == 'editor' || record.view_type == 'wangEditor') {
+    form.value = record.options ? record.options : { height: 400 }
+  } else if (record.view_type == 'date') {
+    form.value = record.options ? record.options : { mode: 'date', showTime: false }
+  } else if (record.view_type == 'cityLinkage') {
+    form.value = record.options ? record.options : { type: 'cascader', mode: 'code' }
+  } else {
+    form.value = record.options ? record.options : {}
   }
+  visible.value = true
+}
 
-  /**
-   * 保存
-   */
-  const save = () => {
-    emit('confirm', row.value.column_name, form.value)
-    handleClose()
-  }
+const save = (done) => {
+  emit('confrim', row.value.column_name, form.value)
+  done(true)
+}
 
-  /**
-   * 关闭弹窗
-   */
-  const handleClose = () => {
-    visible.value = false
-  }
-
-  defineExpose({ open })
+defineExpose({ open })
 </script>
+
+<style scoped>
+.setdata-button {
+  right: 15px;
+  position: absolute;
+}
+</style>

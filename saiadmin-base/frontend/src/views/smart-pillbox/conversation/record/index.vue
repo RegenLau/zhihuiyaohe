@@ -1,314 +1,228 @@
 <template>
-  <div class="pillbox-page page-content conversation-page">
-    <div class="page-header">
-      <div>
-        <h2>对话记录</h2>
-        <p>先选择患者，再查看患者与小智设备的提醒、聊天和未响应记录</p>
-      </div>
-    </div>
+  <div class="smart-page conversation-page">
+    <a-card class="smart-panel" :bordered="false">
+      <a-row class="smart-filter-row" :gutter="[12, 12]" align="center">
+        <a-col :xs="24" :md="8">
+          <a-input-search
+            v-model="filters.keyword"
+            placeholder="搜索姓名、处方编号、设备号"
+            allow-clear
+          />
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="5">
+          <a-select v-model="filters.type" placeholder="全部" allow-clear>
+            <a-option value="">全部</a-option>
+            <a-option value="患者聊天">患者聊天</a-option>
+            <a-option value="小智提醒">小智提醒</a-option>
+            <a-option value="设备事件">设备事件</a-option>
+          </a-select>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="5">
+          <a-select v-model="filters.status" placeholder="跟进状态" allow-clear>
+            <a-option value="待人工跟进">待人工跟进</a-option>
+            <a-option value="待处理">待处理</a-option>
+            <a-option value="未响应">未响应</a-option>
+            <a-option value="已归档">已归档</a-option>
+            <a-option value="已确认">已确认</a-option>
+            <a-option value="已闭环">已闭环</a-option>
+          </a-select>
+        </a-col>
+        <a-col :xs="24" :md="6" class="smart-filter-actions">
+          <a-space wrap>
+            <a-button type="primary" @click="handleExport">
+              <template #icon><sa-icon icon="ri:download-2-line" :size="16" /></template>
+              导出记录
+            </a-button>
+            <a-button :loading="loading" @click="fetchConversations">
+              <template #icon><sa-icon icon="ri:refresh-line" :size="16" /></template>
+              刷新
+            </a-button>
+          </a-space>
+        </a-col>
+      </a-row>
+    </a-card>
 
-    <div class="patient-layout conversation-layout">
-      <ElCard class="patient-list-card conversation-patient-card" shadow="never">
-        <template #header><b>选择患者</b></template>
-        <ElInput v-model="keyword" placeholder="搜索姓名、处方编号、设备号" clearable>
-          <template #prefix><ArtSvgIcon icon="ri:search-line" /></template>
-        </ElInput>
-        <ElScrollbar v-loading="patientLoading" class="patient-scrollbar">
-          <button
-            v-for="patient in patientOptions"
-            :key="patient.id"
-            class="patient-option"
-            :class="{ 'is-active': patient.id === selectedPatientId }"
-            @click="selectedPatientId = patient.id"
-          >
-            <div class="flex justify-between gap-3">
-              <div>
-                <b>{{ patient.name }}</b>
-                <div class="muted text-xs mt-1">{{ patient.recordNo }} · {{ patient.age }}岁</div>
-              </div>
-              <ElTag :type="patient.deviceStatusType">{{ patient.deviceStatus }}</ElTag>
-            </div>
-            <div class="muted mt-2">最近互动：{{ patient.recentInteraction }}</div>
-          </button>
-        </ElScrollbar>
-      </ElCard>
+    <a-spin :loading="loading">
+      <div class="conversation-shell">
+        <a-card class="conversation-users" :bordered="false">
+          <div class="conversation-users-title">选择患者</div>
+          <div v-if="patientGroups.length" class="conversation-user-list">
+            <button
+              v-for="group in patientGroups"
+              :key="group.patientId"
+              type="button"
+              class="conversation-user-item"
+              :class="{ 'is-active': String(group.patientId) === String(activePatientId) }"
+              @click="selectPatient(group.patientId)"
+            >
+              <span class="conversation-user-main">
+                <span class="conversation-user-head">
+                  <strong>{{ group.patient }}</strong>
+                  <span v-if="group.pendingCount" class="conversation-pending-text">待跟进 {{ group.pendingCount }}</span>
+                </span>
+                <span class="conversation-user-line">
+                  <span>{{ group.deviceNo }}</span>
+                  <span>最近互动：{{ group.latestTime }}</span>
+                </span>
+              </span>
+            </button>
+          </div>
+          <a-empty v-else description="暂无患者对话" />
+        </a-card>
 
-      <div class="detail-stack conversation-detail">
-        <ElCard v-loading="conversationLoading" class="timeline-card-shell" shadow="never">
-          <template #header>
-            <div class="timeline-header">
-              <ElTabs v-model="conversationFilter" class="timeline-tabs">
-                <ElTabPane
-                  v-for="option in conversationFilterOptions"
-                  :key="option"
-                  :label="option"
-                  :name="option"
-                />
-              </ElTabs>
-              <ElTag type="primary">最近 {{ conversations.length }} 条</ElTag>
-            </div>
-          </template>
-          <ElScrollbar class="conversation-scrollbar">
-            <div class="conversation-scroll-content">
-              <div v-if="conversationFilter === '全部'" class="summary-grid conversation-summary">
-                <div class="summary-item">
-                  <span class="summary-number">{{ conversations.length }} 条</span>
-                  <span class="muted">近7天互动</span>
-                </div>
-                <div class="summary-item">
-                  <span class="summary-number">{{ respondedCount }} 次</span>
-                  <span class="muted">患者响应</span>
-                </div>
-                <div class="summary-item">
-                  <span class="summary-number">{{ pendingCount }} 项</span>
-                  <span class="muted">待人工跟进</span>
-                </div>
-                <div class="summary-item">
-                  <span class="summary-number">{{ currentPatient.recentInteraction }}</span>
-                  <span class="muted">最近一次互动</span>
-                </div>
+        <a-card class="conversation-records" :bordered="false">
+          <div v-if="activePatient" class="conversation-records-header">
+            <div>
+              <div class="conversation-records-title">{{ activePatient.patient }}</div>
+              <div class="smart-muted">
+                {{ activePatient.deviceNo || '未绑定' }}，最近 {{ activeMessages.length }} 条记录
               </div>
-              <ElEmpty v-if="conversations.length === 0" description="当前筛选条件下暂无对话记录" />
-              <div v-else class="detail-stack timeline-list">
-                <div v-for="item in conversations" :key="item.id" class="timeline-card">
-                  <div class="flex justify-between items-center mb-3">
-                    <b>{{ item.time }}</b>
-                    <ElTag :type="item.statusType">{{ item.status }}</ElTag>
-                  </div>
-                  <div class="conversation-flow">
-                    <div v-if="item.deviceText" class="bubble">{{ item.deviceText }}</div>
-                    <div v-if="item.patientText" class="bubble right">{{ item.patientText }}</div>
-                  </div>
-                </div>
-              </div>
+              <div class="smart-muted">知情同意：未同意时需先回到患者详情补齐授权</div>
             </div>
-          </ElScrollbar>
-        </ElCard>
+            <a-button type="outline" @click="openPatient(activePatient.patientId)">
+              <template #icon><sa-icon icon="ri:user-heart-line" :size="16" /></template>
+              患者详情
+            </a-button>
+          </div>
+
+          <div v-if="activeMessages.length" class="conversation-message-list">
+            <div class="summary-grid conversation-summary">
+              <div class="summary-item"><span class="summary-number">{{ activeMessages.length }} 条</span><span class="smart-muted">近7天互动</span></div>
+              <div class="summary-item"><span class="summary-number">{{ respondedCount }} 次</span><span class="smart-muted">患者响应</span></div>
+              <div class="summary-item"><span class="summary-number is-warning">{{ pendingCount }} 项</span><span class="smart-muted">待人工跟进</span></div>
+              <div class="summary-item"><span class="summary-number">{{ activePatient.latestTime }}</span><span class="smart-muted">最近一次互动</span></div>
+            </div>
+            <div v-for="message in activeMessages" :key="message.id" class="conversation-message">
+              <div class="conversation-message-meta">
+                <span>{{ message.time }}</span>
+                <a-tag color="blue">{{ message.type }}</a-tag>
+                <a-tag :color="statusColor(message.status)">{{ message.status }}</a-tag>
+              </div>
+
+              <div v-if="message.patientText" class="conversation-bubble conversation-bubble-patient">
+                <div class="conversation-bubble-role">患者</div>
+                <div>{{ message.patientText }}</div>
+              </div>
+              <div v-if="message.deviceText" class="conversation-bubble conversation-bubble-device">
+                <div class="conversation-bubble-role">小智药盒</div>
+                <div>{{ message.deviceText }}</div>
+              </div>
+              <div v-if="message.note" class="conversation-note">{{ message.note }}</div>
+            </div>
+          </div>
+          <a-empty v-else description="当前筛选条件下暂无对话记录" />
+        </a-card>
       </div>
-    </div>
+    </a-spin>
   </div>
 </template>
 
-<script setup lang="ts">
-  import conversationApi from '@/views/plugin/smart-pillbox/api/doctor/conversation'
-  import patientApi from '@/views/plugin/smart-pillbox/api/doctor/patient'
-  import type { Conversation, Patient } from '@/views/plugin/smart-pillbox/api/doctor/types'
+<script setup>
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { Message } from '@arco-design/web-vue'
+import { useRoute, useRouter } from 'vue-router'
+import { conversationApi } from '@/views/plugin/smart-pillbox/api/doctor'
 
-  defineOptions({ name: 'SmartPillboxConversationRecord' })
+const route = useRoute()
+const router = useRouter()
+const loading = ref(false)
+const conversations = ref([])
+const activePatientId = ref(route.query.patientId || '')
 
-  const route = useRoute()
-  const keyword = ref('')
-  const selectedPatientId = ref(Number(route.query.patientId || 1))
-  const conversationFilter = ref('全部')
-  const conversationFilterOptions = ['全部', '小智提醒', '患者聊天', '设备事件', '未响应']
-  const patients = ref<Patient[]>([])
-  const conversations = ref<Conversation[]>([])
-  const patientLoading = ref(false)
-  const conversationLoading = ref(false)
+const filters = reactive({
+  keyword: '',
+  type: '',
+  status: ''
+})
 
-  const emptyPatient: Patient = {
-    id: 0,
-    name: '-',
-    gender: '-',
-    age: 0,
-    recordNo: '-',
-    phone: '-',
-    diseases: [],
-    deviceNo: '-',
-    deviceStatus: '未绑定',
-    deviceStatusType: 'info',
-    consent: '未同意',
-    child: '-',
-    nextReminder: '-',
-    todayDrugs: 0,
-    recentInteraction: '-',
-    completionRate: 0,
-    taskRisk: '-'
-  }
-
-  const patientOptions = computed(() =>
-    patients.value.filter(
-      (patient) =>
-        !keyword.value ||
-        [patient.name, patient.recordNo, patient.deviceNo].some((value) => value.includes(keyword.value))
-    )
-  )
-  const currentPatient = computed(
-    () =>
-      patients.value.find((item) => item.id === selectedPatientId.value) ||
-      patients.value[0] ||
-      emptyPatient
-  )
-  const pendingCount = computed(
-    () => conversations.value.filter((item) => item.status.includes('待')).length
-  )
-  const respondedCount = computed(
-    () => conversations.value.filter((item) => item.patientText).length
-  )
-  const conversationType = computed(() => {
-    if (conversationFilter.value === '小智提醒') return '小智提醒'
-    if (conversationFilter.value === '患者聊天') return '患者聊天'
-    if (conversationFilter.value === '设备事件') return '设备事件'
-    return ''
+const filteredConversations = computed(() => {
+  const keyword = filters.keyword.trim()
+  return conversations.value.filter((item) => {
+    const keywordMatched =
+      !keyword ||
+      [item.patient, item.deviceNo, item.patientText, item.deviceText, item.note]
+        .filter(Boolean)
+        .some((value) => String(value).includes(keyword))
+    const typeMatched = !filters.type || item.type === filters.type
+    const statusMatched = !filters.status || item.status === filters.status
+    return keywordMatched && typeMatched && statusMatched
   })
-  const conversationStatus = computed(() => {
-    if (conversationFilter.value === '未响应') return '未响应'
-    return ''
-  })
+})
 
-  const loadPatients = async () => {
-    patientLoading.value = true
-    try {
-      const result = await patientApi.list({ page: 1, limit: 100, keyword: keyword.value })
-      patients.value = result.records
-      if (!patients.value.some((item) => item.id === selectedPatientId.value)) {
-        selectedPatientId.value = patients.value[0]?.id || 0
-      }
-    } finally {
-      patientLoading.value = false
+const patientGroups = computed(() => {
+  const groupMap = new Map()
+  filteredConversations.value.forEach((item) => {
+    const key = String(item.patientId)
+    const group = groupMap.get(key) || {
+      patientId: item.patientId,
+      patient: item.patient,
+      deviceNo: item.deviceNo,
+      latestTime: item.time,
+      pendingCount: 0,
+      messages: []
     }
-  }
-
-  const loadConversations = async () => {
-    if (!selectedPatientId.value) return
-    conversationLoading.value = true
-    try {
-      const result = await conversationApi.list({
-        page: 1,
-        limit: 50,
-        patientId: selectedPatientId.value,
-        type: conversationType.value,
-        status: conversationStatus.value
-      })
-      conversations.value = result.records
-    } finally {
-      conversationLoading.value = false
+    group.messages.push(item)
+    if (['待人工跟进', '待处理', '未响应'].includes(item.status)) {
+      group.pendingCount += 1
     }
+    groupMap.set(key, group)
+  })
+  return Array.from(groupMap.values()).sort((a, b) => Number(b.messages[0]?.id || 0) - Number(a.messages[0]?.id || 0))
+})
+
+const activePatient = computed(() => {
+  return patientGroups.value.find((group) => String(group.patientId) === String(activePatientId.value))
+})
+
+const activeMessages = computed(() => {
+  return [...(activePatient.value?.messages || [])].sort((a, b) => Number(b.id || 0) - Number(a.id || 0))
+})
+const pendingCount = computed(() => activeMessages.value.filter((item) => ['待人工跟进', '待处理', '未响应'].includes(item.status)).length)
+const respondedCount = computed(() => activeMessages.value.filter((item) => item.patientText).length)
+
+const fetchConversations = async () => {
+  loading.value = true
+  try {
+    const response = await conversationApi.list({ limit: 200 })
+    conversations.value = response?.data?.data || []
+  } finally {
+    loading.value = false
   }
+}
 
-  watch([selectedPatientId, conversationFilter], () => {
-    loadConversations()
-  })
+const selectPatient = (patientId) => {
+  activePatientId.value = patientId
+}
 
-  onMounted(async () => {
-    await loadPatients()
-    await loadConversations()
-  })
+const openPatient = (patientId) => {
+  router.push(`/doctor/patient-detail?id=${patientId}`)
+}
+
+const statusColor = (status) => {
+  if (['待人工跟进', '待处理'].includes(status)) return 'orange'
+  if (status === '未响应') return 'red'
+  if (['已确认', '已恢复', '已处理', '已归档', '已闭环'].includes(status)) return 'green'
+  return 'gray'
+}
+
+const handleExport = async () => {
+  await conversationApi.export()
+  Message.success('导出任务已提交')
+}
+
+watch(
+  patientGroups,
+  (groups) => {
+    if (!groups.length) {
+      return
+    }
+    const activeExists = groups.some((group) => String(group.patientId) === String(activePatientId.value))
+    if (!activeExists) {
+      activePatientId.value = groups[0].patientId
+    }
+  },
+  { immediate: true }
+)
+
+onMounted(fetchConversations)
 </script>
-
-<style lang="scss" scoped>
-  @use '../../style';
-
-  .conversation-page {
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 118px);
-    min-height: 560px;
-    overflow: hidden;
-  }
-
-  .conversation-layout {
-    flex: 1;
-    min-height: 0;
-    align-items: stretch;
-  }
-
-  .conversation-patient-card {
-    position: static;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-height: 0;
-
-    :deep(.el-card__body) {
-      display: flex;
-      flex: 1;
-      flex-direction: column;
-      min-height: 0;
-    }
-  }
-
-  .patient-scrollbar {
-    flex: 1;
-    min-height: 0;
-    margin-top: 10px;
-
-    :deep(.el-scrollbar__bar) {
-      display: none;
-    }
-
-    :deep(.el-scrollbar__wrap) {
-      scrollbar-width: none;
-    }
-
-    :deep(.el-scrollbar__wrap::-webkit-scrollbar) {
-      display: none;
-    }
-  }
-
-  .conversation-detail {
-    height: 100%;
-    min-height: 0;
-    overflow: hidden;
-  }
-
-  .timeline-card-shell {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    min-height: 0;
-
-    :deep(.el-card__body) {
-      display: flex;
-      flex: 1;
-      flex-direction: column;
-      min-height: 0;
-      overflow: hidden;
-    }
-  }
-
-  .conversation-scrollbar {
-    flex: 1;
-    min-height: 0;
-  }
-
-  .conversation-scroll-content {
-    min-height: 100%;
-  }
-
-  .conversation-summary {
-    margin-bottom: 14px;
-  }
-
-  .timeline-list {
-    gap: 12px;
-    padding-right: 4px;
-  }
-
-  .timeline-header {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-  }
-
-  .timeline-tabs {
-    flex: 1;
-    min-width: 0;
-
-    :deep(.el-tabs__header) {
-      margin: 0;
-    }
-
-    :deep(.el-tabs__nav-wrap::after) {
-      display: none;
-    }
-
-    :deep(.el-tabs__item) {
-      height: 32px;
-      font-size: 14px;
-      line-height: 32px;
-    }
-  }
-</style>

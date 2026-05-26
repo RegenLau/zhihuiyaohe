@@ -1,160 +1,156 @@
 <template>
-  <div class="art-full-height">
-    <!-- 搜索面板 -->
-    <TableSearch v-model="searchForm" @search="handleSearch" @reset="resetSearchParams" />
+  <div class="ma-content-block lg:flex justify-between">
+    <!-- CRUD 组件 -->
+    <sa-table ref="crudRef" :options="options" :columns="columns" :searchForm="searchForm">
+      <!-- 搜索区 tableSearch -->
+      <template #tableSearch>
+        <a-col :sm="8" :xs="24">
+          <a-form-item field="name" label="任务名称">
+            <a-input v-model="searchForm.name" placeholder="请输入任务名称" />
+          </a-form-item>
+        </a-col>
+        <a-col :sm="8" :xs="24">
+          <a-form-item field="type" label="任务类型">
+            <a-select v-model="searchForm.type" :options="types" allow-clear placeholder="请选择任务类型" />
+          </a-form-item>
+        </a-col>
+        <a-col :sm="8" :xs="24">
+          <a-form-item field="status" label="状态">
+            <sa-select v-model="searchForm.status" dict="data_status" allow-clear placeholder="请选择状态" />
+          </a-form-item>
+        </a-col>
+      </template>
 
-    <ElCard class="art-table-card" shadow="never">
-      <!-- 表格头部 -->
-      <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
-        <template #left>
-          <ElSpace wrap>
-            <ElButton v-permission="'tool:crontab:edit'" @click="showDialog('add')" v-ripple>
-              <template #icon>
-                <ArtSvgIcon icon="ri:add-fill" />
-              </template>
-              新增
-            </ElButton>
-          </ElSpace>
-        </template>
-      </ArtTableHeader>
+      <!-- Table 自定义渲染 -->
+      <!-- 自定义规则 -->
+      <template #rule="{ record }">
+        <span>{{ record.rule }}</span>
+      </template>
+      <!-- 状态列 -->
+      <template #status="{ record }">
+        <sa-switch v-model="record.status" @change="changeStatus($event, record.id)"></sa-switch>
+      </template>
 
-      <!-- 表格 -->
-      <ArtTable
-        ref="tableRef"
-        rowKey="id"
-        :loading="loading"
-        :data="data"
-        :columns="columns"
-        :pagination="pagination"
-        @sort-change="handleSortChange"
-        @selection-change="handleSelectionChange"
-        @pagination:size-change="handleSizeChange"
-        @pagination:current-change="handleCurrentChange"
-      >
-        <!-- 操作列 -->
-        <template #operation="{ row }">
-          <div class="flex gap-2">
-            <SaButton
-              v-permission="'tool:crontab:run'"
-              type="primary"
-              icon="ri:play-fill"
-              toolTip="运行任务"
-              @click="handleRun(row)"
-            />
-            <SaButton
-              type="primary"
-              icon="ri:history-line"
-              toolTip="运行日志"
-              @click="showTableDialog('edit', row)"
-            />
-            <SaButton
-              v-permission="'tool:crontab:edit'"
-              type="secondary"
-              @click="showDialog('edit', row)"
-            />
-            <SaButton
-              v-permission="'tool:crontab:edit'"
-              type="error"
-              @click="deleteRow(row, api.delete, refreshData)"
-            />
-          </div>
-        </template>
-      </ArtTable>
-    </ElCard>
+      <!-- 操作前置扩展 -->
+      <template #operationBeforeExtend="{ record }">
+        <a-popconfirm content="确定立刻执行一次?" position="bottom" @ok="run(record)">
+          <a-link v-auth="['/tool/crontab/run']"><icon-caret-right /> 执行一次</a-link>
+        </a-popconfirm>
+        <a-link @click="openLogModal(record)"><icon-history /> 日志 </a-link>
+      </template>
+    </sa-table>
 
-    <!-- 编辑弹窗 -->
-    <EditDialog
-      v-model="dialogVisible"
-      :dialog-type="dialogType"
-      :data="dialogData"
-      @success="refreshData"
-    />
+    <!-- 编辑表单 -->
+    <edit-form ref="editRef" @success="refresh" />
 
-    <!-- 日志弹窗 -->
-    <LogListDialog v-model="tableVisible" :dialog-type="tableDialogType" :data="tableData" />
+    <!-- 日志记录 -->
+    <log-list ref="logsRef" />
   </div>
 </template>
 
-<script setup lang="ts">
-  import { useTable } from '@/hooks/core/useTable'
-  import { useSaiAdmin } from '@/composables/useSaiAdmin'
-  import { ElMessage, ElMessageBox } from 'element-plus'
-  import api from '@/api/tool/crontab'
-  import TableSearch from './modules/table-search.vue'
-  import EditDialog from './modules/edit-dialog.vue'
-  import LogListDialog from './modules/log-list.vue'
+<script setup>
+import { ref, reactive, onMounted } from 'vue'
+import { Message } from '@arco-design/web-vue'
 
-  // 搜索表单
-  const searchForm = ref({
-    name: undefined,
-    type: undefined,
-    status: undefined
-  })
+import api from '@/api/tool/crontab'
+import LogList from './logList.vue'
+import EditForm from './edit.vue'
 
-  // 搜索处理
-  const handleSearch = (params: Record<string, any>) => {
-    Object.assign(searchParams, params)
-    getData()
+const crudRef = ref()
+const editRef = ref()
+const logsRef = ref()
+
+// 搜索表单
+const searchForm = ref({
+  name: '',
+  type: '',
+  status: '',
+})
+
+// 类型字典
+const types = [
+  { label: 'URL任务GET', value: 1 },
+  { label: 'URL任务POST', value: 2 },
+  { label: '类任务', value: 3 },
+]
+
+// 修改状态
+const changeStatus = async (status, id) => {
+  const response = await api.changeStatus({ id, status })
+  if (response.code === 200) {
+    Message.success(response.message)
+    crudRef.value.refresh()
   }
+}
 
-  // 表格配置
-  const {
-    columns,
-    columnChecks,
-    data,
-    loading,
-    getData,
-    searchParams,
-    pagination,
-    resetSearchParams,
-    handleSortChange,
-    handleSizeChange,
-    handleCurrentChange,
-    refreshData
-  } = useTable({
-    core: {
-      apiFn: api.list,
-      columnsFactory: () => [
-        { prop: 'id', label: '编号', width: 100, align: 'center' },
-        { prop: 'name', label: '任务名称', minWidth: 120 },
-        {
-          prop: 'type',
-          label: '任务类型',
-          saiType: 'dict',
-          saiDict: 'crontab_task_type',
-          minWidth: 120
-        },
-        { prop: 'rule', label: '定时规则', minWidth: 140 },
-        { prop: 'target', label: '调用目标', minWidth: 200, showOverflowTooltip: true },
-        { prop: 'status', label: '状态', saiType: 'dict', saiDict: 'data_status', width: 100 },
-        { prop: 'update_time', label: '更新日期', width: 180, sortable: true },
-        { prop: 'operation', label: '操作', width: 180, fixed: 'right', useSlot: true }
-      ]
-    }
-  })
-
-  // 编辑配置
-  const { dialogType, dialogVisible, dialogData, showDialog, deleteRow, handleSelectionChange } =
-    useSaiAdmin()
-
-  const {
-    dialogVisible: tableVisible,
-    dialogType: tableDialogType,
-    dialogData: tableData,
-    showDialog: showTableDialog
-  } = useSaiAdmin()
-
-  // 运行任务
-  const handleRun = (row: any) => {
-    ElMessageBox.confirm(`确定要运行任务【${row.name}】吗？`, '运行任务', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }).then(() => {
-      api.run({ id: row.id }).then(() => {
-        ElMessage.success('任务运行成功')
-        refreshData()
-      })
-    })
+// 执行
+const run = async (row) => {
+  const response = await api.run({ id: row.id })
+  if (response.code === 200) {
+    Message.success(response.message)
+    crudRef.value.refresh()
   }
+}
+
+// 日志窗口
+const openLogModal = (row) => {
+  logsRef.value.open(row.id)
+}
+
+// SaTable 基础配置
+const options = reactive({
+  api: api.getPageList,
+  rowSelection: { showCheckedAll: true },
+  operationColumnWidth: 280,
+  add: {
+    show: true,
+    auth: ['/tool/crontab/save'],
+    func: async () => {
+      editRef.value?.open()
+    },
+  },
+  edit: {
+    show: true,
+    auth: ['/tool/crontab/update'],
+    func: async (record) => {
+      editRef.value?.open('edit')
+      editRef.value?.setFormData(record)
+    },
+  },
+  delete: {
+    show: true,
+    auth: ['/tool/crontab/destroy'],
+    func: async (params) => {
+      const resp = await api.destroy(params)
+      if (resp.code === 200) {
+        Message.success(`删除成功！`)
+        crudRef.value?.refresh()
+      }
+    },
+  },
+})
+
+// SaTable 列配置
+const columns = reactive([
+  { title: '任务名称', dataIndex: 'name', width: 180 },
+  { title: '任务类型', dataIndex: 'type', type: 'dict', options: types, width: 140 },
+  { title: '定时规则', dataIndex: 'rule', width: 260 },
+  { title: '调用目标', dataIndex: 'target', width: 260 },
+  { title: '状态', dataIndex: 'status', type: 'dict', dict: 'data_status', width: 120 },
+  { title: '创建时间', dataIndex: 'create_time', width: 180 },
+])
+
+// 页面数据初始化
+const initPage = async () => {}
+
+// SaTable 数据请求
+const refresh = async () => {
+  crudRef.value?.refresh()
+}
+
+// 页面加载完成执行
+onMounted(async () => {
+  initPage()
+  refresh()
+})
 </script>

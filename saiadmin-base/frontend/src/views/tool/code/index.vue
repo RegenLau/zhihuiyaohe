@@ -1,272 +1,178 @@
 <template>
-  <div class="art-full-height">
-    <!-- 搜索面板 -->
-    <TableSearch v-model="searchForm" @search="handleSearch" @reset="resetSearchParams" />
+  <div class="ma-content-block">
+    <sa-table
+      ref="crudRef"
+      :options="options"
+      :columns="columns"
+      :searchForm="searchForm"
+      @selection-change="selectionChange">
+      <!-- 搜索表单 start -->
+      <template #tableSearch>
+        <a-col :span="8">
+          <a-form-item field="table_name" label="表名称">
+            <a-input v-model="searchForm.table_name" placeholder="请输入数据表名称" />
+          </a-form-item>
+        </a-col>
+        <a-col :span="8">
+          <a-form-item field="source" label="数据源">
+            <a-input v-model="searchForm.source" placeholder="请输入数据源名称" />
+          </a-form-item>
+        </a-col>
+      </template>
+      <!-- 搜索表单 end -->
+      <!-- 表格按钮后置扩展 start -->
+      <template #tableAfterButtons>
+        <a-button type="outline" @click="batchGenerate">
+          <template #icon><icon-code /></template>生成代码
+        </a-button>
+        <a-button @click="() => loadTableRef.open()" type="outline" status="success">
+          <template #icon><icon-export /></template>装载数据表
+        </a-button>
+      </template>
+      <!-- 表格按钮后置扩展 end -->
+      <template #operationBeforeExtend="{ record }">
+        <a-link @click="previewRef.open(record.id)"><icon-eye /> 预览</a-link>
+        <a-popconfirm content="同步会自动同步数据库字段，确定同步吗?" position="bottom" @ok="syncTable(record.id)">
+          <a-link><icon-sync /> 同步</a-link>
+        </a-popconfirm>
+      </template>
+      <template #operationAfterExtend="{ record }">
+        <a-dropdown trigger="hover" @select="selectOperation($event, record.id)">
+          <a-link><icon-double-right /> 生成</a-link>
+          <template #content>
+            <a-doption value="generateFile">生成到项目</a-doption>
+            <a-doption value="generateCode">代码下载</a-doption>
+          </template>
+        </a-dropdown>
+      </template>
+      <!-- Table 自定义渲染 start -->
+      <template #tpl_category="{ record }">
+        <a-tag v-if="record.tpl_category == 'single'" color="green">单表CRUD</a-tag>
+        <a-tag v-else color="red">树表CRUD</a-tag>
+      </template>
+      <template #form_type="{ record }">
+        <a-tag v-if="record.form_type == 'a-modal'" color="blue">Modal</a-tag>
+        <a-tag v-else color="orange">Drawer</a-tag>
+      </template>
+      <!-- Table 自定义渲染 end -->
+    </sa-table>
 
-    <ElCard class="art-table-card" shadow="never">
-      <!-- 表格头部 -->
-      <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
-        <template #left>
-          <ElSpace wrap>
-            <ElButton v-permission="'core:database:index'" @click="showTableDialog('add')" v-ripple>
-              <template #icon>
-                <ArtSvgIcon icon="ri:upload-2-line" />
-              </template>
-              装载
-            </ElButton>
-            <ElButton
-              v-permission="'tool:code:edit'"
-              :disabled="selectedRows.length === 0"
-              @click="batchGenerate"
-              v-ripple
-            >
-              <template #icon>
-                <ArtSvgIcon icon="ri:download-2-line" />
-              </template>
-              生成
-            </ElButton>
-            <ElButton
-              v-permission="'tool:code:edit'"
-              :disabled="selectedRows.length === 0"
-              @click="deleteSelectedRows(api.delete, refreshData)"
-              v-ripple
-            >
-              <template #icon>
-                <ArtSvgIcon icon="ri:delete-bin-5-line" />
-              </template>
-              删除
-            </ElButton>
-          </ElSpace>
-        </template>
-      </ArtTableHeader>
+    <load-table ref="loadTableRef" @success="refresh" />
 
-      <!-- 表格 -->
-      <ArtTable
-        rowKey="id"
-        :loading="loading"
-        :data="data"
-        :columns="columns"
-        :pagination="pagination"
-        @sort-change="handleSortChange"
-        @selection-change="handleSelectionChange"
-        @pagination:size-change="handleSizeChange"
-        @pagination:current-change="handleCurrentChange"
-      >
-        <!-- 生成类型列 -->
-        <template #tpl_category="{ row }">
-          <el-tag v-if="row.tpl_category === 'single'" type="success">单表CRUD</el-tag>
-          <el-tag v-else type="danger">树表CRUD</el-tag>
-        </template>
+    <preview ref="previewRef" />
 
-        <!-- 操作列 -->
-        <template #operation="{ row }">
-          <div class="flex gap-2">
-            <SaButton
-              v-permission="'tool:code:edit'"
-              type="secondary"
-              icon="ri:eye-line"
-              @click="showDialog('edit', row)"
-            />
-            <SaButton
-              v-permission="'tool:code:edit'"
-              type="primary"
-              icon="ri:refresh-line"
-              @click="syncTable(row.id)"
-            />
-            <SaButton
-              v-permission="'tool:code:edit'"
-              type="secondary"
-              @click="showEditDialog('edit', row)"
-            />
-            <SaButton
-              v-permission="'tool:code:edit'"
-              type="error"
-              @click="deleteRow(row, api.delete, refreshData)"
-            />
-            <ElDropdown>
-              <ArtIconButton
-                icon="ri:more-2-fill"
-                class="!size-8 bg-g-200 dark:bg-g-300/45 text-sm"
-              />
-              <template #dropdown>
-                <ElDropdownMenu>
-                  <ElDropdownItem>
-                    <div
-                      v-permission="'tool:code:edit'"
-                      class="flex-c gap-2"
-                      @click="generateFile(row.id)"
-                    >
-                      <ArtSvgIcon icon="ri:folder-add-line" />
-                      <span>生成到项目</span>
-                    </div>
-                  </ElDropdownItem>
-                  <ElDropdownItem>
-                    <div
-                      v-permission="'tool:code:edit'"
-                      class="flex-c gap-2"
-                      @click="generateCode(row.id)"
-                    >
-                      <ArtSvgIcon icon="ri:download-line" />
-                      <span>代码下载</span>
-                    </div>
-                  </ElDropdownItem>
-                </ElDropdownMenu>
-              </template>
-            </ElDropdown>
-          </div>
-        </template>
-      </ArtTable>
-    </ElCard>
-
-    <!-- 装载数据表 -->
-    <LoadTable v-model="tableVisible" :dialog-type="dialogType" @success="refreshData" />
-
-    <!-- 预览代码 -->
-    <Preview v-model="dialogVisible" :data="dialogData" />
-
-    <!-- 编辑弹窗 -->
-    <EditInfo v-model="editVisible" :data="editDialogData" @success="refreshData" />
+    <edit-info ref="editRef" @success="refresh" />
   </div>
 </template>
 
-<script setup lang="ts">
-  import { useTable } from '@/hooks/core/useTable'
-  import { useSaiAdmin } from '@/composables/useSaiAdmin'
-  import { ElMessage, ElMessageBox } from 'element-plus'
-  import api from '@/api/tool/generate'
-  import { downloadFile } from '@/utils/tool'
+<script setup>
+import { onMounted, ref, reactive, computed } from 'vue'
+import { Message, Modal } from '@arco-design/web-vue'
+import tool from '@/utils/tool'
+import api from '@/api/tool/generate'
 
-  import TableSearch from './modules/table-search.vue'
-  import LoadTable from './components/loadTable.vue'
-  import Preview from './components/preview.vue'
-  import EditInfo from './components/editInfo.vue'
+import LoadTable from './components/loadTable.vue'
+import Preview from './components/preview.vue'
+import EditInfo from './components/editInfo.vue'
 
-  // 编辑弹窗
-  const {
-    dialogType,
-    dialogVisible,
-    dialogData,
-    showDialog,
-    handleSelectionChange,
-    deleteRow,
-    deleteSelectedRows,
-    selectedRows
-  } = useSaiAdmin()
+const crudRef = ref()
+const editRef = ref()
+const previewRef = ref()
+const loadTableRef = ref()
+const selections = ref([])
 
-  const { dialogVisible: tableVisible, showDialog: showTableDialog } = useSaiAdmin()
+const selectionChange = (row) => (selections.value = row)
 
-  const {
-    dialogVisible: editVisible,
-    dialogData: editDialogData,
-    showDialog: showEditDialog
-  } = useSaiAdmin()
-
-  // 搜索表单
-  const searchForm = ref({
-    table_name: undefined,
-    source: undefined
-  })
-
-  // 搜索处理
-  const handleSearch = (params: Record<string, any>) => {
-    Object.assign(searchParams, params)
-    getData()
+const selectOperation = async (value, id) => {
+  if (value === 'generateCode') {
+    generateCode(id)
+    return
   }
-
-  // 表格配置
-  const {
-    columns,
-    columnChecks,
-    data,
-    loading,
-    getData,
-    pagination,
-    searchParams,
-    resetSearchParams,
-    handleSortChange,
-    handleSizeChange,
-    handleCurrentChange,
-    refreshData
-  } = useTable({
-    core: {
-      apiFn: api.list,
-      apiParams: {
-        ...searchForm.value
+  if (value === 'generateFile') {
+    Modal.info({
+      title: '提示',
+      content: '生成到项目将会覆盖原有文件，确定要生成吗？',
+      simple: false,
+      onBeforeOk: (done) => {
+        generateFile(id)
+        done(true)
       },
-      columnsFactory: () => [
-        { type: 'selection', width: 50 },
-        { prop: 'table_name', label: '表名称', minWidth: 180, align: 'left' },
-        { prop: 'table_comment', label: '表描述', minWidth: 150, align: 'left' },
-        { prop: 'template', label: '应用类型', minWidth: 120 },
-        { prop: 'namespace', label: '应用名称', minWidth: 120 },
-        { prop: 'stub', label: '模板类型', minWidth: 120 },
-        { prop: 'tpl_category', label: '生成类型', minWidth: 120, useSlot: true },
-        { prop: 'update_time', label: '更新时间', width: 180, sortable: true },
-        { prop: 'operation', label: '操作', width: 220, fixed: 'right', useSlot: true }
-      ]
-    }
+    })
+    return
+  }
+}
+
+const generateCode = async (ids) => {
+  Message.info('代码生成下载中，请稍后')
+  const response = await api.generateCode({
+    ids: ids.toString().split(','),
   })
-
-  /**
-   * 生成代码下载
-   */
-  const generateCode = async (ids: number | string) => {
-    ElMessage.info('代码生成下载中，请稍后')
-    const response = await api.generateCode({
-      ids: ids.toString().split(',')
-    })
-    if (response) {
-      downloadFile(response, 'code.zip')
-      ElMessage.success('代码生成成功，开始下载')
-    } else {
-      ElMessage.error('文件下载失败')
-    }
+  if (response) {
+    tool.download(response, 'saiadmin.zip')
+    Message.success('代码生成成功，开始下载')
+  } else {
+    Message.error('文件下载失败')
   }
+}
 
-  /**
-   * 同步表结构
-   */
-  const syncTable = async (id: number) => {
-    ElMessageBox.confirm('执行同步操作将会覆盖已经设置的表结构，确定要同步吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }).then(() => {
-      api.async({ id }).then(() => {
-        ElMessage.success('同步成功')
-      })
-    })
-  }
+const syncTable = async (id) => {
+  const response = await api.sync(id)
+  response.code === 200 && Message.success(response.message)
+}
 
-  /**
-   * 生成到项目
-   */
-  const generateFile = async (id: number) => {
-    ElMessageBox.confirm('生成到项目将会覆盖原有文件，确定要生成吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }).then(() => {
-      api.generateFile({ id }).then(() => {
-        ElMessage.success('生成到项目成功')
-      })
-    })
-  }
+const generateFile = async (id) => {
+  const response = await api.generateFile({ id })
+  response.code === 200 && Message.success(response.message)
+}
 
-  /**
-   * 批量生成代码
-   */
-  const batchGenerate = () => {
-    if (selectedRows.value.length === 0) {
-      ElMessage.error('至少要选择一条数据')
-      return
-    }
-    generateCode(selectedRows.value.map((item: any) => item.id).join(','))
+const batchGenerate = () => {
+  if (selections.value.length === 0) {
+    Message.error('至少要选择一条数据')
+    return
   }
+  generateCode(selections.value.join(','))
+}
+
+const searchForm = ref({
+  table_name: '',
+  source: '',
+})
+
+const options = reactive({
+  api: api.getPageList,
+  rowSelection: { showCheckedAll: true },
+  operationColumnWidth: 300,
+  edit: {
+    show: true,
+    func: async (record) => {
+      editRef.value.open(record.id)
+    },
+  },
+  delete: {
+    show: true,
+    func: async (params) => {
+      await api.destroy(params)
+      Message.success(`删除成功！`)
+      crudRef.value?.refresh()
+    },
+  },
+})
+
+const columns = reactive([
+  { title: '表名称', dataIndex: 'table_name', width: 180, align: 'left' },
+  { title: '表描述', dataIndex: 'table_comment', width: 150, align: 'left' },
+  { title: '应用类型', dataIndex: 'template', width: 120 },
+  { title: '应用名称', dataIndex: 'namespace', width: 120 },
+  { title: '模板类型', dataIndex: 'stub', width: 120 },
+  { title: '生成类型', dataIndex: 'tpl_category', width: 120 },
+  { title: '创建时间', dataIndex: 'create_time', width: 180 },
+])
+
+const refresh = async () => {
+  crudRef.value?.refresh()
+}
+
+onMounted(async () => {
+  refresh()
+})
 </script>
-
-<style lang="scss" scoped>
-  :deep(.el-drawer__header) {
-    margin-bottom: 10px !important;
-  }
-</style>

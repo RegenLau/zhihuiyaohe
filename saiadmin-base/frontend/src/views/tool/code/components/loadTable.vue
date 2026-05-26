@@ -1,228 +1,128 @@
 <template>
-  <el-drawer
-    v-model="visible"
-    title="装载数据表"
-    size="70%"
-    destroy-on-close
-    :close-on-click-modal="false"
-    @close="handleClose"
-  >
-    <div class="art-full-height">
-      <el-alert type="info" :closable="false">
-        <template #title>
-          <div>1、支持配置多数据源；</div>
-          <div>
-            2、载入表[sa_shop_category]会自动处理为[SaShopCategory]类，可以编辑对类名进行修改[ShopCategory]
-          </div>
-        </template>
-      </el-alert>
-
-      <div class="flex justify-between items-center mt-4">
-        <ElSpace wrap>
-          <el-select v-model="searchForm.source" placeholder="切换数据源" style="width: 200px">
-            <el-option
-              v-for="item in dataSourceList"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
-          <el-input
-            v-model="searchForm.name"
-            placeholder="请输入数据表名称"
-            style="width: 300px"
-            clearable
-          />
-        </ElSpace>
-        <ElSpace wrap>
-          <ElButton class="reset-button" @click="handleReset" v-ripple>
-            <template #icon>
-              <ArtSvgIcon icon="ri:reset-right-line" />
-            </template>
-            重置
-          </ElButton>
-          <ElButton type="primary" class="search-button" @click="handleSearch" v-ripple>
-            <template #icon>
-              <ArtSvgIcon icon="ri:search-line" />
-            </template>
-            查询
-          </ElButton>
-        </ElSpace>
-      </div>
-      <ElCard class="art-table-card" shadow="never">
-        <div>
-          <ElSpace wrap>
-            <ElButton :disabled="selectedRows.length === 0" @click="handleLoadTable" v-ripple>
-              <template #icon>
-                <ArtSvgIcon icon="ri:check-fill" />
-              </template>
-              确认选择
-            </ElButton>
-          </ElSpace>
-        </div>
-        <!-- 表格 -->
-        <ArtTable
-          ref="tableRef"
-          rowKey="name"
-          :loading="loading"
-          :data="tableData"
-          :columns="columns"
-          :pagination="pagination"
-          @sort-change="handleSortChange"
-          @selection-change="handleSelectionChange"
-          @pagination:size-change="handleSizeChange"
-          @pagination:current-change="handleCurrentChange"
-        />
-      </ElCard>
-    </div>
-  </el-drawer>
+  <a-modal fullscreen v-model:visible="visible" :on-before-ok="loadTable" :align-center="false" unmount-on-close>
+    <template #title>装载数据表</template>
+    <a-alert class="mb-3" closable>
+      1、支持thinkorm配置多数据源；
+      2、载入表[sa_shop_category]会自动处理为[SaShopCategory]类，可以在载入后对类名进行修改[ShopCategory]
+    </a-alert>
+    <sa-table
+      ref="crudRef"
+      :options="options"
+      :columns="columns"
+      :searchForm="searchForm"
+      @selection-change="handlerSelection">
+      <!-- 搜索表单 start -->
+      <template #tableSearch>
+        <a-col :span="8">
+          <a-form-item field="name" label="表名称">
+            <a-input v-model="searchForm.name" placeholder="请输入数据表名称" allow-clear />
+          </a-form-item>
+        </a-col>
+      </template>
+      <!-- 搜索表单 end -->
+      <template #tableBeforeButtons>
+        <a-input-group>
+          <a-select
+            placeholder="切换数据源"
+            v-model="sourceName"
+            :options="dataSourceList"
+            style="width: 300px"></a-select>
+          <a-button type="primary" @click="switchSource">确定切换</a-button>
+        </a-input-group>
+      </template>
+    </sa-table>
+  </a-modal>
 </template>
 
-<script setup lang="ts">
-  import { ElMessage } from 'element-plus'
-  import api from '@/api/safeguard/database'
-  import { useTable } from '@/hooks/core/useTable'
-  import generate from '@/api/tool/generate'
+<script setup>
+import { ref, reactive, nextTick } from 'vue'
+import api from '@/api/system/database'
+import generate from '@/api/tool/generate'
+import { Message } from '@arco-design/web-vue'
 
-  interface Props {
-    modelValue: boolean
-    data?: Record<string, any>
+const crudRef = ref()
+const selecteds = ref([])
+const visible = ref(false)
+const sourceName = ref('mysql')
+const newName = ref({})
+const newComment = ref({})
+const emit = defineEmits(['success'])
+
+const searchForm = ref({
+  name: '',
+  source: '',
+})
+
+const dataSourceList = ref([])
+
+const switchSource = () => {
+  searchForm.value.source = sourceName.value
+  options.api = api.getPageList
+  crudRef.value.refresh()
+}
+
+const loadTable = async (done) => {
+  if (selecteds.value.length < 1) {
+    Message.info('至少要选择一条数据')
+    done(false)
+    return
   }
-
-  interface Emits {
-    (e: 'update:modelValue', value: boolean): void
-    (e: 'success'): void
-  }
-
-  const props = withDefaults(defineProps<Props>(), {
-    modelValue: false,
-    data: undefined
-  })
-
-  const emit = defineEmits<Emits>()
-
-  const selectedRows = ref<Record<string, any>[]>([])
-  const dataSourceList = ref<{ label: string; value: string }[]>([])
-  const searchForm = ref({
-    name: '',
-    source: ''
-  })
-
-  /**
-   * 弹窗显示状态双向绑定
-   */
-  const visible = computed({
-    get: () => props.modelValue,
-    set: (value) => emit('update:modelValue', value)
-  })
-
-  /**
-   * 监听弹窗打开，初始化表单数据
-   */
-  watch(
-    () => props.modelValue,
-    (newVal) => {
-      if (newVal) {
-        initPage()
-      }
+  let names = []
+  crudRef.value.getTableData().filter((item) => {
+    if (selecteds.value.includes(item.name)) {
+      names.push({ name: item.name, comment: item.comment, sourceName: item.name })
     }
-  )
-
-  /**
-   * 初始化页面数据
-   */
-  const initPage = async () => {
-    const response = await api.getDataSource()
-    dataSourceList.value = response.map((item: any) => ({
-      label: item,
-      value: item
-    }))
-    searchForm.value.source = dataSourceList.value[0]?.value || ''
-    refreshData()
-  }
-
-  /**
-   * 获取表格数据
-   */
-  const refreshData = () => {
-    Object.assign(searchParams, searchForm.value)
-    getData()
-  }
-
-  /**
-   * 搜索
-   */
-  const handleSearch = () => {
-    refreshData()
-  }
-
-  /**
-   * 重置
-   */
-  const handleReset = () => {
-    searchForm.value.name = ''
-    refreshData()
-  }
-
-  // 表格行选择变化
-  const handleSelectionChange = (selection: Record<string, any>[]): void => {
-    selectedRows.value = selection
-  }
-
-  // 确认选择装载数据表
-  const handleLoadTable = async () => {
-    if (selectedRows.value.length < 1) {
-      ElMessage.info('至少要选择一条数据')
-      return
+  })
+  names.map((item) => {
+    if (newComment.value[item.sourceName]) {
+      item.comment = newComment.value[item.sourceName]
     }
-    const names = selectedRows.value.map((item) => ({
-      name: item.name,
-      comment: item.comment,
-      sourceName: item.name
-    }))
-
-    await generate.loadTable({
-      source: searchForm.value.source,
-      names
-    })
-    ElMessage.success('装载成功')
+    if (newName.value[item.name]) {
+      item.name = newName.value[item.name]
+    }
+  })
+  const response = await generate.loadTable({ source: sourceName.value, names })
+  if (response.code === 200) {
+    Message.success('装载成功')
     emit('success')
-    handleClose()
+    selecteds.value = []
+    done(true)
   }
+}
 
-  /**
-   * 关闭弹窗
-   */
-  const handleClose = () => {
-    visible.value = false
-    selectedRows.value = []
-  }
+const handlerSelection = (name) => {
+  selecteds.value = name
+}
 
-  const {
-    loading,
-    data: tableData,
-    columns,
-    getData,
-    pagination,
-    searchParams,
-    handleSortChange,
-    handleSizeChange,
-    handleCurrentChange
-  } = useTable({
-    core: {
-      apiFn: api.list,
-      immediate: false,
-      apiParams: {
-        ...searchForm.value
-      },
-      columnsFactory: () => [
-        { type: 'selection' },
-        { prop: 'name', label: '表名称' },
-        { prop: 'comment', label: '表注释' },
-        { prop: 'engine', label: '引擎' },
-        { prop: 'collation', label: '编码' },
-        { prop: 'create_time', label: '创建时间' }
-      ]
-    }
+const open = async () => {
+  visible.value = true
+  const response = await api.getDataSource()
+  dataSourceList.value = response.data.map((item) => {
+    return { label: item, value: item }
   })
+  sourceName.value = dataSourceList.value[0] ? dataSourceList.value[0].value : ''
+  nextTick(() => {
+    switchSource()
+  })
+}
+
+const options = reactive({
+  pk: 'name',
+  api: api.getPageList,
+  height: 670,
+  showIndex: true,
+  showSort: false,
+  operationColumn: false,
+  rowSelection: { showCheckedAll: true, key: 'name', onlyCurrent: true },
+})
+
+const columns = reactive([
+  { title: '表名称', dataIndex: 'name', align: 'left', width: 200 },
+  { title: '表注释', dataIndex: 'comment', align: 'left', width: 180 },
+  { title: '引擎', dataIndex: 'engine', width: 150 },
+  { title: '编码', dataIndex: 'collation', width: 180 },
+  { title: '创建时间', dataIndex: 'create_time' },
+])
+
+defineExpose({ open })
 </script>
