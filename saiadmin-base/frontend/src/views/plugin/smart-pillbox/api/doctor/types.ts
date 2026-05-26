@@ -121,6 +121,9 @@ export interface Plan {
   source: string
   reminderCount?: number
   auditSummary?: string
+  stoppedAt?: string
+  stopReason?: string
+  sourcePlanId?: number
   drugs: Drug[]
 }
 
