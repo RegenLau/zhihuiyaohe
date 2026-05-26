@@ -86,11 +86,7 @@
                       <span>{{ group.items.length }} 项</span>
                     </div>
                     <div class="timeline-medicine-list">
-                      <div
-                        v-for="item in group.items"
-                        :key="item.key"
-                        class="timeline-medicine"
-                      >
+                      <div v-for="item in group.items" :key="item.key" class="timeline-medicine">
                         <div class="timeline-medicine-top">
                           <b>{{ item.drug.name }}</b>
                           <ElSpace wrap>
@@ -125,11 +121,12 @@
                     <div class="scheme-title">
                       <ArtSvgIcon icon="ri:shield-check-line" />
                       <span>{{ plan.title }}</span>
-                      <span class="scheme-count">
-                        共 {{ plan.drugs.length }} 种，{{ getPlanReminderCount(plan) }} 个提醒节点
-                      </span>
                     </div>
-                    <p>{{ plan.code }} · {{ plan.period }} · {{ plan.source }}</p>
+                    <div class="scheme-meta-line">
+                      <span>日期 {{ plan.period }}</span>
+                      <span>药品数量 {{ plan.drugs.length }} 种</span>
+                      <span>提醒节点 {{ getPlanReminderCount(plan) }} 个</span>
+                    </div>
                   </div>
                   <ElSpace wrap>
                     <ElButton @click="openAddDrugDialog(plan)">
@@ -162,9 +159,12 @@
                   </ElButton>
                 </ElEmpty>
                 <div v-else class="medicine-card-list">
-                  <div v-for="(drug, index) in plan.drugs" :key="`${drug.name}-${index}`" class="medicine-card">
+                  <div
+                    v-for="(drug, index) in plan.drugs"
+                    :key="`${drug.name}-${index}`"
+                    class="medicine-card"
+                  >
                     <div class="medicine-field medicine-name-field">
-                      <span>药品名称</span>
                       <b>{{ drug.name }}</b>
                       <small v-if="drug.specification || drug.quantity">
                         {{ [drug.specification, drug.quantity].filter(Boolean).join(' · ') }}
@@ -190,15 +190,22 @@
                       <span>用药天数</span>
                       <b>{{ drug.durationDays || 30 }}天</b>
                     </div>
-                    <ElButton class="medicine-edit-button" @click="openEditDrugDialog(plan, index)">
+                    <ElButton
+                      class="medicine-edit-button"
+                      type="primary"
+                      plain
+                      @click="openEditDrugDialog(plan, index)"
+                    >
                       <template #icon><ArtSvgIcon icon="ri:edit-line" /></template>
-                      修改调整
+                      编辑
                     </ElButton>
                   </div>
                 </div>
 
                 <div v-if="plan.status === '已停用'" class="stopped-note">
-                  停用时间：{{ plan.stoppedAt || '-' }}，原因：{{ plan.stopReason || '医药师手动停用' }}
+                  停用时间：{{ plan.stoppedAt || '-' }}，原因：{{
+                    plan.stopReason || '医药师手动停用'
+                  }}
                 </div>
               </div>
             </ElTabPane>
@@ -223,14 +230,24 @@
           <ElCol :xs="24" :md="12">
             <ElFormItem label="计划来源" prop="source">
               <ElSelect v-model="editForm.source" placeholder="请选择计划来源">
-                <ElOption v-for="source in sourceOptions" :key="source" :label="source" :value="source" />
+                <ElOption
+                  v-for="source in sourceOptions"
+                  :key="source"
+                  :label="source"
+                  :value="source"
+                />
               </ElSelect>
             </ElFormItem>
           </ElCol>
           <ElCol :xs="24" :md="12">
             <ElFormItem label="计划状态" prop="status">
               <ElSelect v-model="editForm.status" placeholder="请选择计划状态">
-                <ElOption v-for="status in statusOptions" :key="status" :label="status" :value="status" />
+                <ElOption
+                  v-for="status in statusOptions"
+                  :key="status"
+                  :label="status"
+                  :value="status"
+                />
               </ElSelect>
             </ElFormItem>
           </ElCol>
@@ -393,7 +410,12 @@
                     placeholder="提醒时间"
                   />
                   <ElSelect v-model="slot.tag" placeholder="服药时段">
-                    <ElOption v-for="tag in reminderTagOptions" :key="tag" :label="tag" :value="tag" />
+                    <ElOption
+                      v-for="tag in reminderTagOptions"
+                      :key="tag"
+                      :label="tag"
+                      :value="tag"
+                    />
                   </ElSelect>
                 </div>
               </div>
@@ -413,12 +435,7 @@
       </ElForm>
       <template #footer>
         <ElSpace wrap>
-          <ElButton
-            v-if="drugDialogMode === 'edit'"
-            type="danger"
-            plain
-            @click="removeCurrentDrug"
-          >
+          <ElButton v-if="drugDialogMode === 'edit'" type="danger" plain @click="removeCurrentDrug">
             <template #icon><ArtSvgIcon icon="ri:stop-circle-line" /></template>
             停用药品
           </ElButton>
@@ -751,8 +768,10 @@
     const explicitTime = parseClockTime(tag)
     if (explicitTime !== null) return minutesToTime(explicitTime)
     if (normalized.includes('早餐')) {
-      if (normalized.includes('前')) return offsetTime(currentPatient.value.breakfastTime, -30, '07:00')
-      if (normalized.includes('后')) return offsetTime(currentPatient.value.breakfastTime, 30, '07:00')
+      if (normalized.includes('前'))
+        return offsetTime(currentPatient.value.breakfastTime, -30, '07:00')
+      if (normalized.includes('后'))
+        return offsetTime(currentPatient.value.breakfastTime, 30, '07:00')
       return currentPatient.value.breakfastTime || '07:00'
     }
     if (normalized.includes('午餐')) {
@@ -761,12 +780,14 @@
       return currentPatient.value.lunchTime || '12:00'
     }
     if (normalized.includes('晚餐')) {
-      if (normalized.includes('前')) return offsetTime(currentPatient.value.dinnerTime, -30, '18:00')
+      if (normalized.includes('前'))
+        return offsetTime(currentPatient.value.dinnerTime, -30, '18:00')
       if (normalized.includes('后')) return offsetTime(currentPatient.value.dinnerTime, 30, '18:00')
       return currentPatient.value.dinnerTime || '18:00'
     }
     if (normalized.includes('睡前')) return offsetTime(currentPatient.value.sleepTime, -30, '22:00')
-    if (normalized.includes('空腹')) return offsetTime(currentPatient.value.breakfastTime, -30, '07:00')
+    if (normalized.includes('空腹'))
+      return offsetTime(currentPatient.value.breakfastTime, -30, '07:00')
     return getDefaultReminderSlot(index, total).time
   }
 
@@ -881,7 +902,9 @@
 
   function buildPeriod() {
     if (!editForm.startDate) return '未设置'
-    return editForm.endDate ? `${editForm.startDate} 至 ${editForm.endDate}` : `${editForm.startDate} 起`
+    return editForm.endDate
+      ? `${editForm.startDate} 至 ${editForm.endDate}`
+      : `${editForm.startDate} 起`
   }
 
   function buildPlanCode() {
@@ -1400,9 +1423,13 @@
     }
   }
 
-  .scheme-count {
-    font-size: 14px;
-    font-weight: 500;
+  .scheme-meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.45;
     color: var(--pillbox-text-muted);
   }
 
@@ -1416,20 +1443,21 @@
   .medicine-card-list {
     display: grid;
     gap: var(--pillbox-gap-sm);
+    container-type: inline-size;
   }
 
   .medicine-card {
     display: grid;
     grid-template-columns:
-      minmax(180px, 1fr)
-      minmax(220px, 1.2fr)
-      minmax(170px, 1fr)
-      minmax(120px, 0.6fr)
+      minmax(150px, 1.15fr)
+      minmax(180px, 1.1fr)
+      minmax(126px, 0.8fr)
+      minmax(84px, 0.55fr)
       auto;
-    gap: var(--pillbox-gap);
+    gap: 16px 14px;
     align-items: center;
     min-width: 0;
-    padding: 24px 28px;
+    padding: 24px;
     background: linear-gradient(135deg, var(--el-color-primary-light-9), var(--pillbox-surface));
     border: 1px solid var(--pillbox-border);
     border-radius: var(--pillbox-card-radius);
@@ -1474,7 +1502,24 @@
   }
 
   .medicine-edit-button {
-    min-width: 104px;
+    justify-self: end;
+    min-width: 72px;
+    white-space: nowrap;
+  }
+
+  @container (max-width: 720px) {
+    .medicine-card {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .medicine-name-field {
+      grid-column: 1 / -1;
+    }
+
+    .medicine-edit-button {
+      grid-column: 1 / -1;
+      justify-self: start;
+    }
   }
 
   .timeline-list {
