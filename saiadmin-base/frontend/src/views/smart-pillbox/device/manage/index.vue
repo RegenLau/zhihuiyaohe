@@ -214,7 +214,7 @@ const dispatchRecords = ref([])
 const selectedDevice = reactive({})
 
 const filters = reactive({
-  sn: '',
+  sn: String(pickQueryValue(route.query.sn)),
   status: String(pickQueryValue(route.query.status))
 })
 const deviceForm = reactive({
@@ -464,6 +464,7 @@ const submitImport = async () => {
 watch(
   () => route.fullPath,
   async () => {
+    filters.sn = String(pickQueryValue(route.query.sn))
     filters.status = String(pickQueryValue(route.query.status))
     await fetchDevices()
     await openGuidedBindDialog()
