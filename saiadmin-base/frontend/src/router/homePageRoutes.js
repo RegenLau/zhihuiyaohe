@@ -13,53 +13,76 @@ const homePageRoutes = [
   },
   {
     id: 20,
-    name: 'SmartPatients',
-    path: '/doctor/patients',
+    name: 'SmartPatientManagement',
+    path: '/doctor/patient-management',
+    redirect: '/doctor/patients',
     meta: {
       title: '患者管理',
       icon: 'ri:user-heart-line',
       type: 'M'
     },
-    component: () => import('@/views/smart-pillbox/patient/list/index.vue')
+    component: () => import('@/layout/empty.vue'),
+    children: [
+      {
+        id: 21,
+        name: 'SmartPatientFiles',
+        path: '/doctor/patients',
+        meta: {
+          title: '患者档案',
+          icon: 'ri:file-user-line',
+          type: 'M'
+        },
+        component: () => import('@/views/smart-pillbox/patient/list/index.vue')
+      },
+      {
+        id: 22,
+        name: 'SmartConversations',
+        path: '/doctor/conversations',
+        meta: {
+          title: '对话记录',
+          icon: 'ri:chat-history-line',
+          type: 'M'
+        },
+        component: () => import('@/views/smart-pillbox/conversation/record/index.vue')
+      },
+      {
+        id: 23,
+        name: 'SmartHealthData',
+        path: '/doctor/health-data',
+        meta: {
+          title: '健康数据',
+          icon: 'ri:pulse-line',
+          type: 'M'
+        },
+        component: () => import('@/views/smart-pillbox/health/data/index.vue')
+      }
+    ]
   },
   {
-    id: 21,
+    id: 24,
     name: 'SmartPatientCreate',
     path: '/doctor/patient-create',
     meta: {
       title: '新增患者建档',
       icon: 'ri:user-add-line',
       type: 'M',
-      activeMenu: 'SmartPatients',
+      activeMenu: 'SmartPatientFiles',
       hidden: true
     },
     component: () => import('@/views/smart-pillbox/patient/create/index.vue')
   },
   {
-    id: 22,
+    id: 25,
     name: 'SmartPatientDetail',
     path: '/doctor/patient-detail',
     meta: {
       title: '患者详情',
       icon: 'ri:file-user-line',
       type: 'M',
-      activeMenu: 'SmartPatients',
+      activeMenu: 'SmartPatientFiles',
       hidden: true
     },
     component: () => import('@/views/smart-pillbox/patient/detail/index.vue')
-  },
-  {
-    id: 23,
-    name: 'SmartHealthData',
-    path: '/doctor/health-data',
-    meta: {
-      title: '健康数据',
-      icon: 'ri:pulse-line',
-      type: 'M',
-      activeMenu: 'SmartPatients',
-      hidden: true
-    },
-    component: () => import('@/views/smart-pillbox/health/data/index.vue')
   },
   {
     id: 30,
@@ -128,17 +151,6 @@ const homePageRoutes = [
           type: 'M'
         },
         component: () => import('@/views/smart-pillbox/device/manage/index.vue')
-      },
-      {
-        id: 42,
-        name: 'SmartConversations',
-        path: '/doctor/conversations',
-        meta: {
-          title: '对话记录',
-          icon: 'ri:chat-history-line',
-          type: 'M'
-        },
-        component: () => import('@/views/smart-pillbox/conversation/record/index.vue')
       }
     ]
   },

@@ -3,17 +3,18 @@
     <div class="smart-page-header is-actions-only">
       <a-button @click="router.push('/doctor/patients')">
         <template #icon><sa-icon icon="ri:arrow-left-line" :size="16" /></template>
-        返回患者管理
+        返回患者档案
       </a-button>
     </div>
 
-    <a-card v-if="createdPatient" class="smart-panel" :bordered="false">
+    <div v-if="createdPatient" class="ma-content-block p-3">
+    <a-card :bordered="false">
       <a-result status="success" title="患者建档成功" :subtitle="successSubtitle">
         <template #extra>
           <a-space wrap>
             <a-button @click="router.push('/doctor/patients')">
               <template #icon><sa-icon icon="ri:list-check" :size="16" /></template>
-              返回患者列表
+              返回患者档案
             </a-button>
             <a-button v-if="hasBoundDevice" type="primary" @click="goToMedicationPlan()">
               <template #icon><sa-icon icon="ri:calendar-check-line" :size="16" /></template>
@@ -34,11 +35,15 @@
         <a-descriptions-item label="设备状态">
           <a-tag :color="statusColor(createdPatient.deviceStatus)">{{ createdPatient.deviceStatus }}</a-tag>
         </a-descriptions-item>
+        <a-descriptions-item label="知情同意">{{ createdPatient.consent }}</a-descriptions-item>
+        <a-descriptions-item label="子女账号">{{ createdPatient.child }}</a-descriptions-item>
         <a-descriptions-item label="下一步">{{ nextStepText }}</a-descriptions-item>
       </a-descriptions>
     </a-card>
+    </div>
 
-    <a-card v-else class="smart-panel" :bordered="false">
+    <div v-else class="ma-content-block p-3">
+    <a-card :bordered="false">
       <a-form :model="form" layout="vertical">
         <h3 class="form-step-title">患者基础信息</h3>
         <p class="smart-muted" style="margin: 6px 0 18px">批量导入和 HIS 同步也会先进入同样的基础档案状态。</p>
@@ -67,6 +72,44 @@
               <a-date-picker v-model="form.birthDate" style="width: 100%" />
             </a-form-item>
           </a-col>
+          <a-col :xs="24" :md="12">
+            <a-form-item label="慢病史">
+              <a-input v-model="form.diseasesText" placeholder="多个用顿号分隔，例如：高血压、糖尿病" />
+            </a-form-item>
+          </a-col>
+          <a-col :xs="24" :md="12">
+            <a-form-item label="过敏史">
+              <a-input v-model="form.allergiesText" placeholder="多个用顿号分隔，可留空" />
+            </a-form-item>
+          </a-col>
+          <a-col :xs="24" :md="8">
+            <a-form-item label="联系人关系">
+              <a-select v-model="form.contactRelation">
+                <a-option value="女儿">女儿</a-option>
+                <a-option value="儿子">儿子</a-option>
+                <a-option value="配偶">配偶</a-option>
+                <a-option value="其他">其他</a-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+          <a-col :xs="24" :md="8">
+            <a-form-item label="联系人姓名">
+              <a-input v-model="form.contactName" placeholder="请输入联系人姓名" />
+            </a-form-item>
+          </a-col>
+          <a-col :xs="24" :md="8">
+            <a-form-item label="联系人电话">
+              <a-input v-model="form.contactPhone" placeholder="请输入联系人电话" />
+            </a-form-item>
+          </a-col>
+          <a-col :xs="24" :md="12">
+            <a-form-item label="知情同意状态">
+              <a-select v-model="form.consent">
+                <a-option value="未同意">未同意</a-option>
+                <a-option value="已同意">已同意</a-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
           <a-col :span="24">
             <a-form-item label="设备绑定">
               <a-select v-model="form.deviceId" :loading="devicesLoading" placeholder="请选择可用设备" allow-clear>
@@ -91,6 +134,7 @@
         </div>
       </a-form>
     </a-card>
+    </div>
   </div>
 </template>
 
@@ -99,7 +143,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { useRouter } from 'vue-router'
 import { deviceApi, patientApi } from '@/views/plugin/smart-pillbox/api/doctor'
-import { calculateAge, formatDateTime, generatePatientNo, getPayload, getRecords, statusColor } from '@/views/smart-pillbox/utils'
+import { calculateAge, formatDateTime, generatePatientNo, getPayload, getRecords, splitTags, statusColor } from '@/views/smart-pillbox/utils'
 
 const router = useRouter()
 const saving = ref(false)
@@ -112,6 +156,12 @@ const form = reactive({
   phone: '',
   gender: '男',
   birthDate: '',
+  diseasesText: '',
+  allergiesText: '',
+  contactRelation: '女儿',
+  contactName: '',
+  contactPhone: '',
+  consent: '未同意',
   deviceId: ''
 })
 
@@ -140,6 +190,10 @@ const handleSubmit = async () => {
   saving.value = true
   try {
     const now = formatDateTime()
+    const contacts = form.contactName && form.contactPhone
+      ? [{ id: `CT-${Date.now()}`, relation: form.contactRelation, name: form.contactName, phone: form.contactPhone, isPrimary: true }]
+      : []
+    const allergyNames = splitTags(form.allergiesText)
     const response = await patientApi.save({
       name: form.name,
       phone: form.phone,
@@ -147,16 +201,22 @@ const handleSubmit = async () => {
       birthDate: form.birthDate,
       age: calculateAge(form.birthDate),
       recordNo: generatePatientNo(),
-      diseases: [],
+      diseases: splitTags(form.diseasesText),
       historyDiseases: [],
-      allergies: [],
-      contacts: [],
+      allergies: allergyNames.map((allergen, index) => ({
+        id: `ALG-${Date.now()}-${index}`,
+        allergenType: 'other',
+        allergen,
+        severity: 'mild',
+        reaction: ''
+      })),
+      contacts,
       status: '正常管理',
       deviceNo: '未绑定',
       deviceStatus: '未绑定',
       deviceStatusType: 'warning',
-      consent: '未同意',
-      child: '待绑定',
+      consent: form.consent,
+      child: contacts.length ? `${contacts[0].relation} ${contacts[0].name} ${contacts[0].phone}` : '待绑定',
       nextReminder: '-',
       todayDrugs: 0,
       recentInteraction: '-',

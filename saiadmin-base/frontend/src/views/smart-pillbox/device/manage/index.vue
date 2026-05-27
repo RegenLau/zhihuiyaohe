@@ -1,6 +1,6 @@
 <template>
   <div class="smart-page">
-    <a-card class="smart-panel" :bordered="false">
+    <div class="ma-content-block p-4">
       <a-row class="smart-filter-row" :gutter="[12, 12]" align="center">
         <a-col :xs="24" :sm="10" :md="8">
           <a-input-search
@@ -27,10 +27,6 @@
         </a-col>
         <a-col :xs="24" :md="11" class="smart-filter-actions">
           <a-space wrap>
-            <a-button type="primary" @click="importVisible = true">
-              <template #icon><sa-icon icon="ri:upload-cloud-2-line" :size="16" /></template>
-              导入设备
-            </a-button>
             <a-button :loading="loading" @click="fetchDevices">
               <template #icon><sa-icon icon="ri:refresh-line" :size="16" /></template>
               刷新状态
@@ -38,94 +34,61 @@
           </a-space>
         </a-col>
       </a-row>
-    </a-card>
-
-    <div class="device-summary-grid">
-      <a-card v-for="item in statusSummary" :key="item.label" class="device-summary-card" :bordered="false">
-        <div class="smart-muted">{{ item.label }}</div>
-        <div class="device-summary-value">{{ item.value }}</div>
-      </a-card>
     </div>
 
-    <a-spin :loading="loading" class="device-card-spin">
-      <div v-if="devices.length" class="device-card-grid">
-        <a-card v-for="device in devices" :key="device.id" class="device-card" :bordered="false">
-          <div class="device-card-header">
-            <div>
-              <div class="device-sn">{{ device.sn }}</div>
-              <div class="smart-muted">绑定日期 {{ device.bindDate || '-' }}</div>
-            </div>
-            <a-tag :color="statusColor(device.status)">{{ device.status }}</a-tag>
-          </div>
-
-          <div class="device-patient-row">
-            <div>
-              <div class="smart-muted">绑定患者</div>
-              <div class="device-patient">{{ device.patient || '-' }}</div>
-            </div>
-            <a-space wrap>
-              <a-button size="small" type="primary" :disabled="!device.bindPatientId" @click="openPatient(device)">
-                <template #icon><sa-icon icon="ri:user-heart-line" :size="14" /></template>
-                患者详情
-              </a-button>
-              <a-button size="small" @click="router.push(`/doctor/conversations?patientId=${device.bindPatientId || ''}`)">
-                <template #icon><sa-icon icon="ri:file-list-3-line" :size="14" /></template>
-                对话记录
-              </a-button>
-            </a-space>
-          </div>
-
-          <div class="device-battery">
-            <div class="device-battery-header">
-              <span>电量 {{ device.battery || '-' }}</span>
-              <span>{{ device.wifi }}</span>
-            </div>
-            <div class="device-battery-track">
-              <div class="device-battery-bar" :style="{ width: `${batteryPercent(device)}%` }"></div>
-            </div>
-          </div>
-
-          <div class="device-field-grid">
-            <div>
-              <span class="smart-muted">固件</span>
-              <strong>{{ device.firmware || '-' }}</strong>
-            </div>
-            <div>
-              <span class="smart-muted">最后心跳</span>
-              <strong>{{ device.lastHeartbeat || '-' }}</strong>
-            </div>
-            <div>
-              <span class="smart-muted">离线时长</span>
-              <strong>{{ device.offlineHours ? `${device.offlineHours} 小时` : '正常' }}</strong>
-            </div>
-            <div>
-              <span class="smart-muted">下发状态</span>
-              <strong>{{ device.dispatchStatus || '-' }}</strong>
-            </div>
-          </div>
-
-          <div class="smart-toolbar device-card-actions">
-            <div class="smart-row">
-              <span class="smart-muted">操作</span>
-              <a-tag>{{ device.dispatchStatus || '-' }}</a-tag>
-            </div>
-            <a-space wrap>
-              <a-button size="small" @click="openEditDialog(device)">
-                <template #icon><sa-icon icon="ri:edit-2-line" :size="14" /></template>
-                编辑
-              </a-button>
-              <a-popconfirm :content="`确认解除设备 ${device.sn} 与 ${device.patient} 的绑定关系？`" @ok="unbindDevice(device)">
-                <a-button size="small" status="danger" :disabled="!isDeviceBound(device)">
-                  <template #icon><sa-icon icon="ri:link-unlink" :size="14" /></template>
-                  确认解绑
-                </a-button>
-              </a-popconfirm>
-            </a-space>
-          </div>
-        </a-card>
-      </div>
-      <a-empty v-else description="暂无设备" />
-    </a-spin>
+    <div class="ma-content-block p-2">
+      <a-table
+        row-key="id"
+        :data="devices"
+        :loading="loading"
+        :pagination="false"
+        :scroll="{ x: 1080 }"
+        table-layout-fixed
+      >
+        <template #columns>
+          <a-table-column title="设备编号" data-index="sn" :width="180">
+            <template #cell="{ record }">
+              <a-link @click="openEditDialog(record)">{{ record.sn }}</a-link>
+              <div class="smart-muted">绑定日期 {{ record.bindDate || '-' }}</div>
+            </template>
+          </a-table-column>
+          <a-table-column title="绑定患者" data-index="patient" :width="150">
+            <template #cell="{ record }">
+              <a-link v-if="record.bindPatientId" @click="router.push(`/doctor/patient-detail?patientId=${record.bindPatientId}`)">
+                {{ record.patient || '-' }}
+              </a-link>
+              <span v-else>{{ record.patient || '-' }}</span>
+            </template>
+          </a-table-column>
+          <a-table-column title="状态" data-index="status" :width="110">
+            <template #cell="{ record }">
+              <a-tag :color="statusColor(record.status)">{{ record.status }}</a-tag>
+            </template>
+          </a-table-column>
+          <a-table-column title="电量" data-index="battery" :width="170">
+            <template #cell="{ record }">
+              <a-space direction="vertical" :size="4" fill>
+                <span>{{ record.battery || '-' }}</span>
+                <a-progress :percent="batteryPercent(record) / 100" size="small" :show-text="false" />
+              </a-space>
+            </template>
+          </a-table-column>
+          <a-table-column title="固件" data-index="firmware" :width="120" />
+          <a-table-column title="最后心跳" data-index="lastHeartbeat" :width="180">
+            <template #cell="{ record }">{{ record.lastHeartbeat || '-' }}</template>
+          </a-table-column>
+          <a-table-column title="操作" :width="190">
+            <template #cell="{ record }">
+              <a-space>
+                <a-button size="mini" @click="openRecordsDrawer(record)">设备记录</a-button>
+                <a-button size="mini" @click="openEditDialog(record)">编辑</a-button>
+                <a-button size="mini" status="danger" :disabled="!isDeviceBound(record)" @click="openUnbindConfirm(record)">解绑</a-button>
+              </a-space>
+            </template>
+          </a-table-column>
+        </template>
+      </a-table>
+    </div>
 
     <a-modal
       v-model:visible="editVisible"
@@ -149,26 +112,21 @@
           <div class="smart-toolbar" style="width: 100%">
             <span class="smart-muted">目前版本</span>
             <a-input v-model="deviceForm.firmware" readonly />
-            <a-button type="primary" :disabled="deviceForm.firmware === latestFirmwareVersion" @click="handleFirmwareUpdate">
-              <template #icon><sa-icon icon="ri:refresh-line" :size="16" /></template>
-              更新版本
-            </a-button>
+            <a-tag color="arcoblue">仅展示</a-tag>
           </div>
         </a-form-item>
       </a-form>
     </a-modal>
 
     <a-modal v-model:visible="importVisible" title="导入设备" width="min(680px, calc(100vw - 32px))" :footer="false">
-      <div class="import-drop">
-        <a-textarea
-          v-model="importText"
-          :auto-size="{ minRows: 5, maxRows: 8 }"
-          placeholder="将文件拖到此处，或点击选择。当前 mock 支持粘贴 CSV，每行一台设备，例如：PBX-202605-099,王秀兰,在线,90%,v2.1.3"
-        />
-        <a-alert style="margin-top: 12px" type="info">
-          支持 .xlsx、.xls、.csv，至少包含设备 SN。已识别 {{ previewRows.length }} 台设备
-        </a-alert>
-      </div>
+      <a-textarea
+        v-model="importText"
+        :auto-size="{ minRows: 5, maxRows: 8 }"
+        placeholder="将文件拖到此处，或点击选择。当前 mock 支持粘贴 CSV，每行一台设备，例如：PBX-202605-099,王秀兰,在线,90%,v2.1.3"
+      />
+      <a-alert style="margin-top: 12px" type="info">
+        支持 .xlsx、.xls、.csv，至少包含设备 SN。已识别 {{ previewRows.length }} 台设备
+      </a-alert>
       <a-table v-if="previewRows.length" row-key="sn" :data="previewRows" :pagination="false" :scroll="{ x: 760 }" style="margin-top: 16px">
         <template #columns>
           <a-table-column title="设备SN" data-index="sn" />
@@ -187,6 +145,47 @@
         </a-button>
       </div>
     </a-modal>
+
+    <a-drawer v-model:visible="recordsDrawerVisible" :width="720" title="设备记录" unmount-on-close>
+      <a-spin :loading="recordsLoading">
+        <a-descriptions :column="2" bordered>
+          <a-descriptions-item label="设备编号">{{ selectedDevice.sn }}</a-descriptions-item>
+          <a-descriptions-item label="绑定患者">{{ selectedDevice.patient }}</a-descriptions-item>
+          <a-descriptions-item label="在线状态"><a-tag :color="statusColor(selectedDevice.status)">{{ selectedDevice.status }}</a-tag></a-descriptions-item>
+          <a-descriptions-item label="最后心跳">{{ selectedDevice.lastHeartbeat || '-' }}</a-descriptions-item>
+        </a-descriptions>
+
+        <a-tabs default-active-key="events" class="smart-block-gap-sm">
+          <a-tab-pane key="events" title="开关记录与事件">
+            <a-table row-key="id" :data="deviceEventRecords" :pagination="false" :scroll="{ x: 640 }" size="small">
+              <template #columns>
+                <a-table-column title="时间" data-index="eventTime" :width="150" />
+                <a-table-column title="事件" data-index="eventType" :width="100" />
+                <a-table-column title="药品" data-index="medicine" :width="150" />
+                <a-table-column title="状态" data-index="matchedPlan" :width="100">
+                  <template #cell="{ record }"><a-tag :color="record.matchedPlan ? 'green' : 'orange'">{{ record.matchedPlan ? '匹配' : '需确认' }}</a-tag></template>
+                </a-table-column>
+                <a-table-column title="说明" data-index="note" />
+              </template>
+            </a-table>
+          </a-tab-pane>
+          <a-tab-pane key="dispatch" title="计划下发记录">
+            <a-table row-key="id" :data="dispatchRecords" :pagination="false" :scroll="{ x: 640 }" size="small">
+              <template #columns>
+                <a-table-column title="下发时间" data-index="dispatchTime" :width="150" />
+                <a-table-column title="计划" data-index="planTitle" />
+                <a-table-column title="状态" data-index="status" :width="90">
+                  <template #cell="{ record }"><a-tag :color="statusColor(record.statusType || record.status)">{{ record.status }}</a-tag></template>
+                </a-table-column>
+                <a-table-column title="说明" data-index="failReason" :width="120">
+                  <template #cell="{ record }">{{ record.failReason || '-' }}</template>
+                </a-table-column>
+              </template>
+            </a-table>
+          </a-tab-pane>
+        </a-tabs>
+      </a-spin>
+    </a-drawer>
   </div>
 </template>
 
@@ -204,10 +203,15 @@ const loading = ref(false)
 const saving = ref(false)
 const editVisible = ref(false)
 const importVisible = ref(false)
+const recordsDrawerVisible = ref(false)
 const dialogType = ref('edit')
 const guidedBinding = ref(false)
 const latestFirmwareVersion = 'v2.1.3'
 const importText = ref('')
+const recordsLoading = ref(false)
+const deviceEventRecords = ref([])
+const dispatchRecords = ref([])
+const selectedDevice = reactive({})
 
 const filters = reactive({
   sn: '',
@@ -244,27 +248,6 @@ const previewRows = computed(() => {
     .filter((item) => item.sn)
 })
 
-const statusSummary = computed(() => {
-  const counts = devices.value.reduce(
-    (result, device) => {
-      result.total += 1
-      result.online += device.status === '在线' ? 1 : 0
-      result.offline += device.status === '离线' ? 1 : 0
-      result.unbound += device.status === '待分配' ? 1 : 0
-      return result
-    },
-    { total: 0, online: 0, offline: 0, unbound: 0 }
-  )
-
-  return [
-    { label: '设备总数', value: counts.total },
-    { label: '在线设备', value: counts.online },
-    { label: '离线设备', value: counts.offline },
-    { label: '待分配设备', value: counts.unbound },
-    { label: '已绑定设备', value: devices.value.filter((item) => isDeviceBound(item)).length }
-  ]
-})
-
 const fetchDevices = async () => {
   loading.value = true
   try {
@@ -282,11 +265,6 @@ const fetchDevices = async () => {
 const batteryPercent = (device) => {
   const value = Number(device.batteryLevel ?? String(device.battery || '').replace('%', ''))
   return Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0
-}
-
-const openPatient = (device) => {
-  if (!device.bindPatientId) return
-  router.push(`/doctor/patient-detail?patientId=${device.bindPatientId}`)
 }
 
 const isDeviceBound = (device) => {
@@ -389,6 +367,38 @@ const handleFirmwareUpdate = () => {
   }
   deviceForm.firmware = latestFirmwareVersion
   Message.success(`固件已更新至 ${latestFirmwareVersion}`)
+}
+
+const openRecordsDrawer = async (device) => {
+  Object.assign(selectedDevice, device)
+  recordsDrawerVisible.value = true
+  recordsLoading.value = true
+  try {
+    const [eventsResponse, dispatchResponse] = await Promise.all([
+      deviceApi.events({ sn: device.sn, limit: 100 }),
+      deviceApi.dispatchRecords({ sn: device.sn, limit: 100 })
+    ])
+    deviceEventRecords.value = getRecords(eventsResponse)
+    dispatchRecords.value = getRecords(dispatchResponse)
+  } finally {
+    recordsLoading.value = false
+  }
+}
+
+const openUnbindConfirm = (device) => {
+  if (!isDeviceBound(device)) {
+    Message.warning('当前设备未绑定患者')
+    return
+  }
+  Modal.confirm({
+    title: '确认解绑',
+    content: `确认解除设备 ${device.sn} 与 ${device.patient} 的绑定关系？`,
+    simple: false,
+    titleAlign: 'start',
+    okText: '确认',
+    cancelText: '取消',
+    onOk: () => unbindDevice(device)
+  })
 }
 
 const unbindDevice = async (device) => {

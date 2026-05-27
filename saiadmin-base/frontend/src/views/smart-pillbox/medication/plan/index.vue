@@ -1,42 +1,38 @@
 <template>
   <div class="smart-page">
-    <div class="plan-board">
-      <a-card title="选择患者" class="smart-panel" :bordered="false">
+    <div class="official-two-column">
+      <div class="ma-content-block p-3">
+      <a-card title="选择患者" :bordered="false">
         <a-input v-model="patientKeyword" placeholder="搜索姓名、处方编号、设备号" allow-clear />
-        <div class="smart-side-list" style="margin-top: 12px">
-          <div
-            v-for="patient in filteredPatients"
-            :key="patient.id"
-            class="smart-side-item"
-            :class="{ 'is-active': Number(activePatientId) === Number(patient.id) }"
-            @click="selectPatient(patient.id)"
-          >
-            <div class="smart-row" style="justify-content: space-between">
-              <strong>{{ patient.name }}</strong>
-              <a-tag :color="patient.deviceStatus === '在线' ? 'green' : 'orange'">{{ patient.deviceStatus }}</a-tag>
-            </div>
-            <div class="smart-muted" style="margin-top: 8px">
-              {{ patient.gender }} · {{ patient.age }}岁 · {{ patient.recordNo }}
-            </div>
-            <div class="smart-row" style="margin-top: 8px">
-              <a-tag>今日药品 {{ patient.todayDrugs || 0 }} 种</a-tag>
-              <a-tag>下一提醒 {{ patient.nextReminder || '-' }}</a-tag>
-            </div>
-          </div>
-        </div>
+        <a-table row-key="id" :data="filteredPatients" :pagination="false" size="small" style="margin-top: 12px">
+          <template #columns>
+            <a-table-column title="患者" data-index="name">
+              <template #cell="{ record }">
+                <a-space direction="vertical" :size="2" fill>
+                  <a-space wrap>
+                    <a-link @click="selectPatient(record.id)">{{ record.name }}</a-link>
+                    <a-tag :color="record.deviceStatus === '在线' ? 'green' : 'orange'">{{ record.deviceStatus }}</a-tag>
+                  </a-space>
+                  <span class="smart-muted">{{ record.gender }} · {{ record.age }}岁 · {{ record.recordNo }}</span>
+                </a-space>
+              </template>
+            </a-table-column>
+          </template>
+        </a-table>
       </a-card>
+      </div>
 
-      <a-card class="scheme-panel" :bordered="false">
-        <section class="timeline-drug-panel">
-          <div class="panel-header">
-            <div>
-              <strong>时间线</strong>
-              <div class="smart-section-note">{{ activePatient?.name || '当前患者' }}的全天用药安排</div>
-            </div>
-            <a-space wrap class="plan-content-actions">
+      <div class="ma-content-block p-3">
+        <a-card title="时间线" :bordered="false">
+          <template #extra>
+            <a-space wrap>
               <a-button :disabled="!activePatientId" @click="router.push(`/doctor/patient-detail?patientId=${activePatientId}`)">
                 <template #icon><sa-icon icon="ri:eye-line" :size="16" /></template>
                 查看患者档案
+              </a-button>
+              <a-button :disabled="!activePatientId" @click="openOcrDialog">
+                <template #icon><sa-icon icon="ri:file-search-line" :size="16" /></template>
+                OCR 处方识别
               </a-button>
               <a-button v-if="plans.length" type="primary" @click="openCreatePlan">
                 <template #icon><sa-icon icon="ri:add-line" :size="16" /></template>
@@ -47,27 +43,26 @@
                 调整作息
               </a-button>
             </a-space>
-          </div>
-          <div v-if="timelineItems.length" class="timeline-drug-list smart-block-gap">
-            <div v-for="item in timelineItems" :key="item.key" class="timeline-drug-item">
-              <div class="task-time">{{ item.clock }}</div>
-              <div>
-                <strong>{{ item.time }}</strong>
-                <div class="smart-muted">{{ item.drug.name }} · {{ item.drug.dose }} · {{ item.drug.frequency }}</div>
-              </div>
-              <a-tag>{{ item.plan.title }}</a-tag>
-            </div>
-          </div>
-          <div v-else class="plan-empty-state">
-            <span class="plan-empty-icon"><sa-icon icon="ri:medicine-bottle-line" :size="34" /></span>
-            <strong>当前患者暂无用药计划</strong>
-            <span>请先确认患者信息，再创建用药计划。</span>
-            <a-button type="primary" @click="openCreatePlan">
-              <template #icon><sa-icon icon="ri:add-line" :size="16" /></template>
-              创建用药计划
-            </a-button>
-          </div>
-        </section>
+          </template>
+          <a-table row-key="key" :data="timelineItems" :pagination="false" size="small">
+            <template #columns>
+              <a-table-column title="时间" data-index="clock" :width="100" />
+              <a-table-column title="提醒节点" data-index="time" :width="120" />
+              <a-table-column title="药品">
+                <template #cell="{ record }">
+                  {{ record.drug.name }}
+                  <div class="smart-muted">{{ record.drug.dose }} · {{ record.drug.frequency }}</div>
+                </template>
+              </a-table-column>
+              <a-table-column title="计划" :width="180">
+                <template #cell="{ record }"><a-tag>{{ record.plan.title }}</a-tag></template>
+              </a-table-column>
+            </template>
+          </a-table>
+          <a-empty v-if="!timelineItems.length" description="当前患者暂无用药计划">
+            <a-button type="primary" @click="openCreatePlan">创建用药计划</a-button>
+          </a-empty>
+        </a-card>
 
         <a-tabs v-if="plans.length" v-model:active-key="activePlanId">
           <a-tab-pane v-for="plan in plans" :key="String(plan.id)" :title="plan.title">
@@ -92,6 +87,10 @@
                   <template #icon><sa-icon icon="ri:send-plane-line" :size="16" /></template>
                   下发药盒
                 </a-button>
+                <a-button :disabled="!plan.drugs?.length" @click="copyPlan(plan)">
+                  <template #icon><sa-icon icon="ri:file-copy-line" :size="16" /></template>
+                  复制计划
+                </a-button>
                 <a-popconfirm content="确定停用该计划吗？" @ok="stopPlan(plan)">
                   <a-button status="danger">
                     <template #icon><sa-icon icon="ri:pause-circle-line" :size="16" /></template>
@@ -108,41 +107,47 @@
               <a-tag>{{ plan.auditSummary || '无审核提示' }}</a-tag>
             </div>
 
-            <div class="medicine-card-list">
-              <div v-for="(drug, index) in plan.drugs" :key="`${drug.name}-${index}`" class="medicine-card">
-                <div>
-                  <div class="medicine-name">{{ drug.name }}</div>
-                  <div>{{ drug.specification }} · {{ drug.quantity }}</div>
-                </div>
-                <div>
-                  <div class="medicine-label">提醒节点</div>
-                  <a-space wrap>
-                    <a-tag v-for="node in getDrugReminderLabels(drug)" :key="node" color="arcoblue">{{ node }}</a-tag>
-                  </a-space>
-                </div>
-                <div>
-                  <div class="medicine-label">用法用量</div>
-                  <div class="medicine-value">{{ drug.dose }} {{ drug.frequency }}</div>
-                </div>
-                <div>
-                  <div class="medicine-label">用药天数</div>
-                  <div class="medicine-value">{{ drug.durationDays }}天</div>
-                </div>
-                <a-button class="medicine-edit-button" type="primary" @click="openDrugDialog(plan, drug, index)">
-                  <template #icon><sa-icon icon="ri:edit-2-line" :size="16" /></template>
-                  编辑
-                </a-button>
-              </div>
-              <a-empty v-if="!plan.drugs?.length" description="当前方案暂无药品">
-                <a-button type="primary" @click="openDrugDialog(plan)">添加药品</a-button>
-              </a-empty>
+            <div class="smart-block-gap-sm">
+              <a-alert v-if="getPlanAttachments(plan).length" type="info">
+                处方附件：{{ getPlanAttachments(plan).map((item) => `${item.fileName}（${item.ocrStatus || '未识别'}）`).join('、') }}
+              </a-alert>
+              <a-alert v-else type="normal">当前计划暂无处方附件，可通过 OCR 处方识别上传照片或 HIS 截图。</a-alert>
             </div>
+
+            <a-table row-key="name" :data="plan.drugs || []" :pagination="false">
+              <template #columns>
+                <a-table-column title="药品" data-index="name">
+                  <template #cell="{ record }">
+                    {{ record.name }}
+                    <div v-if="drugMetaText(record)" class="smart-muted">{{ drugMetaText(record) }}</div>
+                  </template>
+                </a-table-column>
+                <a-table-column title="提醒节点" :width="180">
+                  <template #cell="{ record }">
+                    <a-space wrap>
+                      <a-tag v-for="node in getDrugReminderLabels(record)" :key="node" color="arcoblue">{{ node }}</a-tag>
+                    </a-space>
+                  </template>
+                </a-table-column>
+                <a-table-column title="用法用量" :width="140">
+                  <template #cell="{ record }">{{ record.dose }} {{ record.frequency }}</template>
+                </a-table-column>
+                <a-table-column title="操作" :width="88">
+                  <template #cell="{ record, rowIndex }">
+                    <a-button size="mini" type="primary" @click="openDrugDialog(plan, record, rowIndex)">编辑</a-button>
+                  </template>
+                </a-table-column>
+              </template>
+            </a-table>
+            <a-empty v-if="!plan.drugs?.length" description="当前方案暂无药品">
+              <a-button type="primary" @click="openDrugDialog(plan)">添加药品</a-button>
+            </a-empty>
             <a-alert v-if="plan.status === '已停用'" style="margin-top: 16px" type="warning">
               停用时间：{{ plan.stoppedAt || '-' }}，原因：{{ plan.stopReason || '医药师手动停用' }}
             </a-alert>
           </a-tab-pane>
         </a-tabs>
-      </a-card>
+      </div>
     </div>
 
     <a-modal v-model:visible="planVisible" title="创建用药计划" width="min(960px, calc(100vw - 32px))" @ok="saveCreatePlan">
@@ -173,6 +178,89 @@
           <a-col :xs="24"><a-alert type="info">同一患者已生效计划中，药品名称和服药时段不能重复</a-alert></a-col>
         </a-row>
       </a-form>
+    </a-modal>
+
+    <a-modal
+      v-model:visible="ocrVisible"
+      title="OCR 处方识别"
+      width="min(980px, calc(100vw - 32px))"
+      :footer="false"
+    >
+      <a-form :model="ocrForm" layout="vertical">
+        <a-row :gutter="16">
+          <a-col :xs="24" :md="10">
+            <a-form-item label="患者">
+              <a-input :model-value="activePatient?.name || '-'" readonly />
+            </a-form-item>
+          </a-col>
+          <a-col :xs="24" :md="7">
+            <a-form-item label="文件类型">
+              <a-select v-model="ocrForm.fileType">
+                <a-option value="处方照片">处方照片</a-option>
+                <a-option value="HIS截图">HIS截图</a-option>
+                <a-option value="复诊处方PDF">复诊处方PDF</a-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+          <a-col :xs="24" :md="7">
+            <a-form-item label="文件名">
+              <a-input v-model="ocrForm.fileName" placeholder="如 王秀兰-处方.jpg" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="24">
+            <a-alert type="info">mock 阶段支持上传元数据并生成结构化识别结果，药品、剂量、频次、提醒时间需人工确认后生成计划。</a-alert>
+          </a-col>
+        </a-row>
+      </a-form>
+
+      <div class="form-actions smart-block-gap-sm">
+        <a-button @click="ocrVisible = false">关闭</a-button>
+        <a-button type="primary" :loading="ocrSubmitting" @click="runOcrRecognition">
+          <template #icon><sa-icon icon="ri:file-search-line" :size="16" /></template>
+          生成识别结果
+        </a-button>
+        <a-button type="primary" status="success" :disabled="!recognizedDrugs.length" @click="confirmOcrToPlan">
+          <template #icon><sa-icon icon="ri:check-line" :size="16" /></template>
+          确认生成计划
+        </a-button>
+      </div>
+
+      <a-table v-if="recognizedDrugs.length" row-key="name" :data="recognizedDrugs" :pagination="false" class="smart-block-gap-sm">
+        <template #columns>
+          <a-table-column title="药品" data-index="name" />
+          <a-table-column title="规格" data-index="specification" :width="110" />
+          <a-table-column title="剂量" data-index="dose" :width="110" />
+          <a-table-column title="频次" data-index="frequency" :width="110" />
+          <a-table-column title="服药时段" data-index="time" :width="150" />
+          <a-table-column title="疗程" data-index="durationDays" :width="90">
+            <template #cell="{ record }">{{ record.durationDays }}天</template>
+          </a-table-column>
+          <a-table-column title="注意事项" data-index="guide" />
+        </template>
+      </a-table>
+
+      <div class="smart-row is-between smart-block-gap-sm">
+        <strong>识别记录</strong>
+        <span class="smart-muted">共 {{ ocrRecords.length }} 条</span>
+      </div>
+      <a-table v-if="ocrRecords.length" row-key="id" :data="ocrRecords" :pagination="false" class="smart-block-gap-sm" size="small">
+        <template #columns>
+          <a-table-column title="文件" data-index="fileName" />
+          <a-table-column title="类型" data-index="fileType" :width="120" />
+          <a-table-column title="状态" data-index="status" :width="110">
+            <template #cell="{ record }"><a-tag :color="record.status === '已确认' ? 'green' : 'orange'">{{ record.status }}</a-tag></template>
+          </a-table-column>
+          <a-table-column title="置信度" data-index="confidence" :width="90">
+            <template #cell="{ record }">{{ record.confidence }}%</template>
+          </a-table-column>
+          <a-table-column title="创建时间" data-index="createdAt" :width="150" />
+          <a-table-column title="操作" :width="96">
+            <template #cell="{ record }">
+              <a-button size="mini" type="primary" :disabled="record.status === '已确认'" @click="useOcrRecord(record)">确认</a-button>
+            </template>
+          </a-table-column>
+        </template>
+      </a-table>
     </a-modal>
 
     <a-modal
@@ -231,7 +319,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { Message, Modal } from '@arco-design/web-vue'
 import { useRoute, useRouter } from 'vue-router'
-import { deviceApi, patientApi, planApi } from '@/views/plugin/smart-pillbox/api/doctor'
+import { deviceApi, ocrApi, patientApi, planApi } from '@/views/plugin/smart-pillbox/api/doctor'
 import { formatDateTime, getPayload, getRecords, pickQueryValue } from '@/views/smart-pillbox/utils'
 
 const route = useRoute()
@@ -248,6 +336,10 @@ const drugDialogMode = ref('add')
 const editingPlan = ref(null)
 const editingDrugIndex = ref(-1)
 const routineVisible = ref(false)
+const ocrVisible = ref(false)
+const ocrSubmitting = ref(false)
+const ocrRecords = ref([])
+const recognizedDrugs = ref([])
 
 const planForm = reactive({
   title: '日常用药计划',
@@ -273,6 +365,11 @@ const routineForm = reactive({
   lunchTime: '',
   dinnerTime: '',
   sleepTime: ''
+})
+const ocrForm = reactive({
+  fileName: '',
+  fileType: '处方照片',
+  recordId: null
 })
 
 const filteredPatients = computed(() => {
@@ -350,6 +447,10 @@ const getPlanReminderCount = (plan) => {
   return plan.reminderCount || (plan.drugs || []).reduce((total, drug) => total + getDrugReminderLabels(drug).length, 0)
 }
 
+const getPlanAttachments = (plan) => (Array.isArray(plan.attachments) ? plan.attachments : [])
+
+const drugMetaText = (drug) => [drug.specification, drug.quantity].filter(Boolean).join(' · ')
+
 const openCreatePlan = () => {
   planForm.title = '日常用药计划'
   planForm.source = '社区复诊处方'
@@ -389,6 +490,127 @@ const saveCreatePlan = async () => {
     const savedPlan = plans.value.find((plan) => String(plan.id) === String(response.data.id))
     if (savedPlan) openDrugDialog(savedPlan)
   }
+}
+
+const loadOcrRecords = async () => {
+  if (!activePatientId.value) return
+  const response = await ocrApi.list({ patientId: activePatientId.value, limit: 20 })
+  ocrRecords.value = getRecords(response)
+}
+
+const openOcrDialog = async () => {
+  if (!activePatient.value) {
+    Message.warning('请先选择患者')
+    return
+  }
+  Object.assign(ocrForm, {
+    fileName: `${activePatient.value.name}-处方照片.jpg`,
+    fileType: '处方照片',
+    recordId: null
+  })
+  recognizedDrugs.value = []
+  await loadOcrRecords()
+  ocrVisible.value = true
+}
+
+const runOcrRecognition = async () => {
+  if (!ocrForm.fileName) {
+    Message.warning('请输入文件名')
+    return
+  }
+  ocrSubmitting.value = true
+  try {
+    const response = await ocrApi.save({
+      patientId: activePatientId.value,
+      patient: activePatient.value?.name,
+      fileName: ocrForm.fileName,
+      fileType: ocrForm.fileType,
+      operator: '医药师'
+    })
+    const record = getPayload(response)
+    ocrForm.recordId = record.id
+    recognizedDrugs.value = Array.isArray(record.recognizedDrugs) ? record.recognizedDrugs : []
+    Message.success('OCR 识别结果已生成，请人工确认')
+    await loadOcrRecords()
+  } finally {
+    ocrSubmitting.value = false
+  }
+}
+
+const useOcrRecord = (record) => {
+  const drugs = Array.isArray(record.recognizedDrugs) ? record.recognizedDrugs : []
+  if (!drugs.length) {
+    Message.warning('当前识别记录暂无药品结果，请重新生成识别结果')
+    return
+  }
+  Object.assign(ocrForm, {
+    fileName: record.fileName,
+    fileType: record.fileType,
+    recordId: record.id
+  })
+  recognizedDrugs.value = drugs.map((drug) => ({ ...drug }))
+  Message.success('已载入识别结果，请确认生成计划')
+}
+
+const confirmOcrToPlan = async () => {
+  if (!recognizedDrugs.value.length || !activePatient.value) {
+    Message.warning('请先生成识别结果')
+    return
+  }
+  const attachment = {
+    id: Date.now(),
+    fileName: ocrForm.fileName,
+    fileType: ocrForm.fileType,
+    uploadTime: formatDateTime(),
+    ocrStatus: '已确认',
+    operator: '医药师'
+  }
+  const response = await planApi.save({
+    title: `${activePatient.value.name} OCR 识别用药计划`,
+    source: 'OCR处方识别',
+    status: '草稿',
+    startDate: '2026-05-21',
+    endDate: '2026-06-19',
+    patientId: activePatientId.value,
+    patientName: activePatient.value.name,
+    period: '2026-05-21 至 2026-06-19',
+    dispatchStatus: '待人工确认',
+    generatedTasks: '待确认后生成',
+    reminderCount: recognizedDrugs.value.reduce((total, drug) => total + getDrugReminderLabels(drug).length, 0),
+    auditSummary: 'OCR 识别结果已生成，请确认后下发药盒。',
+    attachments: [attachment],
+    drugs: recognizedDrugs.value.map((drug) => ({ ...drug }))
+  })
+  if (ocrForm.recordId) {
+    await ocrApi.update({
+      id: ocrForm.recordId,
+      status: '已确认',
+      statusType: 'success',
+      confirmedAt: formatDateTime(),
+      correctionNote: '已人工确认并生成用药计划'
+    })
+  }
+  Message.success('已根据 OCR 识别结果生成用药计划草稿')
+  ocrVisible.value = false
+  await loadPlans()
+  activePlanId.value = String(response.data.id)
+}
+
+const copyPlan = async (plan) => {
+  const response = await planApi.save({
+    ...plan,
+    id: undefined,
+    title: `${plan.title} 副本`,
+    code: '草稿',
+    status: '草稿',
+    dispatchStatus: '待确认',
+    generatedTasks: '待确认后生成',
+    source: `${plan.source || '手动录入'}复制`,
+    updatedAt: formatDateTime()
+  })
+  Message.success('计划副本已创建')
+  await loadPlans()
+  activePlanId.value = String(response.data.id)
 }
 
 const createDraftPlan = async () => {
@@ -589,6 +811,9 @@ onMounted(async () => {
   await loadPlans()
   if (pickQueryValue(route.query.action) === 'create' && activePatientId.value) {
     await createDraftPlan()
+  }
+  if (pickQueryValue(route.query.action) === 'ocr' && activePatientId.value) {
+    await openOcrDialog()
   }
 })
 </script>

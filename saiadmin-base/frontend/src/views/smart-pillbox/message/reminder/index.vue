@@ -23,6 +23,8 @@
               <a-option value="子女提醒">子女提醒</a-option>
               <a-option value="复诊提醒">复诊提醒</a-option>
               <a-option value="系统提醒">系统提醒</a-option>
+              <a-option value="缺药提醒">缺药提醒</a-option>
+              <a-option value="慢病指标异常提醒">慢病指标异常提醒</a-option>
             </a-select>
           </a-form-item>
         </a-col>
@@ -82,38 +84,6 @@
       </template>
     </sa-table>
 
-    <div class="smart-mobile-card-list">
-      <a-card v-for="record in messages" :key="record.id" class="smart-mobile-card" :bordered="false">
-        <div class="smart-mobile-card-head">
-          <div>
-            <strong>{{ record.title }}</strong>
-            <div class="smart-muted">{{ record.patient }} · {{ record.receiver }}</div>
-          </div>
-          <a-tag :color="statusColor(record.status)">{{ record.status }}</a-tag>
-        </div>
-        <div class="smart-muted">{{ record.content }}</div>
-        <div class="smart-mobile-meta-grid">
-          <span>{{ record.type }}</span>
-          <span>{{ record.channel }}</span>
-          <span>{{ record.createTime }}</span>
-        </div>
-        <a-space wrap>
-          <a-button size="small" @click="viewMessage(record)">
-            <template #icon><sa-icon icon="ri:eye-line" :size="14" /></template>
-            查看
-          </a-button>
-          <a-button size="small" @click="showDialog('edit', record)">
-            <template #icon><sa-icon icon="ri:edit-2-line" :size="14" /></template>
-            编辑
-          </a-button>
-          <a-button size="small" type="primary" @click="markHandled(record)">
-            <template #icon><sa-icon icon="ri:check-line" :size="14" /></template>
-            处理
-          </a-button>
-        </a-space>
-      </a-card>
-    </div>
-
     <a-modal v-model:visible="dialogVisible" :title="dialogType === 'add' ? '创建提醒' : '编辑提醒'" width="min(760px, calc(100vw - 32px))" @ok="saveMessage">
       <a-form :model="formData" layout="vertical">
         <a-row :gutter="16">
@@ -123,6 +93,8 @@
                 <a-option value="子女提醒">子女提醒</a-option>
                 <a-option value="复诊提醒">复诊提醒</a-option>
                 <a-option value="系统提醒">系统提醒</a-option>
+                <a-option value="缺药提醒">缺药提醒</a-option>
+                <a-option value="慢病指标异常提醒">慢病指标异常提醒</a-option>
               </a-select>
             </a-form-item>
           </a-col>
@@ -185,6 +157,7 @@ const tableOptions = reactive({
   operationColumn: true,
   operationColumnText: '操作',
   operationColumnWidth: 118,
+  operationColumnFixed: false,
   add: { show: false },
   edit: { show: false },
   delete: { show: false }

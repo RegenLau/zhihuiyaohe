@@ -1,32 +1,30 @@
 <template>
   <div class="smart-page">
-    <div class="patient-layout">
-      <a-card title="选择患者" class="patient-list-card" :bordered="false">
+    <div class="official-two-column">
+      <div class="ma-content-block p-3">
+      <a-card title="选择患者" :bordered="false">
         <a-input-search v-model="keyword" placeholder="搜索姓名、处方编号、设备号" allow-clear />
-        <div class="patient-scroll">
-          <button
-            v-for="patient in patientOptions"
-            :key="patient.id"
-            class="patient-option"
-            :class="{ 'is-active': Number(patient.id) === Number(selectedPatientId) }"
-            type="button"
-            @click="selectedPatientId = patient.id"
-          >
-            <div class="smart-row" style="justify-content: space-between">
-              <div>
-                <strong>{{ patient.name }}</strong>
-                <div class="smart-muted" style="margin-top: 4px">今日药品 {{ patient.todayDrugs }} 种</div>
-              </div>
-              <a-tag :color="statusColor(patient.deviceStatus)">{{ patient.deviceStatus }}</a-tag>
-            </div>
-            <div class="smart-muted" style="margin-top: 8px">下一提醒：{{ patient.nextReminder }}</div>
-            <div class="chip-row" style="margin-top: 8px"><a-tag>{{ patient.taskRisk }}</a-tag></div>
-          </button>
-        </div>
+        <a-table row-key="id" :data="patientOptions" :pagination="false" size="small" style="margin-top: 12px">
+          <template #columns>
+            <a-table-column title="患者" data-index="name">
+              <template #cell="{ record }">
+                <a-space direction="vertical" :size="2" fill>
+                  <a-space wrap>
+                    <a-link @click="selectedPatientId = record.id">{{ record.name }}</a-link>
+                    <a-tag :color="statusColor(record.deviceStatus)">{{ record.deviceStatus }}</a-tag>
+                  </a-space>
+                  <span class="smart-muted">今日药品 {{ record.todayDrugs }} 种</span>
+                </a-space>
+              </template>
+            </a-table-column>
+          </template>
+        </a-table>
       </a-card>
+      </div>
 
       <div class="detail-stack">
-        <a-card class="smart-panel" :loading="taskLoading" :bordered="false">
+        <div class="ma-content-block p-3">
+        <a-card :loading="taskLoading" :bordered="false">
           <div class="detail-hero">
             <div>
               <h3>{{ currentPatient.name }} · 今日提醒计划</h3>
@@ -45,15 +43,27 @@
             </a-space>
           </div>
         </a-card>
-
-        <div class="summary-grid">
-          <div class="summary-item"><span class="summary-number">{{ taskSummary.pending }} 条</span><span class="smart-muted">待执行</span></div>
-          <div class="summary-item"><span class="summary-number">{{ taskSummary.done }} 条</span><span class="smart-muted">已完成</span></div>
-          <div class="summary-item"><span class="summary-number is-danger">{{ taskSummary.risk }} 条</span><span class="smart-muted">异常 / 未打卡</span></div>
-          <div class="summary-item"><span class="summary-number">{{ currentPatient.nextReminder }}</span><span class="smart-muted">下一提醒</span></div>
         </div>
 
-        <a-card class="smart-panel" :bordered="false">
+        <div class="ma-content-block p-4">
+          <a-grid :cols="{ xs: 1, sm: 12, md: 24 }" :row-gap="16">
+            <a-grid-item :span="6">
+              <a-space direction="vertical" :size="2"><a-typography-text type="secondary">待执行</a-typography-text><a-typography-title :heading="5" style="margin: 0">{{ taskSummary.pending }} 条</a-typography-title></a-space>
+            </a-grid-item>
+            <a-grid-item :span="6">
+              <a-space direction="vertical" :size="2"><a-typography-text type="secondary">已完成</a-typography-text><a-typography-title :heading="5" style="margin: 0">{{ taskSummary.done }} 条</a-typography-title></a-space>
+            </a-grid-item>
+            <a-grid-item :span="6">
+              <a-space direction="vertical" :size="2"><a-typography-text type="secondary">异常 / 未打卡</a-typography-text><a-typography-title :heading="5" style="margin: 0">{{ taskSummary.risk }} 条</a-typography-title></a-space>
+            </a-grid-item>
+            <a-grid-item :span="6">
+              <a-space direction="vertical" :size="2"><a-typography-text type="secondary">下一提醒</a-typography-text><a-typography-title :heading="5" style="margin: 0">{{ currentPatient.nextReminder }}</a-typography-title></a-space>
+            </a-grid-item>
+          </a-grid>
+        </div>
+
+        <div class="ma-content-block p-3">
+        <a-card :bordered="false">
           <div class="smart-toolbar">
             <a-radio-group v-model="taskView" type="button">
               <a-radio value="今日任务">今日任务</a-radio>
@@ -68,56 +78,49 @@
             <a-date-picker v-model="taskDate" class="task-filter-date" />
           </div>
         </a-card>
+        </div>
 
-        <a-card class="smart-panel" :loading="taskLoading" :bordered="false">
-          <div class="smart-card-heading">
-            <div>
-              <strong>今日提醒时间表</strong>
-              <div class="smart-section-note">任务由生效用药计划生成；本页只处理当天执行和临时调整。</div>
-            </div>
-            <a-tag color="orange">异常 {{ taskSummary.risk }} 条</a-tag>
-          </div>
+        <div class="ma-content-block p-3">
+        <a-card title="今日提醒时间表" :loading="taskLoading" :bordered="false">
+          <template #extra><a-tag color="orange">异常 {{ taskSummary.risk }} 条</a-tag></template>
           <a-radio-group v-model="drugFilter" type="button" class="task-drug-filter">
             <a-radio v-for="option in drugFilterOptions" :key="option" :value="option">{{ option }}</a-radio>
           </a-radio-group>
-          <a-empty v-if="displayedTasks.length === 0" description="当前筛选条件下暂无服药任务" />
-          <div v-else class="detail-stack">
-            <div v-for="task in displayedTasks" :key="task.id" class="timeline-card">
-              <a-row :gutter="12" align="center">
-                <a-col :xs="24" :md="4">
-                  <div class="smart-muted">系统建议时间</div>
-                  <div class="task-time">{{ task.time }}</div>
-                  <div class="smart-muted">{{ task.period }}</div>
-                </a-col>
-                <a-col :xs="24" :md="14">
-                  <strong>{{ task.drug }}</strong>
-                  <div class="chip-row" style="margin-top: 8px">
-                    <a-tag>{{ task.dose }}</a-tag>
-                    <a-tag>{{ task.source }}</a-tag>
-                  </div>
-                  <div class="smart-muted" style="margin-top: 8px">{{ task.suggestion }}</div>
-                </a-col>
-                <a-col :xs="24" :md="6" class="smart-table-action-cell">
-                  <a-space wrap>
-                    <a-link v-if="task.statusType === 'danger'" @click="notifyFamily(task)">
-                      <sa-icon icon="ri:notification-3-line" :size="15" /> 通知子女
-                    </a-link>
-                    <a-link v-if="task.status !== '已完成'" status="success" @click="markDone(task)">
-                      <sa-icon icon="ri:check-line" :size="15" /> 标记完成
-                    </a-link>
-                    <a-link v-if="task.status === '待执行'" status="danger" @click="markMissed(task)">
-                      <sa-icon icon="ri:close-circle-line" :size="15" /> 标记漏服
-                    </a-link>
-                    <a-tag :color="statusColor(task.status)">{{ task.status }}</a-tag>
+          <a-table row-key="id" :data="displayedTasks" :pagination="false" class="task-table">
+            <template #columns>
+              <a-table-column title="建议时间" data-index="time" :width="112">
+                <template #cell="{ record }">
+                  {{ record.time }}
+                  <div class="smart-muted">{{ record.period }}</div>
+                </template>
+              </a-table-column>
+              <a-table-column title="药品" data-index="drug" :width="132">
+                <template #cell="{ record }">
+                  <a-typography-text :ellipsis="{ rows: 2 }">{{ record.drug }}</a-typography-text>
+                </template>
+              </a-table-column>
+              <a-table-column title="剂量" data-index="dose" :width="86" />
+              <a-table-column title="来源" data-index="source" :width="96" />
+              <a-table-column title="建议" data-index="suggestion" />
+              <a-table-column title="状态" data-index="status" :width="90">
+                <template #cell="{ record }"><a-tag :color="statusColor(record.status)">{{ record.status }}</a-tag></template>
+              </a-table-column>
+              <a-table-column title="操作" :width="150">
+                <template #cell="{ record }">
+                  <a-space size="mini">
+                    <a-button v-if="record.statusType === 'danger'" size="mini" @click="notifyFamily(record)">通知</a-button>
+                    <a-button v-if="record.status !== '已完成'" size="mini" type="primary" @click="markDone(record)">完成</a-button>
+                    <a-button v-if="record.status === '待执行'" size="mini" status="danger" @click="markMissed(record)">漏服</a-button>
                   </a-space>
-                </a-col>
-              </a-row>
-            </div>
-          </div>
+                </template>
+              </a-table-column>
+            </template>
+          </a-table>
           <a-alert class="task-tip" type="info">
             今日临时调整只影响 {{ taskDate || '所选日期' }} 的任务；需要长期变更时，请在用药计划中修改当前方案并重新下发药盒。
           </a-alert>
         </a-card>
+        </div>
       </div>
     </div>
   </div>
@@ -199,8 +202,18 @@ const markMissed = async (task) => {
   loadTasks()
 }
 const notifyFamily = (task) => {
-  router.push(`/doctor/messages?patient=${currentPatient.value.name}&type=子女提醒`)
-  Message.success(`${task.drug} 异常提醒已进入消息处理`)
+  router.push({
+    path: '/doctor/messages',
+    query: {
+      action: 'create',
+      patient: currentPatient.value.name,
+      type: '子女提醒',
+      receiver: currentPatient.value.child || '患者 / 子女',
+      title: `${currentPatient.value.name}${task.drug}服药异常提醒`,
+      content: `${task.time} ${task.drug} ${task.status}，请联系患者确认实际服药情况。`
+    }
+  })
+  Message.success(`${task.drug} 异常提醒已进入创建流程`)
 }
 
 watch([selectedPatientId, statusFilter, taskDate], loadTasks)

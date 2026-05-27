@@ -227,6 +227,16 @@ export const plans = [
     dispatchType: 'success',
     generatedTasks: '已生成 90 条',
     source: '社区复诊处方',
+    attachments: [
+      {
+        id: 1,
+        fileName: '王秀兰-社区复诊处方.jpg',
+        fileType: '处方照片',
+        uploadTime: '2026-05-20 09:18',
+        ocrStatus: '已确认',
+        operator: '刘药师'
+      }
+    ],
     reminderCount: 4,
     auditSummary: '控释片整片吞服，二甲双胍随餐服用',
     drugs: [
@@ -282,6 +292,16 @@ export const plans = [
     dispatchType: 'danger',
     generatedTasks: '已生成 60 条',
     source: '复诊调整',
+    attachments: [
+      {
+        id: 2,
+        fileName: '张建国-HIS处方截图.png',
+        fileType: 'HIS截图',
+        uploadTime: '2026-05-20 10:32',
+        ocrStatus: '待确认',
+        operator: '张药师'
+      }
+    ],
     reminderCount: 2,
     auditSummary: '离线后需重新下发',
     drugs: [
@@ -484,6 +504,51 @@ export const medicationRecords = [
   }
 ]
 
+export const shortageReports = [
+  {
+    id: 1,
+    patientId: 3,
+    patient: '李桂芳',
+    medicine: '阿托伐他汀钙片',
+    remainingAmount: '5片',
+    expectedDays: 5,
+    source: '药盒余量上报',
+    status: '待处理',
+    statusType: 'danger',
+    reportTime: '2026-05-21 10:42',
+    handler: '',
+    result: '建议创建复诊提醒并确认是否需要补药'
+  },
+  {
+    id: 2,
+    patientId: 1,
+    patient: '王秀兰',
+    medicine: '二甲双胍缓释片',
+    remainingAmount: '12片',
+    expectedDays: 6,
+    source: '子女小程序',
+    status: '处理中',
+    statusType: 'warning',
+    reportTime: '2026-05-21 13:10',
+    handler: '刘药师',
+    result: '已提醒家属复诊补药'
+  },
+  {
+    id: 3,
+    patientId: 5,
+    patient: '赵春梅',
+    medicine: '苯磺酸氨氯地平片',
+    remainingAmount: '18片',
+    expectedDays: 18,
+    source: '患者小程序',
+    status: '已处理',
+    statusType: 'success',
+    reportTime: '2026-05-20 16:28',
+    handler: '张药师',
+    result: '暂不需要补药，继续观察余量'
+  }
+]
+
 export const devices = [
   {
     id: 1,
@@ -572,6 +637,171 @@ export const devices = [
   }
 ]
 
+export const deviceEvents = [
+  {
+    id: 1,
+    sn: 'PBX-202605-018',
+    patientId: 1,
+    patient: '王秀兰',
+    eventType: '开盖',
+    grid: '1号格',
+    medicine: '硝苯地平控释片',
+    taskTime: '06:30',
+    matchedPlan: false,
+    level: '关注',
+    eventTime: '2026-05-21 06:52',
+    note: '开盖时间晚于计划 22 分钟'
+  },
+  {
+    id: 2,
+    sn: 'PBX-202605-018',
+    patientId: 1,
+    patient: '王秀兰',
+    eventType: '关盖',
+    grid: '2号格',
+    medicine: '二甲双胍缓释片',
+    taskTime: '07:00',
+    matchedPlan: true,
+    level: '正常',
+    eventTime: '2026-05-21 07:08',
+    note: '与小程序打卡时间一致'
+  },
+  {
+    id: 3,
+    sn: 'PBX-202605-006',
+    patientId: 2,
+    patient: '张建国',
+    eventType: '离线',
+    grid: '-',
+    medicine: '-',
+    taskTime: '08:00',
+    matchedPlan: false,
+    level: '高风险',
+    eventTime: '2026-05-21 08:14',
+    note: '离线后未收到早餐后服药记录'
+  },
+  {
+    id: 4,
+    sn: 'PBX-202605-029',
+    patientId: 5,
+    patient: '赵春梅',
+    eventType: '低电量',
+    grid: '-',
+    medicine: '-',
+    taskTime: '-',
+    matchedPlan: true,
+    level: '关注',
+    eventTime: '2026-05-21 07:30',
+    note: '电量低于 30% 时已发充电提醒'
+  }
+]
+
+export const planDispatchRecords = [
+  {
+    id: 1,
+    planId: 1,
+    planTitle: '高血压与血糖日常用药',
+    patientId: 1,
+    patient: '王秀兰',
+    deviceNo: 'PBX-202605-018',
+    status: '成功',
+    statusType: 'success',
+    dispatchTime: '2026-05-20 09:26',
+    retryStatus: '无需重试',
+    failReason: ''
+  },
+  {
+    id: 2,
+    planId: 2,
+    planTitle: '冠心病复诊调整',
+    patientId: 2,
+    patient: '张建国',
+    deviceNo: 'PBX-202605-006',
+    status: '失败',
+    statusType: 'danger',
+    dispatchTime: '2026-05-20 11:04',
+    retryStatus: '待重试',
+    failReason: '药盒离线'
+  },
+  {
+    id: 3,
+    planId: 3,
+    planTitle: '高血脂稳定期',
+    patientId: 3,
+    patient: '李桂芳',
+    deviceNo: 'PBX-202605-011',
+    status: '成功',
+    statusType: 'success',
+    dispatchTime: '2026-05-19 15:12',
+    retryStatus: '无需重试',
+    failReason: ''
+  }
+]
+
+export const prescriptionAttachments = [
+  {
+    id: 1,
+    planId: 1,
+    patientId: 1,
+    patient: '王秀兰',
+    fileName: '王秀兰-社区复诊处方.jpg',
+    fileType: '处方照片',
+    uploadTime: '2026-05-20 09:18',
+    ocrStatus: '已确认',
+    operator: '刘药师'
+  },
+  {
+    id: 2,
+    planId: 2,
+    patientId: 2,
+    patient: '张建国',
+    fileName: '张建国-HIS处方截图.png',
+    fileType: 'HIS截图',
+    uploadTime: '2026-05-20 10:32',
+    ocrStatus: '待确认',
+    operator: '张药师'
+  }
+]
+
+export const ocrRecords = [
+  {
+    id: 1,
+    patientId: 2,
+    patient: '张建国',
+    fileName: '张建国-HIS处方截图.png',
+    fileType: 'HIS截图',
+    status: '待确认',
+    statusType: 'warning',
+    confidence: 88,
+    createdAt: '2026-05-20 10:32',
+    confirmedAt: '',
+    operator: '张药师',
+    correctionNote: '需确认瑞舒伐他汀规格',
+    recognizedDrugs: [
+      {
+        name: '阿司匹林肠溶片',
+        specification: '100mg',
+        quantity: '1盒',
+        dose: '1片/次',
+        frequency: '每日1次',
+        time: '早餐后',
+        durationDays: 30,
+        guide: '饭后服用，如黑便或出血倾向需联系医药师。'
+      },
+      {
+        name: '瑞舒伐他汀片',
+        specification: '10mg',
+        quantity: '1盒',
+        dose: '1片/次',
+        frequency: '每日1次',
+        time: '睡前',
+        durationDays: 30,
+        guide: '关注肌肉酸痛等不适。'
+      }
+    ]
+  }
+]
+
 export const messages = [
   {
     id: 1,
@@ -617,6 +847,36 @@ export const messages = [
     createTime: '今日 09:01',
     sendTime: '今日 09:01',
     triggerSource: '设备离线规则'
+  },
+  {
+    id: 4,
+    patientId: 3,
+    title: '阿托伐他汀缺药提醒',
+    content: '剩余约 5 天，请确认复诊或补药安排',
+    patient: '李桂芳',
+    receiver: '患者 / 子女',
+    channel: '小程序 + 药盒语音',
+    type: '缺药提醒',
+    status: '待处理',
+    statusType: 'warning',
+    createTime: '今日 10:42',
+    sendTime: '今日 21:00',
+    triggerSource: '缺药上报'
+  },
+  {
+    id: 5,
+    patientId: 2,
+    title: '晨间血压偏高跟进',
+    content: '请确认今日血压复测结果和早餐后服药情况',
+    patient: '张建国',
+    receiver: '患者 / 子女',
+    channel: '小程序消息中心',
+    type: '慢病指标异常提醒',
+    status: '已创建',
+    statusType: 'success',
+    createTime: '今日 09:30',
+    sendTime: '今日 10:00',
+    triggerSource: '慢病指标上报'
   }
 ]
 
@@ -630,6 +890,14 @@ export const conversations = [
     type: '患者聊天',
     status: '待人工跟进',
     statusType: 'warning',
+    riskLevel: '高风险',
+    reviewStatus: '待复核',
+    knowledgeHit: {
+      title: '高血压漏服处理建议',
+      summary: '降压药漏服后应避免自行加倍补服，需结合当前血压和症状判断。',
+      confidence: 92,
+      source: '慢病用药问答库'
+    },
     patientText: '降压药今天漏吃了，晚上能补吗？',
     deviceText: '系统建议不要自行加倍补服，按原计划继续服药；如出现头晕、胸闷等异常，应联系医药师。',
     note: '命中高血压用药问答库，建议医药师复核答复并同步一次子女关注提醒。'
@@ -643,6 +911,9 @@ export const conversations = [
     type: '设备事件',
     status: '已恢复',
     statusType: 'success',
+    riskLevel: '正常',
+    reviewStatus: '无需复核',
+    knowledgeHit: null,
     deviceText: '药盒网络已恢复，最近一次计划同步完成。'
   },
   {
@@ -654,6 +925,9 @@ export const conversations = [
     type: '小智提醒',
     status: '已确认',
     statusType: 'success',
+    riskLevel: '正常',
+    reviewStatus: '无需复核',
+    knowledgeHit: null,
     patientText: '午饭后已经服药。',
     deviceText: '午餐后服药提醒已播报，请确认是否已服用二甲双胍片。'
   },
@@ -666,6 +940,14 @@ export const conversations = [
     type: '患者聊天',
     status: '待人工跟进',
     statusType: 'warning',
+    riskLevel: '高风险',
+    reviewStatus: '待复核',
+    knowledgeHit: {
+      title: '血压偏高与用药调整',
+      summary: '血压偏高时不建议自行调整剂量，应记录数值与症状并由医药师复核。',
+      confidence: 89,
+      source: '高血压随访知识库'
+    },
     patientText: '今天上午有点头晕，血压 148/92，要不要调整药量？',
     deviceText: '请先保持原服药计划，记录当前血压和不适症状，建议等待医药师复核后再调整。'
   },
@@ -904,15 +1186,54 @@ export const agreement = {
   updatedAt: '2026-05-21 14:08',
   summary:
     '本服务用于协助患者进行用药计划提醒、服药任务记录、药盒设备绑定、用药相关问答和必要的信息上报。',
+  ocrEnabled: true,
+  ocrFileTypes: 'jpg、png、pdf',
+  ocrFields: '药品名称、规格、剂量、频次、服药时段、疗程、注意事项',
+  ocrProvider: 'mock 识别服务',
   content:
     '<p>一、服务目的：智慧药盒用于辅助用药提醒和用药管理，不替代医生诊疗意见。</p><p>二、信息采集：系统将采集患者基础信息、用药计划、药盒设备状态、服药任务记录和语音问答记录。</p><p>三、风险提示：如出现胸闷、严重不适、疑似不良反应等情况，请及时联系医药师或前往医疗机构。</p><p>四、授权确认：患者或家属点击同意后，表示已阅读并理解上述内容。</p>'
 }
+
+export const consentRecords = [
+  {
+    id: 1,
+    patientId: 1,
+    patient: '王秀兰',
+    version: 'V2026.05',
+    confirmTime: '2026-05-18 09:42',
+    confirmTerminal: '患者小程序',
+    status: '已同意',
+    statusType: 'success'
+  },
+  {
+    id: 2,
+    patientId: 2,
+    patient: '张建国',
+    version: 'V2026.05',
+    confirmTime: '2026-05-18 10:20',
+    confirmTerminal: '子女小程序',
+    status: '已同意',
+    statusType: 'success'
+  },
+  {
+    id: 3,
+    patientId: 4,
+    patient: '陈德明',
+    version: 'V2026.05',
+    confirmTime: '',
+    confirmTerminal: '-',
+    status: '未同意',
+    statusType: 'danger'
+  }
+]
 
 export const dashboard = {
   statCards: [
     { label: '管理患者', value: '24', note: '重点关注 4 人', icon: 'ri:user-heart-line' },
     { label: '今日任务', value: '86', note: '已完成 71 次', icon: 'ri:checkbox-circle-line' },
-    { label: '今日异常', value: '8', note: '连续漏服 2 人', icon: 'ri:alarm-warning-line' },
+    { label: '未打卡', value: '5', note: '漏服与未响应合计', icon: 'ri:close-circle-line' },
+    { label: '异常上报', value: '6', note: '健康 3 条，缺药 3 条', icon: 'ri:alarm-warning-line' },
+    { label: '待复核对话', value: '3', note: '高风险问答 2 条', icon: 'ri:chat-check-line' },
     { label: '设备在线', value: '15/18', note: '1 台离线超 6 小时', icon: 'ri:wifi-line' }
   ],
   trendBars: [
@@ -957,12 +1278,25 @@ export const dashboard = {
       title: '李桂芳 5 天后预计用完阿托伐他汀',
       note: '可创建复诊提醒并下发至药盒',
       patient: '李桂芳 女 76 岁',
-      source: '复诊补药',
+      source: '缺药上报',
       level: '待确认',
       action: '创建提醒',
-      route: '/doctor/messages',
-      query: { patient: '李桂芳', type: '复诊提醒' },
+      route: '/doctor/health-data',
+      query: { tab: 'shortage', patientId: 3 },
       icon: 'ri:calendar-check-line'
+    },
+    {
+      type: 'warning',
+      timestamp: '今日 10:32',
+      title: '张建国 OCR 处方待人工确认',
+      note: '识别到 2 种药品，需确认规格后生成计划',
+      patient: '张建国 男 69 岁',
+      source: 'OCR识别',
+      level: '待确认',
+      action: '确认处方',
+      route: '/doctor/plans',
+      query: { patientId: 2, action: 'ocr' },
+      icon: 'ri:file-search-line'
     }
   ],
   sidePanel: {

@@ -86,9 +86,36 @@ export const patientApi = {
   }
 }
 
-export const deviceApi = crud('device')
+export const deviceApi = {
+  ...crud('device'),
+  async events(params = {}) {
+    return normalizePage(
+      await request({
+        url: `${doctorBase}/device/event/list`,
+        method: 'get',
+        params
+      })
+    )
+  },
+  async dispatchRecords(params = {}) {
+    return normalizePage(
+      await request({
+        url: `${doctorBase}/device/dispatch/list`,
+        method: 'get',
+        params
+      })
+    )
+  }
+}
 export const messageApi = crud('message')
 export const planApi = crud('plan')
+export const shortageApi = crud('shortage')
+export const planAttachmentApi = {
+  ...crud('plan/attachment')
+}
+export const ocrApi = {
+  ...crud('plan/ocr')
+}
 
 export const taskApi = {
   ...crud('task'),
@@ -107,6 +134,13 @@ export const conversationApi = {
     return request({
       url: `${doctorBase}/conversation/export`,
       method: 'post',
+      data
+    })
+  },
+  review(data = {}) {
+    return request({
+      url: `${doctorBase}/conversation/review`,
+      method: 'put',
       data
     })
   }
@@ -136,5 +170,14 @@ export const settingsApi = {
       method: 'put',
       data
     })
+  },
+  async consentRecords(params = {}) {
+    return normalizePage(
+      await request({
+        url: `${doctorBase}/patient/consent/list`,
+        method: 'get',
+        params
+      })
+    )
   }
 }

@@ -57,7 +57,7 @@
       <template #recordNo="{ record }">
         <span class="record-link">{{ record.recordNo || `MR-${record.id}` }}</span>
       </template>
-      <template #name="{ record }"><strong>{{ record.name }}</strong></template>
+      <template #name="{ record }"><span>{{ record.name }}</span></template>
       <template #deviceStatus="{ record }">
         <a-tag :color="statusColor(record.deviceStatus)">{{ record.deviceStatus }}</a-tag>
       </template>
@@ -73,66 +73,22 @@
         </div>
       </template>
       <template #operationCell="{ record }">
-        <a-space size="mini">
-          <a-tooltip content="绑定设备">
-            <a-button v-if="!isDeviceBound(record)" size="mini" type="primary" @click="openBindDialog(record)">
-              <template #icon><sa-icon icon="ri:link-m" :size="14" /></template>
-              绑定设备
-            </a-button>
-          </a-tooltip>
-          <a-tooltip content="详情">
-            <a-button size="mini" @click="router.push(`/doctor/patient-detail?patientId=${record.id}`)">
-              <template #icon><sa-icon icon="ri:eye-line" :size="14" /></template>
-            </a-button>
-          </a-tooltip>
-          <a-tooltip content="计划">
-            <a-button size="mini" @click="router.push(`/doctor/plans?patientId=${record.id}`)">
-              <template #icon><sa-icon icon="ri:file-list-3-line" :size="14" /></template>
-            </a-button>
-          </a-tooltip>
-          <a-tooltip content="提醒">
-            <a-button size="mini" @click="router.push(`/doctor/messages?patient=${record.name}`)">
-              <template #icon><sa-icon icon="ri:message-2-line" :size="14" /></template>
-            </a-button>
-          </a-tooltip>
-        </a-space>
-      </template>
-    </sa-table>
-
-    <div class="smart-mobile-card-list">
-      <a-card v-for="record in patients" :key="record.id" class="smart-mobile-card" :bordered="false">
-        <div class="smart-mobile-card-head">
-          <div>
-            <strong>{{ record.name }}</strong>
-            <div class="smart-muted">{{ record.recordNo || `MR-${record.id}` }}</div>
-          </div>
-          <a-tag :color="statusColor(record.deviceStatus)">{{ record.deviceStatus }}</a-tag>
-        </div>
-        <div class="smart-mobile-meta-grid">
-          <span>{{ record.phone }}</span>
-          <span>{{ getChildStatus(record.child) }}</span>
-          <span>完成率 {{ getCompletionRate(record.completionRate) }}%</span>
-        </div>
-        <a-space wrap>
-          <a-button v-if="!isDeviceBound(record)" size="small" type="primary" @click="openBindDialog(record)">
-            <template #icon><sa-icon icon="ri:link-m" :size="14" /></template>
+        <a-space class="patient-table-actions" size="mini" wrap>
+          <a-button v-if="!isDeviceBound(record)" size="mini" type="primary" @click="openBindDialog(record)">
             绑定设备
           </a-button>
-          <a-button size="small" @click="router.push(`/doctor/patient-detail?patientId=${record.id}`)">
-            <template #icon><sa-icon icon="ri:eye-line" :size="14" /></template>
+          <a-button size="mini" @click="router.push(`/doctor/patient-detail?patientId=${record.id}`)">
             详情
           </a-button>
-          <a-button size="small" @click="router.push(`/doctor/plans?patientId=${record.id}`)">
-            <template #icon><sa-icon icon="ri:file-list-3-line" :size="14" /></template>
+          <a-button size="mini" @click="router.push(`/doctor/plans?patientId=${record.id}`)">
             计划
           </a-button>
-          <a-button size="small" @click="router.push(`/doctor/messages?patient=${record.name}`)">
-            <template #icon><sa-icon icon="ri:message-2-line" :size="14" /></template>
+          <a-button size="mini" @click="router.push(`/doctor/messages?patient=${record.name}`)">
             提醒
           </a-button>
         </a-space>
-      </a-card>
-    </div>
+      </template>
+    </sa-table>
 
     <a-modal v-model:visible="createVisible" title="新增患者建档" width="min(720px, calc(100vw - 32px))" :footer="false">
       <a-alert v-if="createdPatient" type="success" show-icon style="margin-bottom: 16px">
@@ -254,6 +210,7 @@ const tableOptions = reactive({
   operationColumn: true,
   operationColumnText: '操作',
   operationColumnWidth: 230,
+  operationColumnFixed: false,
   add: { show: false },
   edit: { show: false },
   delete: { show: false }

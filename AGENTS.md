@@ -87,6 +87,12 @@ pnpm build:frontend
 
 - 前端底座使用 `saiadmin-vue`。
 - UI 组件使用 Arco Design Vue，模板内优先使用 `a-*` 组件。
+- 页面结构、组件组合、样式节奏和交互规则以 SaiAdmin 5.x 官方 `saiadmin-vue` 与 Arco Design Vue 为唯一落地标准。
+- 智慧药盒业务页只能复用官方底座已有的布局容器、内置组件、Arco 组件、CSS 变量、工具类和默认组件样式。
+- 页面内容块优先使用 SaiAdmin 官方 `ma-content-block`、`sa-table`、`sa-chart`、`sa-*` 业务组件与 Arco `a-card`、`a-grid`、`a-statistic`、`a-table`、`a-form`、`a-descriptions` 等组件。
+- 禁止为智慧药盒业务新增独立视觉体系，包含但不限于自定义卡片主题、渐变背景、装饰图标块、重边框容器、超粗字重、非官方按钮样式、非官方标签样式、页面级视觉包装类。
+- 自定义 CSS 只允许处理官方组件无法直接覆盖的布局补丁，例如 `display`、`grid-template-columns`、`gap`、`width`、`min-width`、`overflow`、响应式断点和少量业务状态对齐。
+- 自定义 CSS 禁止重写 Arco 或 SaiAdmin 官方组件的视觉基础，包括颜色体系、圆角、阴影、边框粗细、按钮外观、表格头样式、卡片头样式、表单控件外观和字号层级。
 - 业务表格优先使用 `sa-table`，通过 `options`、`columns`、`searchForm` 管理表格、分页、搜索和操作列。
 - 列表页默认按 SaiAdmin 5.x SaTable 官方文档实现，参考 https://saithink.top/documents/v5/front/table.html。
 - 内置组件默认按 SaiAdmin 5.x 组件官方文档实现，参考 https://saithink.top/documents/v5/front/component.html。
@@ -111,7 +117,7 @@ pnpm build:frontend
 - 顶部操作使用 `tableBeforeButtons`、`tableAfterButtons`、`tools` 等插槽放置，行内操作使用 `operationBeforeExtend`、`operationCell`、`operationAfterExtend`。
 - 状态、字典、开关优先使用 `sa-dict`、`sa-select`、`sa-radio`、`sa-checkbox`、`sa-switch`，图标优先使用 `sa-icon` 或底座已接入的 Arco 图标。
 - 图表优先使用 `sa-chart`，必须给容器稳定高度，数据为空时使用 Arco 空状态或项目统一空状态。
-- 自定义卡片列表只用于患者卡、设备卡、风险卡等业务语义强的场景，仍需遵循表格页的搜索、分页、操作、空状态和加载状态约束。
+- 卡片类展示优先使用 Arco `a-card` 官方默认样式，列表型数据优先改为 `sa-table` 或 `a-table`。确需卡片承载业务语义时，只允许使用官方卡片组件默认视觉和少量布局类。
 
 ## Arco Design 界面规范
 
@@ -158,12 +164,15 @@ pnpm build:frontend
 - 主列表页优先组合搜索区、`sa-table`、编辑弹窗，不重复实现分页和列状态管理。
 - 编辑弹窗使用 `v-model` 控制显示，接收初始数据，提交前执行表单校验。
 - 新增、编辑、删除成功后刷新当前列表，并保持合理分页状态。
-- 样式优先使用 Arco Design Vue 属性、项目现有 CSS 变量、页面 scoped style。
+- 样式优先使用 Arco Design Vue 属性、SaiAdmin 官方工具类、项目现有 CSS 变量和页面 scoped 布局补丁。
+- 业务页面禁止引入或扩大 `smart-*` 视觉体系。既有 `smart-*` 类需要逐步收敛为布局辅助类或删除，不能承载颜色、圆角、阴影、边框、字号和装饰风格。
+- 新增页面优先从 SaiAdmin 5.x 官方页面结构出发组织内容，不能先自建页面壳再模拟官方视觉。
 - 不提交或保留无关构建产物、缓存文件和 `.DS_Store` 变更。
 
 ## 页面质量评审规范
 
 - 所有智慧药盒页面样式、字体、间距、组件、状态和按钮位置都要符合 SaiAdmin 5.x、Arco Design Vue 和 Arco Design 设计规范。
+- 页面质量评审必须检查是否复用了官方组件结构和默认视觉。发现业务样式覆盖官方视觉时，应直接删减覆盖规则或改回官方组件组合。
 - 页面 UI 修改后必须检查受影响页面；若用户要求全面检查，需要覆盖工作台、患者管理、患者详情、新增患者建档、健康数据、用药计划、服药任务、提醒消息、设备管理、对话记录、系统设置和知情同意书设置。
 - 每页至少检查 1440x900 桌面视口；涉及响应式、表格、筛选区、左右分栏、长文案时，再检查移动视口。
 - 检查项包括导航命名、面包屑、标签页、菜单展开状态、卡片头部、搜索区、表格列、按钮组、图标、标签、图表、空状态、加载状态、错误状态、弹窗、抽屉和分页。

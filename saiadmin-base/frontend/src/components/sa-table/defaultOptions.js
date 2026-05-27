@@ -127,6 +127,8 @@ export default {
   operationColumn: true,
   // 操作列宽度
   operationColumnWidth: 190,
+  // 操作列固定方向，false 为不固定
+  operationColumnFixed: 'right',
   // 操作列名称
   operationColumnText: '操作'
 }

@@ -581,7 +581,7 @@ const init = async () => {
       dataIndex: '__operation',
       slotName: '__operation',
       align: 'center',
-      fixed: 'right',
+      fixed: options.value.operationColumnFixed,
       width: options.value.operationColumnWidth ?? 150,
     })
   }
