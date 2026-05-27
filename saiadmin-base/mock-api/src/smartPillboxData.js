@@ -1229,12 +1229,9 @@ export const consentRecords = [
 
 export const dashboard = {
   statCards: [
-    { label: '管理患者', value: '24', note: '重点关注 4 人', icon: 'ri:user-heart-line' },
     { label: '今日任务', value: '86', note: '已完成 71 次', icon: 'ri:checkbox-circle-line' },
-    { label: '未打卡', value: '5', note: '漏服与未响应合计', icon: 'ri:close-circle-line' },
-    { label: '异常上报', value: '6', note: '健康 3 条，缺药 3 条', icon: 'ri:alarm-warning-line' },
-    { label: '待复核对话', value: '3', note: '高风险问答 2 条', icon: 'ri:chat-check-line' },
-    { label: '设备在线', value: '15/18', note: '1 台离线超 6 小时', icon: 'ri:wifi-line' }
+    { label: '未打卡', value: '5', note: '需确认实际服药', icon: 'ri:close-circle-line' },
+    { label: '待处理', value: '7', note: '进入对应页面处理', icon: 'ri:alarm-warning-line' }
   ],
   trendBars: [
     { label: '周五', done: 80, miss: 10 },
@@ -1245,87 +1242,10 @@ export const dashboard = {
     { label: '周三', done: 84, miss: 9 },
     { label: '今日', done: 86, miss: 16 }
   ],
-  risks: [
-    {
-      type: 'danger',
-      timestamp: '今日 14:18',
-      title: '王秀兰连续 2 次漏服降压药',
-      note: '建议通知子女，并在下次复诊核对用药依从性',
-      patient: '王秀兰 女 72 岁',
-      source: '连续漏服',
-      level: '高风险',
-      action: '联系家属',
-      route: '/doctor/messages',
-      query: { patient: '王秀兰', type: '子女提醒', status: '待处理' },
-      icon: 'ri:alarm-warning-line'
-    },
-    {
-      type: 'warning',
-      timestamp: '今日 09:01',
-      title: '张建国药盒离线 6 小时',
-      note: '最近一次上报：今日 08:14',
-      patient: '张建国 男 69 岁',
-      source: '设备离线',
-      level: '中风险',
-      action: '查看设备',
-      route: '/doctor/devices',
-      query: { status: '离线' },
-      icon: 'ri:wifi-off-line'
-    },
-    {
-      type: 'primary',
-      timestamp: '今日 10:42',
-      title: '李桂芳 5 天后预计用完阿托伐他汀',
-      note: '可创建复诊提醒并下发至药盒',
-      patient: '李桂芳 女 76 岁',
-      source: '缺药上报',
-      level: '待确认',
-      action: '创建提醒',
-      route: '/doctor/health-data',
-      query: { tab: 'shortage', patientId: 3 },
-      icon: 'ri:calendar-check-line'
-    },
-    {
-      type: 'warning',
-      timestamp: '今日 10:32',
-      title: '张建国 OCR 处方待人工确认',
-      note: '识别到 2 种药品，需确认规格后生成计划',
-      patient: '张建国 男 69 岁',
-      source: 'OCR识别',
-      level: '待确认',
-      action: '确认处方',
-      route: '/doctor/plans',
-      query: { patientId: 2, action: 'ocr' },
-      icon: 'ri:file-search-line'
-    }
-  ],
   sidePanel: {
-    metrics: [
-      {
-        label: '任务完成',
-        value: '71/86',
-        percent: 83,
-        note: '今日服药任务',
-        route: '/doctor/tasks'
-      },
-      {
-        label: '风险跟进',
-        value: '5/8',
-        percent: 62,
-        note: '已处理高风险项',
-        route: '/doctor/messages'
-      },
-      {
-        label: '药盒在线',
-        value: '15/18',
-        percent: 83,
-        note: '绑定设备在线率',
-        route: '/doctor/devices'
-      }
-    ],
     actions: [
       {
-        label: '新增建档',
+        label: '新增患者',
         icon: 'ri:user-add-line',
         route: '/doctor/patient-create',
         tone: 'primary'
@@ -1337,31 +1257,18 @@ export const dashboard = {
         tone: 'success'
       },
       {
-        label: '健康数据',
+        label: '处理缺药',
         icon: 'ri:pulse-line',
-        route: '/doctor/health-data',
+        route: '/doctor/health-data?tab=shortage',
         tone: 'warning'
       },
       {
-        label: '提醒消息',
+        label: '查看任务',
         icon: 'ri:notification-3-line',
-        route: '/doctor/messages',
+        route: '/doctor/tasks',
         tone: 'info'
       }
-    ],
-    weeklyBars: [
-      { label: '周五', value: 80, count: '74 次' },
-      { label: '周六', value: 68, count: '61 次' },
-      { label: '周日', value: 76, count: '70 次' },
-      { label: '周一', value: 82, count: '77 次' },
-      { label: '周二', value: 78, count: '73 次' },
-      { label: '周三', value: 84, count: '76 次' },
-      { label: '今日', value: 86, count: '71 次', active: true }
-    ],
-    weeklySummary: {
-      value: '86%',
-      note: '今日完成率，已完成 71 次'
-    }
+    ]
   }
 }
 
