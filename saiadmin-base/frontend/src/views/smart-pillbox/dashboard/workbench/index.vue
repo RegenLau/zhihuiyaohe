@@ -6,7 +6,7 @@
           <a-grid :cols="{ xs: 1, sm: 12, md: 24 }" :row-gap="16">
             <a-grid-item v-for="item in dashboard.statCards" :key="item.label" :span="8">
               <a-space>
-                <a-avatar :size="48" style="color: #fff; background-color: rgb(var(--primary-6))">
+                <a-avatar :size="48" :style="statIconStyle(item)">
                   <sa-icon :icon="item.icon || 'ri:dashboard-line'" :size="22" />
                 </a-avatar>
                 <a-space direction="vertical" :size="2">
@@ -67,6 +67,19 @@ const dashboard = reactive({
 })
 
 const quickActions = computed(() => dashboard.sidePanel?.actions || [])
+
+const statIconStyle = (item) => {
+  const colorMap = {
+    今日任务: 'rgb(var(--green-6))',
+    未打卡: 'rgb(var(--red-6))',
+    待处理: 'rgb(var(--orange-6))'
+  }
+
+  return {
+    color: '#fff',
+    backgroundColor: colorMap[item.label] || 'rgb(var(--primary-6))'
+  }
+}
 
 const trendChartOptions = computed(() => {
   const labels = dashboard.trendBars.map((item) => item.label)

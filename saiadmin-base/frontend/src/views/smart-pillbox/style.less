@@ -172,6 +172,171 @@
   color: rgb(var(--primary-6));
 }
 
+.conversation-page,
+.conversation-page > .arco-spin,
+.conversation-shell {
+  min-height: 0;
+}
+
+.conversation-page {
+  height: calc(100vh - 116px);
+  overflow: hidden;
+}
+
+.conversation-page > .arco-spin,
+.conversation-shell {
+  height: 100%;
+}
+
+.conversation-shell {
+  align-items: stretch;
+}
+
+.conversation-patient-panel,
+.conversation-message-list,
+.conversation-title-panel,
+.conversation-timeline-panel {
+  min-height: 0;
+}
+
+.conversation-patient-panel {
+  overflow: hidden;
+}
+
+.conversation-patient-panel .arco-card,
+.conversation-patient-panel .arco-card-body {
+  height: 100%;
+  min-height: 0;
+}
+
+.conversation-patient-panel .arco-card-body,
+.conversation-timeline-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.conversation-patient-list,
+.conversation-timeline-list {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding-right: 4px;
+}
+
+.conversation-patient-list .arco-list-spin,
+.conversation-timeline-list .arco-list-spin {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.conversation-patient-list .arco-list-content {
+  display: grid;
+  gap: 8px;
+}
+
+.conversation-message-list {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.conversation-timeline-panel {
+  overflow: hidden;
+}
+
+.conversation-title-line,
+.conversation-patient-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.conversation-title-line h3 {
+  margin: 0;
+}
+
+.conversation-filter-tabs .arco-tabs-content,
+.conversation-timeline-tabs .arco-tabs-content {
+  display: none;
+}
+
+.conversation-patient-top {
+  justify-content: space-between;
+}
+
+.conversation-patient-list
+  .arco-list-medium
+  .arco-list-content-wrapper
+  .arco-list-content
+  > .arco-list-item.conversation-patient-item {
+  padding: 0;
+}
+
+.conversation-patient-card {
+  width: 100%;
+  cursor: pointer;
+}
+
+.conversation-patient-card.is-active {
+  background: var(--color-primary-light-1);
+  box-shadow: inset 3px 0 0 rgb(var(--primary-6));
+}
+
+.conversation-patient-card .arco-card-body,
+.conversation-timeline-item,
+.conversation-chat-flow {
+  width: 100%;
+  display: grid;
+  gap: 10px;
+}
+
+.conversation-chat-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: min(78%, 680px);
+}
+
+.conversation-chat-row.is-patient {
+  justify-self: start;
+}
+
+.conversation-chat-row.is-device {
+  justify-self: end;
+}
+
+.conversation-chat-row .arco-avatar {
+  flex: 0 0 auto;
+}
+
+.conversation-chat-content {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.conversation-chat-row.is-device .conversation-chat-content {
+  justify-items: end;
+}
+
+.conversation-chat-name {
+  font-size: 12px;
+  color: var(--color-text-3);
+}
+
+.conversation-chat-bubble {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--color-fill-2);
+  color: var(--color-text-1);
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.conversation-chat-row.is-device .conversation-chat-bubble {
+  background: var(--color-primary-light-1);
+}
+
 .patient-table-actions .arco-btn {
   min-width: 40px;
   padding: 0 8px;
@@ -242,6 +407,21 @@
 
   .smart-filter-actions {
     justify-content: flex-start;
+  }
+
+  .conversation-chat-row {
+    max-width: 100%;
+  }
+
+  .conversation-page,
+  .conversation-page > .arco-spin,
+  .conversation-shell {
+    height: auto;
+  }
+
+  .conversation-patient-list,
+  .conversation-timeline-list {
+    max-height: 420px;
   }
 }
 
