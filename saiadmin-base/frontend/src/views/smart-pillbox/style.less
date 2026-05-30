@@ -275,11 +275,16 @@
 .conversation-patient-card {
   width: 100%;
   cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .conversation-patient-card.is-active {
   background: var(--color-primary-light-1);
-  box-shadow: inset 3px 0 0 rgb(var(--primary-6));
+  border-color: rgb(var(--primary-6));
+  box-shadow: 0 0 0 2px rgba(var(--primary-6), 0.16);
 }
 
 .conversation-patient-card .arco-card-body,
