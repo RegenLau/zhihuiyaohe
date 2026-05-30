@@ -1,7 +1,7 @@
 <template>
   <div class="smart-page">
     <a-row :gutter="[16, 16]">
-      <a-col :xs="24" :lg="15">
+      <a-col :xs="24">
         <div class="ma-content-block p-3">
         <a-card title="知情同意书设置" :loading="loading" :bordered="false">
           <template #extra>
@@ -16,26 +16,10 @@
               <a-col :xs="24" :md="12"><a-form-item label="当前版本"><a-input v-model="agreement.version" placeholder="请输入版本号" /></a-form-item></a-col>
               <a-col :xs="24" :md="12"><a-form-item label="启用状态"><a-switch v-model="agreement.status" :checked-value="1" :unchecked-value="0" /></a-form-item></a-col>
               <a-col :xs="24" :md="12"><a-form-item label="适用端"><a-input model-value="小程序患者端 / 子女端" readonly /></a-form-item></a-col>
-              <a-col :span="24"><a-form-item label="协议摘要"><a-textarea v-model="agreement.summary" placeholder="请输入协议摘要" :auto-size="{ minRows: 4, maxRows: 5 }" /></a-form-item></a-col>
-              <a-col :span="24"><a-form-item label="协议正文"><a-textarea v-model="agreement.content" :auto-size="{ minRows: 12, maxRows: 18 }" /></a-form-item></a-col>
+              <a-col :span="24"><a-form-item label="协议摘要"><ma-wangEditor v-model="agreement.summary" :height="160" /></a-form-item></a-col>
+              <a-col :span="24"><a-form-item label="协议正文"><ma-wangEditor v-model="agreement.content" :height="360" /></a-form-item></a-col>
             </a-row>
           </a-form>
-        </a-card>
-        </div>
-      </a-col>
-      <a-col :xs="24" :lg="9">
-        <div class="ma-content-block p-3">
-        <a-card title="患者知情同意记录" :bordered="false" :loading="recordsLoading">
-          <a-table row-key="id" :data="consentRecords" :pagination="false" size="small" :scroll="{ x: 520 }">
-            <template #columns>
-              <a-table-column title="患者" data-index="patient" :width="90" />
-              <a-table-column title="版本" data-index="version" :width="92" />
-              <a-table-column title="确认端" data-index="confirmTerminal" :width="120" />
-              <a-table-column title="状态" data-index="status" :width="90">
-                <template #cell="{ record }"><a-tag :color="record.status === '已同意' ? 'green' : 'red'">{{ record.status }}</a-tag></template>
-              </a-table-column>
-            </template>
-          </a-table>
         </a-card>
         </div>
       </a-col>
@@ -47,12 +31,10 @@
 import { onMounted, reactive, ref } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { settingsApi } from '@/views/plugin/smart-pillbox/api/doctor'
-import { getPayload, getRecords } from '@/views/smart-pillbox/utils'
+import { getPayload } from '@/views/smart-pillbox/utils'
 
 const loading = ref(false)
 const saving = ref(false)
-const recordsLoading = ref(false)
-const consentRecords = ref([])
 const agreement = reactive({
   name: '智慧药盒服务知情同意书',
   version: 'V2026.05',
@@ -77,16 +59,6 @@ const loadSettings = async () => {
   }
 }
 
-const loadConsentRecords = async () => {
-  recordsLoading.value = true
-  try {
-    const response = await settingsApi.consentRecords({ limit: 100 })
-    consentRecords.value = getRecords(response)
-  } finally {
-    recordsLoading.value = false
-  }
-}
-
 const saveSettings = async () => {
   saving.value = true
   try {
@@ -100,6 +72,5 @@ const saveSettings = async () => {
 
 onMounted(() => {
   loadSettings()
-  loadConsentRecords()
 })
 </script>

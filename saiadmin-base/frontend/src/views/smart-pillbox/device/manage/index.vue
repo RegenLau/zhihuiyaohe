@@ -36,59 +36,83 @@
       </a-row>
     </div>
 
-    <div class="ma-content-block p-2">
-      <a-table
-        row-key="id"
-        :data="devices"
-        :loading="loading"
-        :pagination="false"
-        :scroll="{ x: 1080 }"
-        table-layout-fixed
-      >
-        <template #columns>
-          <a-table-column title="设备编号" data-index="sn" :width="180">
-            <template #cell="{ record }">
-              <a-link @click="openEditDialog(record)">{{ record.sn }}</a-link>
-              <div class="smart-muted">绑定日期 {{ record.bindDate || '-' }}</div>
-            </template>
-          </a-table-column>
-          <a-table-column title="绑定患者" data-index="patient" :width="150">
-            <template #cell="{ record }">
-              <a-link v-if="record.bindPatientId" @click="router.push(`/doctor/patient-detail?patientId=${record.bindPatientId}`)">
-                {{ record.patient || '-' }}
-              </a-link>
-              <span v-else>{{ record.patient || '-' }}</span>
-            </template>
-          </a-table-column>
-          <a-table-column title="状态" data-index="status" :width="110">
-            <template #cell="{ record }">
-              <a-tag :color="statusColor(record.status)">{{ record.status }}</a-tag>
-            </template>
-          </a-table-column>
-          <a-table-column title="电量" data-index="battery" :width="170">
-            <template #cell="{ record }">
-              <a-space direction="vertical" :size="4" fill>
-                <span>{{ record.battery || '-' }}</span>
-                <a-progress :percent="batteryPercent(record) / 100" size="small" :show-text="false" />
-              </a-space>
-            </template>
-          </a-table-column>
-          <a-table-column title="固件" data-index="firmware" :width="120" />
-          <a-table-column title="最后心跳" data-index="lastHeartbeat" :width="180">
-            <template #cell="{ record }">{{ record.lastHeartbeat || '-' }}</template>
-          </a-table-column>
-          <a-table-column title="操作" :width="190">
-            <template #cell="{ record }">
-              <a-space>
-                <a-button size="mini" @click="openRecordsDrawer(record)">设备记录</a-button>
-                <a-button size="mini" @click="openEditDialog(record)">编辑</a-button>
-                <a-button size="mini" status="danger" :disabled="!isDeviceBound(record)" @click="openUnbindConfirm(record)">解绑</a-button>
-              </a-space>
-            </template>
-          </a-table-column>
-        </template>
-      </a-table>
+    <div class="device-summary-grid">
+      <div v-for="item in deviceStatusSummary" :key="item.label" class="ma-content-block p-4">
+        <a-space :size="12" align="center">
+          <a-avatar :size="44" :class="['device-summary-avatar', `is-${item.type}`]">
+            <sa-icon :icon="item.icon" :size="22" />
+          </a-avatar>
+          <a-statistic :title="item.label" :value="item.count" />
+        </a-space>
+      </div>
     </div>
+
+    <a-spin :loading="loading" class="device-card-spin">
+      <div v-if="!devices.length" class="ma-content-block p-4">
+        <a-empty description="暂无设备数据" />
+      </div>
+      <div v-else class="device-card-grid">
+        <a-card v-for="device in devices" :key="device.id" class="device-card">
+          <div class="device-card-header">
+            <span class="device-card-title">
+              <span class="smart-muted">设备编号：</span>
+              <a-link class="device-card-sn" @click="openEditDialog(device)">{{ device.sn }}</a-link>
+            </span>
+            <a-tag :color="statusColor(device.status)" class="device-card-status">{{ device.status }}</a-tag>
+          </div>
+          <a-divider class="device-card-divider" />
+
+          <div class="device-card-fields">
+            <div class="device-card-field">
+              <span class="smart-muted">绑定患者</span>
+              <a-link
+                v-if="device.bindPatientId"
+                @click="router.push(`/doctor/patient-detail?patientId=${device.bindPatientId}`)"
+              >
+                {{ device.patient || '-' }}
+              </a-link>
+              <span v-else>{{ device.patient || '-' }}</span>
+            </div>
+            <div class="device-card-field">
+              <span class="smart-muted">电量</span>
+              <a-space :size="4">
+                <sa-icon icon="ri:battery-2-charge-line" :size="16" />
+                <a-typography-text :type="batteryPercent(device) <= 20 ? 'danger' : undefined">
+                  {{ device.battery || '-' }}
+                </a-typography-text>
+              </a-space>
+            </div>
+            <div class="device-card-field">
+              <span class="smart-muted">WiFi状态</span>
+              <a-space :size="4">
+                <sa-icon :icon="device.wifiConnected === false ? 'ri:wifi-off-line' : 'ri:wifi-line'" :size="16" />
+                <span>{{ wifiStatus(device) }}</span>
+              </a-space>
+            </div>
+            <div class="device-card-field">
+              <span class="smart-muted">固件版本</span>
+              <a-space :size="4">
+                <sa-icon icon="ri:cpu-line" :size="16" />
+                <span>{{ device.firmware || '-' }}</span>
+              </a-space>
+            </div>
+            <div class="device-card-field">
+              <span class="smart-muted">绑定日期</span>
+              <span>{{ device.bindDate || '-' }}</span>
+            </div>
+            <div class="device-card-field">
+              <span class="smart-muted">最后心跳</span>
+              <span>{{ device.lastHeartbeat || '-' }}</span>
+            </div>
+          </div>
+
+          <template #actions>
+            <a-button type="text" @click="openEditDialog(device)">编辑</a-button>
+            <a-button status="danger" :disabled="!isDeviceBound(device)" @click="openUnbindConfirm(device)">解绑设备</a-button>
+          </template>
+        </a-card>
+      </div>
+    </a-spin>
 
     <a-modal
       v-model:visible="editVisible"
@@ -109,10 +133,10 @@
         </a-form-item>
         <a-form-item label="电量"><a-input-number v-model="deviceForm.batteryLevel" :min="0" :max="100" style="width: 100%" :disabled="dialogType === 'edit'" /></a-form-item>
         <a-form-item label="固件更新">
-          <div class="smart-toolbar" style="width: 100%">
+          <div class="device-firmware-row">
             <span class="smart-muted">目前版本</span>
             <a-input v-model="deviceForm.firmware" readonly />
-            <a-tag color="arcoblue">仅展示</a-tag>
+            <a-button :disabled="deviceForm.firmware === latestFirmwareVersion" @click="handleFirmwareUpdate">更新版本</a-button>
           </div>
         </a-form-item>
       </a-form>
@@ -146,46 +170,6 @@
       </div>
     </a-modal>
 
-    <a-drawer v-model:visible="recordsDrawerVisible" :width="720" title="设备记录" unmount-on-close>
-      <a-spin :loading="recordsLoading">
-        <a-descriptions :column="2" bordered>
-          <a-descriptions-item label="设备编号">{{ selectedDevice.sn }}</a-descriptions-item>
-          <a-descriptions-item label="绑定患者">{{ selectedDevice.patient }}</a-descriptions-item>
-          <a-descriptions-item label="在线状态"><a-tag :color="statusColor(selectedDevice.status)">{{ selectedDevice.status }}</a-tag></a-descriptions-item>
-          <a-descriptions-item label="最后心跳">{{ selectedDevice.lastHeartbeat || '-' }}</a-descriptions-item>
-        </a-descriptions>
-
-        <a-tabs default-active-key="events" class="smart-block-gap-sm">
-          <a-tab-pane key="events" title="开关记录与事件">
-            <a-table row-key="id" :data="deviceEventRecords" :pagination="false" :scroll="{ x: 640 }" size="small">
-              <template #columns>
-                <a-table-column title="时间" data-index="eventTime" :width="150" />
-                <a-table-column title="事件" data-index="eventType" :width="100" />
-                <a-table-column title="药品" data-index="medicine" :width="150" />
-                <a-table-column title="状态" data-index="matchedPlan" :width="100">
-                  <template #cell="{ record }"><a-tag :color="record.matchedPlan ? 'green' : 'orange'">{{ record.matchedPlan ? '匹配' : '需确认' }}</a-tag></template>
-                </a-table-column>
-                <a-table-column title="说明" data-index="note" />
-              </template>
-            </a-table>
-          </a-tab-pane>
-          <a-tab-pane key="dispatch" title="计划下发记录">
-            <a-table row-key="id" :data="dispatchRecords" :pagination="false" :scroll="{ x: 640 }" size="small">
-              <template #columns>
-                <a-table-column title="下发时间" data-index="dispatchTime" :width="150" />
-                <a-table-column title="计划" data-index="planTitle" />
-                <a-table-column title="状态" data-index="status" :width="90">
-                  <template #cell="{ record }"><a-tag :color="statusColor(record.statusType || record.status)">{{ record.status }}</a-tag></template>
-                </a-table-column>
-                <a-table-column title="说明" data-index="failReason" :width="120">
-                  <template #cell="{ record }">{{ record.failReason || '-' }}</template>
-                </a-table-column>
-              </template>
-            </a-table>
-          </a-tab-pane>
-        </a-tabs>
-      </a-spin>
-    </a-drawer>
   </div>
 </template>
 
@@ -203,20 +187,40 @@ const loading = ref(false)
 const saving = ref(false)
 const editVisible = ref(false)
 const importVisible = ref(false)
-const recordsDrawerVisible = ref(false)
 const dialogType = ref('edit')
 const guidedBinding = ref(false)
 const latestFirmwareVersion = 'v2.1.3'
 const importText = ref('')
-const recordsLoading = ref(false)
-const deviceEventRecords = ref([])
-const dispatchRecords = ref([])
-const selectedDevice = reactive({})
 
 const filters = reactive({
   sn: String(pickQueryValue(route.query.sn)),
   status: String(pickQueryValue(route.query.status))
 })
+
+const deviceStatusSummary = computed(() => {
+  const records = devices.value
+  return [
+    {
+      label: '在线设备',
+      count: records.filter((device) => device.status === '在线').length,
+      icon: 'ri:checkbox-circle-line',
+      type: 'success'
+    },
+    {
+      label: '离线设备',
+      count: records.filter((device) => device.status === '离线').length,
+      icon: 'ri:error-warning-line',
+      type: 'danger'
+    },
+    {
+      label: '待分配设备',
+      count: records.filter((device) => device.status === '待分配').length,
+      icon: 'ri:question-line',
+      type: 'warning'
+    }
+  ]
+})
+
 const deviceForm = reactive({
   id: undefined,
   bindPatientId: null,
@@ -265,6 +269,10 @@ const fetchDevices = async () => {
 const batteryPercent = (device) => {
   const value = Number(device.batteryLevel ?? String(device.battery || '').replace('%', ''))
   return Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0
+}
+
+const wifiStatus = (device) => {
+  return device.wifi || (device.status === '离线' ? '未连接' : '已连接')
 }
 
 const isDeviceBound = (device) => {
@@ -369,22 +377,6 @@ const handleFirmwareUpdate = () => {
   Message.success(`固件已更新至 ${latestFirmwareVersion}`)
 }
 
-const openRecordsDrawer = async (device) => {
-  Object.assign(selectedDevice, device)
-  recordsDrawerVisible.value = true
-  recordsLoading.value = true
-  try {
-    const [eventsResponse, dispatchResponse] = await Promise.all([
-      deviceApi.events({ sn: device.sn, limit: 100 }),
-      deviceApi.dispatchRecords({ sn: device.sn, limit: 100 })
-    ])
-    deviceEventRecords.value = getRecords(eventsResponse)
-    dispatchRecords.value = getRecords(dispatchResponse)
-  } finally {
-    recordsLoading.value = false
-  }
-}
-
 const openUnbindConfirm = (device) => {
   if (!isDeviceBound(device)) {
     Message.warning('当前设备未绑定患者')
@@ -476,3 +468,117 @@ onMounted(async () => {
   await openGuidedBindDialog()
 })
 </script>
+
+<style scoped>
+.device-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.device-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+.device-card-spin {
+  display: block;
+  width: 100%;
+}
+
+.device-card-grid > * {
+  min-width: 0;
+}
+
+.device-summary-avatar.is-success {
+  color: rgb(var(--green-6));
+  background: rgb(var(--green-1));
+}
+
+.device-summary-avatar.is-danger {
+  color: rgb(var(--red-6));
+  background: rgb(var(--red-1));
+}
+
+.device-summary-avatar.is-warning {
+  color: rgb(var(--orange-6));
+  background: rgb(var(--orange-1));
+}
+
+.device-card {
+  height: 100%;
+}
+
+.device-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.device-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.device-card-sn {
+  display: inline-block;
+  font-size: 14px;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+}
+
+.device-card-status {
+  flex: 0 0 auto;
+}
+
+.device-card-divider {
+  margin: 12px 0 16px;
+}
+
+.device-card-fields {
+  display: grid;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.device-card-field {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-height: 24px;
+}
+
+.device-card-field > :last-child {
+  justify-self: end;
+  min-width: 0;
+  text-align: right;
+}
+
+.device-firmware-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .device-summary-grid,
+  .device-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .device-firmware-row {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
