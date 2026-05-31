@@ -10,7 +10,7 @@
             :searchForm="searchForm"
             @resetSearch="handleResetSearch">
             <template #tableSearch>
-              <a-col :xs="24" :md="7">
+              <a-col :xs="24" :md="8" class="health-search-col">
                 <a-form-item field="keyword" label="患者姓名">
                   <a-input v-model="searchForm.keyword" placeholder="请输入患者姓名" allow-clear />
                 </a-form-item>
