@@ -1,7 +1,7 @@
 <template>
   <div class="smart-page">
     <div class="ma-content-block p-3">
-      <a-tabs v-model:active-key="activeTab" @change="refreshData">
+      <a-tabs v-model:active-key="activeTab" @change="handleTabChange">
         <a-tab-pane key="health" title="慢病指标">
           <sa-table
             ref="crudRef"
@@ -239,12 +239,29 @@ const formatTagText = (value) => {
   if (Array.isArray(value)) return value.length ? value.join('、') : '-'
   return value || '-'
 }
+const normalizeListRecords = (response) => {
+  const payload = getPayload(response)
+  const candidates = [
+    getRecords(response),
+    response?.data?.records,
+    response?.data?.data,
+    response?.data?.data?.records,
+    payload?.records,
+    payload?.data,
+    payload?.data?.records
+  ]
+  return candidates.find((item) => Array.isArray(item) && item.length) || []
+}
+const formatAllergies = (allergies) => {
+  if (Array.isArray(allergies)) return formatTagText(unwrapAllergyNames(allergies))
+  return formatTagText(allergies)
+}
 const mapDiseaseRows = (patients) => patients.map((patient) => ({
   id: patient.id,
   name: patient.name,
   recordNo: patient.recordNo,
   diseases: formatTagText(patient.diseases),
-  allergies: formatTagText(unwrapAllergyNames(patient.allergies))
+  allergies: formatAllergies(patient.allergies)
 }))
 
 async function loadData(params = {}) {
@@ -275,7 +292,7 @@ const loadShortageReports = async () => {
 }
 const loadPatients = async () => {
   const response = await patientApi.list({ page: 1, limit: 100 })
-  patientOptions.value = getRecords(response)
+  patientOptions.value = normalizeListRecords(response)
   diseaseRows.value = mapDiseaseRows(patientOptions.value)
 }
 const syncPatientToForm = (id, target) => {
@@ -301,6 +318,10 @@ const refreshData = async () => {
   if (activeTab.value === 'shortage') {
     await loadShortageReports()
   }
+}
+const handleTabChange = async (key) => {
+  activeTab.value = String(key)
+  await refreshData()
 }
 const openHealthDialog = () => {
   Object.assign(healthForm, {
