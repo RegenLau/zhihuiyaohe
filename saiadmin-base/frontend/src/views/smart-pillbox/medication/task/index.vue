@@ -210,45 +210,184 @@
       </template>
     </a-drawer>
 
-    <a-modal v-model:visible="planVisible" title="创建用药计划" width="min(760px, calc(100vw - 32px))" @ok="saveCreatePlan">
-      <a-form :model="planForm" layout="vertical">
-        <a-row :gutter="16">
-          <a-col :xs="24" :sm="12"><a-form-item label="计划名称"><a-input v-model="planForm.title" placeholder="请输入计划名称" /></a-form-item></a-col>
-          <a-col :xs="24" :sm="12">
-            <a-form-item label="计划状态">
-              <a-select v-model="planForm.status">
-                <a-option value="已生效">已生效</a-option>
-                <a-option value="草稿">草稿</a-option>
-              </a-select>
-            </a-form-item>
-          </a-col>
-          <a-col :xs="24" :sm="12"><a-form-item label="开始日期"><a-date-picker v-model="planForm.startDate" style="width: 100%" /></a-form-item></a-col>
-          <a-col :xs="24" :sm="12"><a-form-item label="结束日期"><a-date-picker v-model="planForm.endDate" style="width: 100%" /></a-form-item></a-col>
-        </a-row>
-      </a-form>
-    </a-modal>
+    <a-drawer v-model:visible="planVisible" title="创建用药计划" width="min(960px, calc(100vw - 32px))" unmount-on-close>
+      <div class="plan-create-stack">
+        <a-card title="用药计划基础信息" :bordered="true">
+          <a-form :model="planForm" layout="vertical" class="plan-create-form">
+            <a-row :gutter="16">
+              <a-col :xs="24" :sm="12"><a-form-item label="计划名称"><a-input v-model="planForm.title" placeholder="请输入计划名称" /></a-form-item></a-col>
+              <a-col :xs="24" :sm="12">
+                <a-form-item label="计划状态">
+                  <a-select v-model="planForm.status">
+                    <a-option value="已生效">已生效</a-option>
+                    <a-option value="草稿">草稿</a-option>
+                  </a-select>
+                </a-form-item>
+              </a-col>
+              <a-col :xs="24" :sm="12"><a-form-item label="开始日期"><a-date-picker v-model="planForm.startDate" style="width: 100%" /></a-form-item></a-col>
+              <a-col :xs="24" :sm="12"><a-form-item label="结束日期"><a-date-picker v-model="planForm.endDate" style="width: 100%" /></a-form-item></a-col>
+            </a-row>
+          </a-form>
+        </a-card>
 
-    <a-modal v-model:visible="drugVisible" :title="drugDialogMode === 'add' ? '新增药品' : '编辑药品'" width="min(760px, calc(100vw - 32px))" @ok="saveDrugEdit">
-      <a-form :model="drugForm" layout="vertical">
+        <a-card :bordered="true" class="prescription-upload-card">
+          <template #title>上传处方图片</template>
+          <template #extra>
+            <a-space size="mini">
+              <a-tag v-if="planOcrFileName" color="arcoblue">{{ planOcrFileName }}</a-tag>
+              <a-tag v-if="planDraftDrugs.length" color="green">已确认 {{ planConfirmedCount }}/{{ planDraftDrugs.length }}</a-tag>
+            </a-space>
+          </template>
+          <div v-if="planOcrStatus === 'idle'" class="prescription-upload-empty">
+            <sa-icon icon="ri:image-add-line" :size="36" />
+            <div>
+              <a-typography-text bold>上传处方图片后自动识别药品</a-typography-text>
+              <div class="smart-muted">识别结果会生成药品卡片，确认全部药品后才能创建用药计划。</div>
+            </div>
+            <a-button type="primary" @click="uploadPrescriptionImage">
+              <template #icon><sa-icon icon="ri:upload-2-line" :size="16" /></template>
+              上传处方图片
+            </a-button>
+          </div>
+
+          <div v-else-if="planOcrStatus === 'recognizing'" class="prescription-recognizing">
+            <a-spin :loading="true" />
+            <div>
+              <a-typography-text bold>处方识别中</a-typography-text>
+              <div class="smart-muted">正在识别药品、规格、剂量、频次和提醒时间。</div>
+            </div>
+          </div>
+
+          <div v-else class="prescription-result-head">
+            <div>
+              <a-typography-text bold>处方识别完成</a-typography-text>
+              <div class="smart-muted">请在下方逐个确认识别出的药品信息。</div>
+            </div>
+            <a-button size="small" @click="uploadPrescriptionImage">重新上传</a-button>
+          </div>
+        </a-card>
+
+        <div v-if="planOcrStatus === 'done'" class="prescription-result-stack">
+          <div class="prescription-result-head">
+            <div>
+              <a-typography-text bold>识别药品卡片</a-typography-text>
+              <div class="smart-muted">每个药品都可以修改信息，确认后纳入计划。</div>
+            </div>
+          </div>
+          <a-empty v-if="!planDraftDrugs.length" description="未识别到药品，请重新上传处方图片" />
+          <div v-else class="plan-drug-card-list">
+            <a-card v-for="(drug, index) in planDraftDrugs" :key="drug.draftId" :bordered="true" class="plan-drug-edit-card" :class="{ 'is-confirmed': drug.confirmed }">
+              <template #title>
+                <a-space size="mini" wrap>
+                  <span>药品 {{ index + 1 }}</span>
+                  <a-tag :color="drug.confirmed ? 'green' : 'orange'">{{ drug.confirmed ? '已确认' : '待确认' }}</a-tag>
+                </a-space>
+              </template>
+              <template #extra>
+                <a-space size="mini">
+                  <a-button v-if="drug.confirmed" size="mini" @click="cancelDraftDrugConfirm(drug)">取消确认</a-button>
+                  <a-button v-else size="mini" type="primary" @click="confirmDraftDrug(drug)">确认药品</a-button>
+                  <a-button size="mini" status="danger" @click="removeDraftDrug(drug)">删除</a-button>
+                </a-space>
+              </template>
+              <a-form :model="drug" layout="vertical" class="draft-drug-form">
+                <a-row :gutter="16">
+                  <a-col :xs="24" :sm="12"><a-form-item label="药品名称"><a-input v-model="drug.name" placeholder="请输入药品名称" @input="markDraftDrugPending(drug)" /></a-form-item></a-col>
+                  <a-col :xs="24" :sm="6"><a-form-item label="规格"><a-input v-model="drug.specification" placeholder="如 500mg" @input="markDraftDrugPending(drug)" /></a-form-item></a-col>
+                  <a-col :xs="24" :sm="6"><a-form-item label="剩余药品量"><a-input v-model="drug.quantity" placeholder="如 18片" @input="markDraftDrugPending(drug)" /></a-form-item></a-col>
+                </a-row>
+
+                <a-form-item label="每次剂量">
+                  <div class="drug-dose-row">
+                    <a-input v-model="drug.doseAmount" placeholder="1" @input="markDraftDrugPending(drug)" />
+                    <a-select v-model="drug.doseUnit" @change="markDraftDrugPending(drug)">
+                      <a-option v-for="unit in doseUnitOptions" :key="unit" :value="unit">{{ unit }}</a-option>
+                    </a-select>
+                  </div>
+                </a-form-item>
+
+                <a-form-item label="每日次数">
+                  <a-radio-group v-model="drug.dailyFrequency" type="button" class="drug-frequency-row" @change="(value) => changeDraftDailyFrequency(drug, value)">
+                    <a-radio v-for="option in frequencyOptions" :key="option.value" :value="option.value">{{ option.label }}</a-radio>
+                  </a-radio-group>
+                </a-form-item>
+
+                <div class="drug-reminder-head">
+                  <span>每次提醒时间</span>
+                  <span class="smart-muted">根据每日次数自动展开，保存后同步到预览</span>
+                </div>
+                <div class="drug-reminder-list">
+                  <div v-for="(slot, slotIndex) in drug.reminderSlots" :key="slotIndex" class="drug-reminder-row">
+                    <strong class="drug-reminder-index">第 {{ slotIndex + 1 }} 次</strong>
+                    <a-input v-model="slot.clock" class="drug-reminder-time" placeholder="如 07:30" @input="markDraftDrugPending(drug)" />
+                    <a-radio-group v-model="slot.period" type="button" class="drug-period-group" @change="markDraftDrugPending(drug)">
+                      <a-radio v-for="period in periodOptions" :key="period" :value="period">{{ period }}</a-radio>
+                    </a-radio-group>
+                  </div>
+                </div>
+              </a-form>
+            </a-card>
+          </div>
+        </div>
+        <a-alert type="warning">完成处方识别并确认全部药品明细后，才会创建用药计划。</a-alert>
+      </div>
+
+      <template #footer>
+        <a-button @click="planVisible = false">取消</a-button>
+        <a-button type="primary" @click="saveCreatePlan">确认添加计划</a-button>
+      </template>
+    </a-drawer>
+
+    <a-modal
+      v-model:visible="drugVisible"
+      :title="drugDialogMode === 'add' ? '新增药品与提醒' : '修改用药与提醒'"
+      width="min(960px, calc(100vw - 32px))"
+      unmount-on-close
+    >
+      <a-form :model="drugForm" layout="vertical" class="drug-reminder-form">
+        <a-alert type="info" :show-icon="false">
+          当前条目：{{ drugForm.name || '待录入药品' }}，时间点默认按说明书和常规作息生成，可逐次调整。
+        </a-alert>
         <a-row :gutter="16">
           <a-col :xs="24" :sm="12"><a-form-item label="药品名称"><a-input v-model="drugForm.name" placeholder="请输入药品名称" /></a-form-item></a-col>
-          <a-col :xs="24" :sm="12"><a-form-item label="规格 / 剩余量"><a-input v-model="drugForm.quantity" placeholder="如 18片" /></a-form-item></a-col>
-          <a-col :xs="24" :sm="8"><a-form-item label="单次剂量"><a-input v-model="drugForm.dose" placeholder="如 1片/次" /></a-form-item></a-col>
-          <a-col :xs="24" :sm="8">
-            <a-form-item label="频次">
-              <a-select v-model="drugForm.frequency">
-                <a-option value="每日1次">每日1次</a-option>
-                <a-option value="每日2次">每日2次</a-option>
-                <a-option value="每日3次">每日3次</a-option>
-              </a-select>
-            </a-form-item>
-          </a-col>
-          <a-col :xs="24" :sm="8"><a-form-item label="疗程"><a-input-number v-model="drugForm.durationDays" style="width: 100%" /></a-form-item></a-col>
-          <a-col :xs="24" :sm="12"><a-form-item label="服药时段"><a-input v-model="drugForm.time" placeholder="早餐后/晚餐时/睡前" /></a-form-item></a-col>
-          <a-col :xs="24" :sm="12"><a-form-item label="提醒时间"><a-input v-model="drugForm.reminderTime" placeholder="如 07:30" /></a-form-item></a-col>
-          <a-col :xs="24"><a-form-item label="用药说明"><a-textarea v-model="drugForm.guide" placeholder="请输入服药说明" /></a-form-item></a-col>
+          <a-col :xs="24" :sm="6"><a-form-item label="规格"><a-input v-model="drugForm.specification" placeholder="如 500mg" /></a-form-item></a-col>
+          <a-col :xs="24" :sm="6"><a-form-item label="剩余药品量"><a-input v-model="drugForm.quantity" placeholder="如 18片" /></a-form-item></a-col>
         </a-row>
+
+        <a-form-item label="每次剂量">
+          <div class="drug-dose-row">
+            <a-input v-model="drugDoseAmount" placeholder="1" />
+            <a-select v-model="drugDoseUnit">
+              <a-option v-for="unit in doseUnitOptions" :key="unit" :value="unit">{{ unit }}</a-option>
+            </a-select>
+          </div>
+        </a-form-item>
+
+        <a-form-item label="每日次数">
+          <a-radio-group v-model="dailyFrequency" type="button" class="drug-frequency-row" @change="changeDailyFrequency">
+            <a-radio v-for="option in frequencyOptions" :key="option.value" :value="option.value">{{ option.label }}</a-radio>
+          </a-radio-group>
+        </a-form-item>
+
+        <div class="drug-reminder-head">
+          <span>每次提醒时间</span>
+          <span class="smart-muted">根据每日次数自动展开，保存后同步到预览</span>
+        </div>
+        <div class="drug-reminder-list">
+          <div v-for="(slot, index) in drugReminderSlots" :key="index" class="drug-reminder-row">
+            <strong class="drug-reminder-index">第 {{ index + 1 }} 次</strong>
+            <a-input v-model="slot.clock" class="drug-reminder-time" placeholder="如 07:30" />
+            <a-radio-group v-model="slot.period" type="button" class="drug-period-group">
+              <a-radio v-for="period in periodOptions" :key="period" :value="period">{{ period }}</a-radio>
+            </a-radio-group>
+          </div>
+        </div>
+
       </a-form>
+      <template #footer>
+        <a-button @click="drugVisible = false">取消</a-button>
+        <a-button type="primary" @click="saveDrugEdit">保存用药与提醒</a-button>
+      </template>
     </a-modal>
 
     <a-modal v-model:visible="routineVisible" title="调整作息时间" width="min(640px, calc(100vw - 32px))" @ok="saveRoutine">
@@ -281,7 +420,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { useRoute } from 'vue-router'
-import { patientApi, planApi, taskApi } from '@/views/plugin/smart-pillbox/api/doctor'
+import { ocrApi, patientApi, planApi, taskApi } from '@/views/plugin/smart-pillbox/api/doctor'
 import { formatDateTime, getPayload, getRecords, pickQueryValue, statusColor } from '@/views/smart-pillbox/utils'
 
 const route = useRoute()
@@ -298,6 +437,7 @@ const taskRecords = ref([])
 const plans = ref([])
 const taskLoading = ref(false)
 const planLoading = ref(false)
+const planOcrSubmitting = ref(false)
 const planVisible = ref(false)
 const drugVisible = ref(false)
 const routineVisible = ref(false)
@@ -308,6 +448,14 @@ const drugDialogMode = ref('add')
 const editingPlan = ref(null)
 const editingDrugIndex = ref(-1)
 const editingTask = ref(null)
+const planOcrRecordId = ref('')
+const planOcrFileName = ref('')
+const planOcrStatus = ref('idle')
+const planDraftDrugs = ref([])
+const drugDoseAmount = ref('1')
+const drugDoseUnit = ref('片/次')
+const dailyFrequency = ref(1)
+const drugReminderSlots = ref([])
 
 const emptyPatient = { id: 0, name: '-', age: '-', deviceStatus: '未绑定', todayDrugs: 0, nextReminder: '-', taskRisk: '-' }
 const planForm = reactive({
@@ -318,6 +466,7 @@ const planForm = reactive({
 })
 const drugForm = reactive({
   name: '',
+  specification: '',
   quantity: '',
   dose: '1片/次',
   frequency: '每日1次',
@@ -346,9 +495,37 @@ const timeTextMap = {
   晚餐前: '17:30',
   晚餐时: '18:00',
   晚餐后: '18:30',
+  餐前: '07:00',
+  餐后: '07:30',
+  空腹: '06:30',
   睡前: '21:30'
 }
-
+const doseUnitOptions = ['片/次', '粒/次', '袋/次', '支/次', 'ml/次']
+const frequencyOptions = [
+  { label: '每日1次', value: 1 },
+  { label: '每日2次', value: 2 },
+  { label: '每日3次', value: 3 },
+  { label: '每日4次', value: 4 }
+]
+const periodOptions = ['餐后', '餐前', '睡前', '空腹']
+const reminderSlotPresets = {
+  1: [{ clock: '07:30', period: '餐后' }],
+  2: [
+    { clock: '07:30', period: '餐后' },
+    { clock: '18:30', period: '餐后' }
+  ],
+  3: [
+    { clock: '07:30', period: '餐后' },
+    { clock: '12:30', period: '餐后' },
+    { clock: '18:30', period: '餐后' }
+  ],
+  4: [
+    { clock: '07:30', period: '餐后' },
+    { clock: '12:30', period: '餐后' },
+    { clock: '18:30', period: '餐后' },
+    { clock: '21:30', period: '睡前' }
+  ]
+}
 const patientOptions = computed(() => {
   const value = keyword.value.trim()
   if (!value) return patients.value
@@ -363,6 +540,7 @@ const displayedTasks = computed(() => {
   return [...records].sort((prev, next) => String(prev.time || '').localeCompare(String(next.time || '')))
 })
 const drugFilterOptions = computed(() => ['全部用药', ...Array.from(new Set(taskRecords.value.map((item) => item.drug)))])
+const planConfirmedCount = computed(() => planDraftDrugs.value.filter((drug) => drug.confirmed).length)
 
 const loadPatients = async () => {
   const response = await patientApi.list({ page: 1, limit: 100, keyword: keyword.value })
@@ -409,12 +587,35 @@ const openPlanDetail = (plan) => {
   planDetailVisible.value = true
 }
 
+const splitDrugField = (value) => String(value || '').split(/[\/,，]/).map((item) => item.trim()).filter(Boolean)
+
+const getFrequencyCount = (frequency) => {
+  const count = Number(String(frequency || '').match(/\d+/)?.[0] || 1)
+  return Math.min(Math.max(count, 1), 4)
+}
+
+const getPresetSlot = (count, index) => {
+  return reminderSlotPresets[count]?.[index] || reminderSlotPresets[4][index] || reminderSlotPresets[1][0]
+}
+
+const normalizePeriod = (period) => {
+  if (periodOptions.includes(period)) return period
+  if (String(period || '').includes('睡')) return '睡前'
+  if (String(period || '').includes('前')) return '餐前'
+  if (String(period || '').includes('空')) return '空腹'
+  return '餐后'
+}
+
 const getDrugReminderLabels = (drug) => {
-  return String(drug.time || '')
-    .split('/')
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .map((item) => `${item} ${drug.reminderTime || timeTextMap[item] || ''}`.trim())
+  const periods = splitDrugField(drug.time)
+  const clocks = splitDrugField(drug.reminderTime)
+  const count = Math.max(getFrequencyCount(drug.frequency), periods.length, clocks.length, 1)
+  return Array.from({ length: count }, (_item, index) => {
+    const preset = getPresetSlot(count, index)
+    const period = periods[index] || preset.period
+    const clock = clocks[index] || timeTextMap[period] || preset.clock
+    return `${period} ${clock}`.trim()
+  })
 }
 const getPlanReminderCount = (plan) => plan.reminderCount || (plan.drugs || []).reduce((total, drug) => total + getDrugReminderLabels(drug).length, 0)
 const drugMetaText = (drug) => [drug.specification, drug.quantity].filter(Boolean).join(' · ')
@@ -430,7 +631,169 @@ const openCreatePlan = () => {
     startDate: '2026-05-20',
     endDate: '2026-06-18'
   })
+  planOcrRecordId.value = ''
+  planOcrFileName.value = ''
+  planOcrStatus.value = 'idle'
+  planDraftDrugs.value = []
   planVisible.value = true
+}
+
+const uploadPrescriptionImage = async () => {
+  if (!selectedPatientId.value) {
+    Message.warning('请先选择患者')
+    return
+  }
+  planOcrFileName.value = `${currentPatient.value.name}-处方照片.jpg`
+  planOcrStatus.value = 'recognizing'
+  planDraftDrugs.value = []
+  planOcrSubmitting.value = true
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 600))
+    const response = await ocrApi.save({
+      patientId: selectedPatientId.value,
+      patient: currentPatient.value.name,
+      fileName: planOcrFileName.value,
+      fileType: '处方照片',
+      operator: '医药师'
+    })
+    const record = getPayload(response)
+    const drugs = Array.isArray(record.recognizedDrugs) ? record.recognizedDrugs : []
+    planOcrRecordId.value = record.id || ''
+    planOcrFileName.value = record.fileName || ''
+    planDraftDrugs.value = drugs.map((drug, index) => toPlanDraftDrug(drug, index))
+    planOcrStatus.value = 'done'
+    if (planDraftDrugs.value.length) {
+      Message.success(`已识别 ${planDraftDrugs.value.length} 种药品，请确认明细`)
+    } else {
+      Message.warning('未识别到药品，请重新识别处方')
+    }
+  } catch (error) {
+    planOcrStatus.value = 'idle'
+    Message.error('处方识别失败，请重新上传处方图片')
+  } finally {
+    planOcrSubmitting.value = false
+  }
+}
+
+const toPlanDraftDrug = (drug = {}, index = 0) => {
+  const doseParts = getDoseParts(drug.dose || '1片/次')
+  const dailyCount = getFrequencyCount(drug.frequency)
+  const draft = {
+    draftId: `${Date.now()}-${index}-${Math.random().toString(16).slice(2)}`,
+    name: drug.name || '',
+    specification: drug.specification || '',
+    quantity: drug.quantity || '',
+    doseAmount: doseParts.amount,
+    doseUnit: doseParts.unit,
+    dailyFrequency: dailyCount,
+    durationDays: drug.durationDays || 30,
+    reminderSlots: createReminderSlots(drug),
+    guide: drug.guide || '按处方执行',
+    confirmed: false
+  }
+  syncDraftReminderSlots(draft, dailyCount)
+  return draft
+}
+
+const validateDraftDrug = (drug) => {
+  const slots = Array.isArray(drug.reminderSlots) ? drug.reminderSlots.slice(0, drug.dailyFrequency) : []
+  return Boolean(drug.name && drug.doseAmount && slots.length && slots.every((slot) => slot.clock && slot.period))
+}
+
+const markDraftDrugPending = (drug) => {
+  drug.confirmed = false
+}
+
+const confirmDraftDrug = (drug) => {
+  if (!validateDraftDrug(drug)) {
+    Message.warning('请补齐药品名称、剂量、频次和服药时段')
+    return
+  }
+  drug.confirmed = true
+}
+
+const cancelDraftDrugConfirm = (drug) => {
+  drug.confirmed = false
+}
+
+const confirmAllDraftDrugs = () => {
+  if (planDraftDrugs.value.some((drug) => !validateDraftDrug(drug))) {
+    Message.warning('请补齐所有药品名称、剂量、频次和服药时段')
+    return
+  }
+  planDraftDrugs.value.forEach((drug) => {
+    drug.confirmed = true
+  })
+}
+
+const removeDraftDrug = (drug) => {
+  planDraftDrugs.value = planDraftDrugs.value.filter((item) => item.draftId !== drug.draftId)
+}
+
+const toPlanDrug = (drug) => ({
+  name: drug.name,
+  specification: drug.specification,
+  quantity: drug.quantity,
+  dose: `${drug.doseAmount}${drug.doseUnit}`,
+  frequency: `每日${drug.dailyFrequency}次`,
+  durationDays: drug.durationDays,
+  time: drug.reminderSlots.slice(0, drug.dailyFrequency).map((slot) => slot.period).join('/'),
+  reminderTime: drug.reminderSlots.slice(0, drug.dailyFrequency).map((slot) => slot.clock).join('/'),
+  guide: drug.guide || '按处方执行'
+})
+
+const getDoseParts = (dose) => {
+  const value = String(dose || '').trim()
+  const matched = value.match(/^(\d+(?:\.\d+)?|半)(.*)$/)
+  const unit = matched?.[2] || '片/次'
+  return {
+    amount: matched?.[1] || '1',
+    unit: doseUnitOptions.includes(unit) ? unit : '片/次'
+  }
+}
+
+const createReminderSlots = (drug = {}) => {
+  const periods = splitDrugField(drug.time)
+  const clocks = splitDrugField(drug.reminderTime)
+  const count = Math.max(getFrequencyCount(drug.frequency), periods.length, clocks.length, 1)
+  return Array.from({ length: count }, (_item, index) => {
+    const preset = getPresetSlot(count, index)
+    const rawPeriod = periods[index] || preset.period
+    return {
+      clock: clocks[index] || timeTextMap[rawPeriod] || preset.clock,
+      period: normalizePeriod(rawPeriod)
+    }
+  })
+}
+
+const syncReminderSlots = (count) => {
+  const nextCount = Math.min(Math.max(Number(count) || 1, 1), 4)
+  const currentSlots = drugReminderSlots.value.slice(0, nextCount)
+  while (currentSlots.length < nextCount) {
+    currentSlots.push({ ...getPresetSlot(nextCount, currentSlots.length) })
+  }
+  drugReminderSlots.value = currentSlots
+}
+
+const syncDraftReminderSlots = (drug, count) => {
+  const nextCount = Math.min(Math.max(Number(count) || 1, 1), 4)
+  const currentSlots = Array.isArray(drug.reminderSlots) ? drug.reminderSlots.slice(0, nextCount) : []
+  while (currentSlots.length < nextCount) {
+    currentSlots.push({ ...getPresetSlot(nextCount, currentSlots.length) })
+  }
+  drug.reminderSlots = currentSlots
+}
+
+const changeDailyFrequency = (value) => {
+  dailyFrequency.value = Math.min(Math.max(Number(value) || 1, 1), 4)
+  drugForm.frequency = `每日${dailyFrequency.value}次`
+  syncReminderSlots(dailyFrequency.value)
+}
+
+const changeDraftDailyFrequency = (drug, value) => {
+  drug.dailyFrequency = Math.min(Math.max(Number(value) || 1, 1), 4)
+  syncDraftReminderSlots(drug, drug.dailyFrequency)
+  markDraftDrugPending(drug)
 }
 
 const saveCreatePlan = async () => {
@@ -438,17 +801,45 @@ const saveCreatePlan = async () => {
     Message.warning('请先选择患者并填写计划名称')
     return false
   }
+  if (!planDraftDrugs.value.length) {
+    Message.warning('请先识别处方')
+    return false
+  }
+  if (planConfirmedCount.value !== planDraftDrugs.value.length) {
+    Message.warning('请确认全部药品明细后再添加计划')
+    return false
+  }
+  const drugs = planDraftDrugs.value.map(toPlanDrug)
   const response = await planApi.save({
     ...planForm,
     patientId: selectedPatientId.value,
     patientName: currentPatient.value.name,
     period: `${planForm.startDate || '-'} 至 ${planForm.endDate || '-'}`,
-    generatedTasks: '待录入药品',
-    source: '手动录入',
-    reminderCount: 0,
-    auditSummary: '请按处方和医药师建议执行。',
-    drugs: []
+    generatedTasks: `已确认 ${drugs.length} 种药品，待生成任务`,
+    source: 'OCR处方识别',
+    reminderCount: drugs.reduce((total, drug) => total + getDrugReminderLabels(drug).length, 0),
+    auditSummary: '处方识别结果和药品明细已人工确认。',
+    attachments: planOcrRecordId.value
+      ? [{
+          id: Date.now(),
+          fileName: planOcrFileName.value || `${currentPatient.value.name}-处方照片.jpg`,
+          fileType: '处方照片',
+          uploadTime: formatDateTime(),
+          ocrStatus: '已确认',
+          operator: '医药师'
+        }]
+      : [],
+    drugs
   })
+  if (planOcrRecordId.value) {
+    await ocrApi.update({
+      id: planOcrRecordId.value,
+      status: '已确认',
+      statusType: 'success',
+      confirmedAt: formatDateTime(),
+      correctionNote: '已人工确认并生成用药计划'
+    })
+  }
   Message.success('用药计划已创建，系统将自动生成提醒信息')
   planVisible.value = false
   await loadPlans()
@@ -461,6 +852,7 @@ const openDrugDialog = (plan, drug = null, index = -1) => {
   drugDialogMode.value = drug ? 'edit' : 'add'
   Object.assign(drugForm, {
     name: drug?.name || '',
+    specification: drug?.specification || '',
     quantity: drug?.quantity || '',
     dose: drug?.dose || '1片/次',
     frequency: drug?.frequency || '每日1次',
@@ -469,17 +861,35 @@ const openDrugDialog = (plan, drug = null, index = -1) => {
     reminderTime: drug?.reminderTime || '',
     guide: drug?.guide || '按处方执行'
   })
+  const doseParts = getDoseParts(drugForm.dose)
+  drugDoseAmount.value = doseParts.amount
+  drugDoseUnit.value = doseParts.unit
+  dailyFrequency.value = getFrequencyCount(drugForm.frequency)
+  drugReminderSlots.value = createReminderSlots(drugForm)
+  syncReminderSlots(dailyFrequency.value)
   drugVisible.value = true
 }
 
 const saveDrugEdit = async () => {
-  if (!editingPlan.value || !drugForm.name || !drugForm.dose || !drugForm.time) {
-    Message.warning('请补齐药品名称、剂量和服药时段')
+  if (!editingPlan.value || !drugForm.name || !drugDoseAmount.value) {
+    Message.warning('请补齐药品名称和每次剂量')
     return false
   }
+  const reminderSlots = drugReminderSlots.value.slice(0, dailyFrequency.value)
+  if (reminderSlots.some((slot) => !slot.clock || !slot.period)) {
+    Message.warning('请补齐每次提醒时间和服药时段')
+    return false
+  }
+  const nextDrug = {
+    ...drugForm,
+    dose: `${drugDoseAmount.value}${drugDoseUnit.value}`,
+    frequency: `每日${dailyFrequency.value}次`,
+    time: reminderSlots.map((slot) => slot.period).join('/'),
+    reminderTime: reminderSlots.map((slot) => slot.clock).join('/')
+  }
   const nextPlan = { ...editingPlan.value, drugs: [...(editingPlan.value.drugs || [])] }
-  if (drugDialogMode.value === 'edit' && editingDrugIndex.value >= 0) nextPlan.drugs[editingDrugIndex.value] = { ...drugForm }
-  else nextPlan.drugs.push({ ...drugForm })
+  if (drugDialogMode.value === 'edit' && editingDrugIndex.value >= 0) nextPlan.drugs[editingDrugIndex.value] = nextDrug
+  else nextPlan.drugs.push(nextDrug)
   nextPlan.reminderCount = nextPlan.drugs.reduce((total, drug) => total + getDrugReminderLabels(drug).length, 0)
   nextPlan.generatedTasks = `${nextPlan.reminderCount} 条任务待生成`
   await planApi.update(nextPlan)
@@ -905,6 +1315,159 @@ onMounted(async () => {
   align-items: center;
 }
 
+.plan-create-stack,
+.plan-recognition-entry {
+  display: grid;
+  gap: 16px;
+}
+
+.plan-recognition-action {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.plan-recognition-action :deep(.arco-input-search) {
+  max-width: 360px;
+}
+
+.plan-draft-card {
+  min-width: 0;
+}
+
+.plan-draft-table :deep(.arco-input-wrapper),
+.plan-draft-table :deep(.arco-select-view) {
+  width: 100%;
+}
+
+.prescription-upload-empty,
+.prescription-recognizing,
+.prescription-result-head {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.prescription-upload-empty {
+  flex-direction: column;
+  min-height: 160px;
+  justify-content: center;
+  text-align: center;
+}
+
+.prescription-upload-empty > div,
+.prescription-recognizing > div,
+.prescription-result-head > div {
+  display: grid;
+  gap: 4px;
+}
+
+.prescription-recognizing {
+  min-height: 160px;
+  justify-content: center;
+}
+
+.prescription-result-head {
+  justify-content: space-between;
+}
+
+.prescription-result-stack,
+.draft-drug-form {
+  display: grid;
+  gap: 16px;
+}
+
+.plan-drug-card-list {
+  display: grid;
+  gap: 24px;
+}
+
+.plan-drug-edit-card {
+  min-width: 0;
+  border-color: var(--color-border-3);
+  border-width: 1px;
+}
+
+.plan-drug-edit-card :deep(.arco-card-header) {
+  border-bottom: 1px solid var(--color-border-2);
+  background: var(--color-fill-1);
+}
+
+.plan-drug-edit-card :deep(.arco-card-body) {
+  padding-top: 18px;
+}
+
+.plan-drug-edit-card.is-confirmed {
+  border-color: rgb(var(--success-6));
+}
+
+.plan-drug-edit-card.is-confirmed :deep(.arco-card-header) {
+  background: rgb(var(--success-1));
+  border-bottom-color: rgb(var(--success-3));
+}
+
+.drug-reminder-form {
+  display: grid;
+  gap: 16px;
+}
+
+.drug-dose-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 16px;
+}
+
+.drug-frequency-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+.drug-frequency-row :deep(.arco-radio-button) {
+  justify-content: center;
+}
+
+.drug-reminder-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.drug-reminder-list {
+  display: grid;
+  gap: 12px;
+}
+
+.drug-reminder-row {
+  display: grid;
+  grid-template-columns: 180px 220px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+
+.drug-reminder-index {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.drug-reminder-time {
+  width: 100%;
+}
+
+.drug-period-group {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.drug-period-group :deep(.arco-radio-button) {
+  justify-content: center;
+}
+
 .plan-card-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -1009,6 +1572,16 @@ onMounted(async () => {
 
   .task-card-actions {
     justify-content: flex-start;
+  }
+
+  .drug-dose-row,
+  .drug-reminder-row {
+    grid-template-columns: 1fr;
+  }
+
+  .drug-frequency-row,
+  .drug-period-group {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 </style>
