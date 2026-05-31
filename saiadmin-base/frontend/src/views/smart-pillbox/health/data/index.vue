@@ -47,6 +47,10 @@
           </sa-table>
         </a-tab-pane>
 
+        <a-tab-pane key="disease" title="基础疾病">
+          <a-table row-key="id" :data="diseaseRows" :columns="diseaseColumns" :loading="loading" :pagination="false" :scroll="{ x: 860 }" />
+        </a-tab-pane>
+
         <a-tab-pane key="shortage" title="缺药上报">
           <div class="smart-toolbar smart-row is-between smart-block-gap-sm">
             <a-space wrap>
@@ -170,7 +174,7 @@ import { onMounted, reactive, ref, watch } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { healthApi, patientApi, shortageApi } from '@/views/plugin/smart-pillbox/api/doctor'
-import { formatDateTime, getPayload, getRecords, pickQueryValue, statusColor } from '@/views/smart-pillbox/utils'
+import { formatDateTime, getPayload, getRecords, pickQueryValue, statusColor, unwrapAllergyNames } from '@/views/smart-pillbox/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -180,6 +184,7 @@ const crudRef = ref()
 const records = ref([])
 const shortageReports = ref([])
 const patientOptions = ref([])
+const diseaseRows = ref([])
 const activeTab = ref(String(pickQueryValue(route.query.tab)) || 'health')
 const shortageKeyword = ref('')
 const shortageStatus = ref('')
@@ -224,6 +229,23 @@ const columns = reactive([
   { title: '响应状态', dataIndex: 'responded', width: 110 },
   { title: '数据来源', dataIndex: 'source', width: 120 }
 ])
+const diseaseColumns = reactive([
+  { title: '患者', dataIndex: 'name', width: 130 },
+  { title: '患者编号', dataIndex: 'recordNo', width: 150 },
+  { title: '慢病史', dataIndex: 'diseases' },
+  { title: '过敏史', dataIndex: 'allergies' }
+])
+const formatTagText = (value) => {
+  if (Array.isArray(value)) return value.length ? value.join('、') : '-'
+  return value || '-'
+}
+const mapDiseaseRows = (patients) => patients.map((patient) => ({
+  id: patient.id,
+  name: patient.name,
+  recordNo: patient.recordNo,
+  diseases: formatTagText(patient.diseases),
+  allergies: formatTagText(unwrapAllergyNames(patient.allergies))
+}))
 
 async function loadData(params = {}) {
   loading.value = true
@@ -254,6 +276,7 @@ const loadShortageReports = async () => {
 const loadPatients = async () => {
   const response = await patientApi.list({ page: 1, limit: 100 })
   patientOptions.value = getRecords(response)
+  diseaseRows.value = mapDiseaseRows(patientOptions.value)
 }
 const syncPatientToForm = (id, target) => {
   const patient = patientOptions.value.find((item) => String(item.id) === String(id))
@@ -272,7 +295,12 @@ const refreshData = async () => {
   if (activeTab.value === 'health') {
     crudRef.value?.refresh()
   }
-  await loadShortageReports()
+  if (activeTab.value === 'disease') {
+    await loadPatients()
+  }
+  if (activeTab.value === 'shortage') {
+    await loadShortageReports()
+  }
 }
 const openHealthDialog = () => {
   Object.assign(healthForm, {

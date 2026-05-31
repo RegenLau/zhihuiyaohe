@@ -7,18 +7,7 @@
           <a-card :bordered="false">
             <div class="detail-hero">
               <div>
-                <h3>{{ patient.name }} · {{ patient.recordNo }}</h3>
-                <p class="smart-muted" style="margin: 6px 0 0">
-                  {{ patient.gender }} · {{ patient.age }} 岁 · {{ patient.phone }} ·
-                  {{ patient.managementPharmacist || '未分配药师' }}
-                </p>
-                <div class="chip-row" style="margin-top: 12px">
-                  <a-tag :color="statusColor(patient.deviceStatus)">{{ patient.deviceStatus }}</a-tag>
-                  <a-tag :color="patient.status === '重点关注' ? 'orange' : 'green'">
-                    {{ patient.status || '正常管理' }}
-                  </a-tag>
-                  <a-tag :color="patient.consent === '已同意' ? 'green' : 'orange'">{{ patient.consent || '未确认同意' }}</a-tag>
-                </div>
+                <h3>{{ patient.name }} · {{ patient.gender || '-' }} · {{ patient.age ?? '-' }} 岁</h3>
               </div>
               <div class="detail-action-stack">
                 <a-space wrap>
@@ -49,7 +38,7 @@
           <div class="ma-content-block p-3">
           <a-card :bordered="false">
             <a-tabs v-model:active-key="activeTab">
-              <a-tab-pane key="basic" title="核心信息">
+              <a-tab-pane key="basic" title="基本信息">
                 <a-form v-if="isEditing" :model="basicForm" layout="vertical">
                   <a-row :gutter="16">
                     <a-col :xs="24" :md="12"><a-form-item label="患者姓名"><a-input v-model="basicForm.name" placeholder="请输入患者姓名" /></a-form-item></a-col>
@@ -71,46 +60,39 @@
                   </div>
                 </a-form>
                 <div v-else class="detail-basic-stack">
-                  <div class="tab-toolbar">
-                    <div>
-                      <h4>档案信息</h4>
-                      <p>保留患者识别、药盒绑定和管理状态。</p>
-                    </div>
-                  </div>
                   <a-descriptions :column="2" bordered>
-                    <a-descriptions-item label="出生年月">{{ patient.birthDate || '-' }}</a-descriptions-item>
+                    <a-descriptions-item label="姓名">{{ patient.name || '-' }}</a-descriptions-item>
+                    <a-descriptions-item label="手机号">{{ patient.phone || '-' }}</a-descriptions-item>
+                    <a-descriptions-item label="性别">{{ patient.gender || '-' }}</a-descriptions-item>
                     <a-descriptions-item label="管理药师">{{ patient.managementPharmacist || '-' }}</a-descriptions-item>
+                    <a-descriptions-item label="出生年月日">{{ patient.birthDate || '-' }}</a-descriptions-item>
+                    <a-descriptions-item label="患者编号">{{ patient.recordNo || '-' }}</a-descriptions-item>
                     <a-descriptions-item label="药盒设备">
                       <a-link v-if="canOpenDeviceRecord" @click="openDeviceRecord">{{ patient.deviceNo }}</a-link>
                       <template v-else>{{ patient.deviceNo || '-' }}</template>
                     </a-descriptions-item>
                     <a-descriptions-item label="设备状态"><a-tag :color="statusColor(patient.deviceStatus)">{{ patient.deviceStatus }}</a-tag></a-descriptions-item>
                     <a-descriptions-item label="知情同意"><a-tag :color="patient.consent === '已同意' ? 'green' : 'orange'">{{ patient.consent || '未同意' }}</a-tag></a-descriptions-item>
+                    <a-descriptions-item label="管理状态"><a-tag :color="patient.status === '重点关注' ? 'orange' : 'green'">{{ patient.status || '正常管理' }}</a-tag></a-descriptions-item>
+                    <a-descriptions-item label="建档时间">{{ patient.createdAt || '-' }}</a-descriptions-item>
+                    <a-descriptions-item label="更新时间">{{ patient.updatedAt || '-' }}</a-descriptions-item>
                     <a-descriptions-item label="最近互动">{{ patient.recentInteraction || '-' }}</a-descriptions-item>
                   </a-descriptions>
-                  <a-divider />
-                  <div class="tab-toolbar">
-                    <div>
-                      <h4>健康背景</h4>
-                      <p>只展示影响用药判断的基础信息。</p>
-                    </div>
-                  </div>
+                </div>
+              </a-tab-pane>
+
+              <a-tab-pane key="family" title="家属信息">
+                <div class="detail-basic-stack">
                   <a-descriptions :column="2" bordered>
-                    <a-descriptions-item label="慢病史">
-                      <a-space direction="vertical" fill :size="0">
-                        <div v-if="patient.diseases?.length" class="chip-row">
-                          <a-tag v-for="item in patient.diseases" :key="item">{{ item }}</a-tag>
-                        </div>
-                        <a-typography-text v-else type="secondary">暂无慢病史记录</a-typography-text>
+                    <a-descriptions-item label="家属绑定状态"><a-tag :color="isChildBound ? 'green' : 'orange'">{{ patient.child || '未绑定' }}</a-tag></a-descriptions-item>
+                    <a-descriptions-item label="联系人数量">{{ patient.contacts?.length || 0 }} 人</a-descriptions-item>
+                    <a-descriptions-item label="家属联系人">
+                      <a-space v-if="patient.contacts?.length" direction="vertical" fill :size="0">
+                        <span v-for="contact in patient.contacts" :key="contact.id || `${contact.relation}-${contact.phone}`">
+                          {{ contact.relation || '-' }} {{ contact.name || '-' }} {{ contact.phone || '-' }}
+                        </span>
                       </a-space>
-                    </a-descriptions-item>
-                    <a-descriptions-item label="过敏史">
-                      <a-space direction="vertical" fill :size="0">
-                        <div v-if="displayAllergyNames.length" class="chip-row">
-                          <a-tag v-for="item in displayAllergyNames" :key="item">{{ item }}</a-tag>
-                        </div>
-                        <a-typography-text v-else type="secondary">暂无过敏史记录</a-typography-text>
-                      </a-space>
+                      <template v-else>-</template>
                     </a-descriptions-item>
                   </a-descriptions>
                 </div>
@@ -155,91 +137,6 @@
                 </div>
               </a-tab-pane>
 
-              <a-tab-pane key="reports" title="上报信息">
-                <div class="health-tab-pane">
-                  <div class="tab-toolbar">
-                    <div>
-                      <h4>健康数据</h4>
-                      <p>展示最近上报数据，异常处理进入健康数据页。</p>
-                    </div>
-                    <a-button size="small" @click="router.push(`/doctor/health-data?patientId=${patient.id}`)">
-                      查看全部
-                    </a-button>
-                  </div>
-                  <a-descriptions :column="4" bordered>
-                    <a-descriptions-item label="平均血压">{{ averageBloodPressure }}</a-descriptions-item>
-                    <a-descriptions-item label="平均空腹血糖">{{ averageGlucose }}</a-descriptions-item>
-                    <a-descriptions-item label="响应率">{{ healthSummary.complianceRate ?? 0 }}%</a-descriptions-item>
-                    <a-descriptions-item label="趋势">{{ healthTrendText }}</a-descriptions-item>
-                  </a-descriptions>
-                  <a-table
-                    v-if="healthRecords.length"
-                    row-key="id"
-                    :data="healthRecords"
-                    :pagination="false"
-                    size="small"
-                    :scroll="{ x: 640 }"
-                    bordered
-                  >
-                    <template #columns>
-                      <a-table-column title="日期" data-index="date" :width="120" />
-                      <a-table-column title="晨间血压" data-index="morningBP" :width="120">
-                        <template #cell="{ record }">{{ record.morningBP || '未上报' }}</template>
-                      </a-table-column>
-                      <a-table-column title="晚间血压" data-index="eveningBP" :width="120">
-                        <template #cell="{ record }">{{ record.eveningBP || '未上报' }}</template>
-                      </a-table-column>
-                      <a-table-column title="空腹血糖" data-index="fastingGlucose" :width="130">
-                        <template #cell="{ record }">{{ formatGlucose(record.fastingGlucose) }}</template>
-                      </a-table-column>
-                      <a-table-column title="风险" data-index="riskLevel" :width="100">
-                        <template #cell="{ record }"><a-tag :color="statusColor(record.riskLevel)">{{ record.riskLevel }}</a-tag></template>
-                      </a-table-column>
-                      <a-table-column title="备注" data-index="note" />
-                    </template>
-                  </a-table>
-                  <a-empty v-else description="暂无健康数据" />
-                </div>
-
-                <a-divider />
-
-                <div class="tab-toolbar">
-                  <div>
-                    <h4>缺药上报</h4>
-                    <p>展示最近补药风险，处理明细进入缺药上报页。</p>
-                  </div>
-                  <a-button size="small" @click="router.push(`/doctor/health-data?tab=shortage&patientId=${patient.id}`)">查看全部</a-button>
-                </div>
-                <a-table row-key="id" :data="shortageRecords" :pagination="false" :scroll="{ x: 680 }" bordered>
-                  <template #columns>
-                    <a-table-column title="药品" data-index="medicine" />
-                    <a-table-column title="剩余量" data-index="remainingAmount" :width="110" />
-                    <a-table-column title="预计可用" data-index="expectedDays" :width="110">
-                      <template #cell="{ record }">{{ record.expectedDays }} 天</template>
-                    </a-table-column>
-                    <a-table-column title="来源" data-index="source" :width="130" />
-                    <a-table-column title="状态" data-index="status" :width="100">
-                      <template #cell="{ record }"><a-tag :color="statusColor(record.status)">{{ record.status }}</a-tag></template>
-                    </a-table-column>
-                    <a-table-column title="处理结果" data-index="result" />
-                  </template>
-                </a-table>
-
-                <a-divider />
-
-                <div class="tab-toolbar">
-                  <div>
-                    <h4>知情同意</h4>
-                    <p>只展示最近一次确认信息，完整记录在系统设置查看。</p>
-                  </div>
-                </div>
-                <a-descriptions :column="4" bordered>
-                  <a-descriptions-item label="当前状态"><a-tag :color="patient.consent === '已同意' ? 'green' : 'orange'">{{ patient.consent || '未同意' }}</a-tag></a-descriptions-item>
-                  <a-descriptions-item label="协议版本">{{ latestConsentRecord.version || '-' }}</a-descriptions-item>
-                  <a-descriptions-item label="确认时间">{{ latestConsentRecord.confirmTime || '-' }}</a-descriptions-item>
-                  <a-descriptions-item label="确认端">{{ latestConsentRecord.confirmTerminal || '-' }}</a-descriptions-item>
-                </a-descriptions>
-              </a-tab-pane>
             </a-tabs>
           </a-card>
           </div>
@@ -254,8 +151,8 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { useRoute, useRouter } from 'vue-router'
-import { healthApi, patientApi, settingsApi, shortageApi } from '@/views/plugin/smart-pillbox/api/doctor'
-import { calculateAge, formatDateTime, getPayload, getRecords, pickQueryValue, statusColor, unwrapAllergyNames } from '@/views/smart-pillbox/utils'
+import { patientApi } from '@/views/plugin/smart-pillbox/api/doctor'
+import { calculateAge, formatDateTime, getPayload, getRecords, isBoundValue, pickQueryValue, statusColor } from '@/views/smart-pillbox/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -266,10 +163,6 @@ const activeTab = ref('basic')
 const isEditing = ref(false)
 const patient = reactive({})
 const medicineRecords = ref([])
-const healthSummary = reactive({})
-const healthRecords = ref([])
-const shortageRecords = ref([])
-const consentRecords = ref([])
 
 const basicForm = reactive({ name: '', phone: '', gender: '男', birthDate: '', managementPharmacist: '' })
 
@@ -284,21 +177,8 @@ const taskRiskTagColor = computed(() => {
   if (value.includes('无计划')) return 'orange'
   return statusColor(value)
 })
-const displayAllergyNames = computed(() => unwrapAllergyNames(patient.allergies || []))
-const latestConsentRecord = computed(() => consentRecords.value[0] || {})
 const canOpenDeviceRecord = computed(() => Boolean(patient.deviceNo && !['-', '未绑定'].includes(String(patient.deviceNo))))
-const averageBloodPressure = computed(() => {
-  return healthSummary.avgSystolic ? `${healthSummary.avgSystolic}/${healthSummary.avgDiastolic}` : '-'
-})
-const averageGlucose = computed(() => (healthSummary.avgGlucose ? `${healthSummary.avgGlucose} mmol/L` : '-'))
-const healthTrendText = computed(() => {
-  const bpTrend = Number(healthSummary.systolicTrend || 0)
-  const glucoseTrend = Number(healthSummary.glucoseTrend || 0)
-  const bpText = bpTrend > 0 ? `收缩压 +${bpTrend}` : `收缩压 ${bpTrend}`
-  const glucoseText = glucoseTrend > 0 ? `血糖 +${glucoseTrend}` : `血糖 ${glucoseTrend}`
-  return `${bpText}，${glucoseText}`
-})
-const formatGlucose = (value) => (typeof value === 'number' ? `${value} mmol/L` : '未上报')
+const isChildBound = computed(() => isBoundValue(patient.child))
 
 const syncEditForms = () => {
   Object.assign(basicForm, {
@@ -356,32 +236,19 @@ const loadAll = async () => {
   if (!patientId.value) {
     Object.keys(patient).forEach((key) => delete patient[key])
     medicineRecords.value = []
-    Object.keys(healthSummary).forEach((key) => delete healthSummary[key])
-    healthRecords.value = []
-    shortageRecords.value = []
-    consentRecords.value = []
     isEditing.value = false
     syncEditForms()
     return
   }
   loading.value = true
   try {
-    const [patientResponse, recordsResponse, healthSummaryResponse, healthRecordsResponse, shortageResponse, consentResponse] = await Promise.all([
+    const [patientResponse, recordsResponse] = await Promise.all([
       patientApi.read(patientId.value),
-      patientApi.medicineRecords(patientId.value),
-      healthApi.summary(patientId.value),
-      healthApi.list({ patientId: patientId.value, page: 1, limit: 3 }),
-      shortageApi.list({ patientId: patientId.value, page: 1, limit: 5 }),
-      settingsApi.consentRecords({ patientId: patientId.value, page: 1, limit: 5 })
+      patientApi.medicineRecords(patientId.value)
     ])
     Object.keys(patient).forEach((key) => delete patient[key])
     Object.assign(patient, getPayload(patientResponse))
     medicineRecords.value = getRecords(recordsResponse)
-    Object.keys(healthSummary).forEach((key) => delete healthSummary[key])
-    Object.assign(healthSummary, getPayload(healthSummaryResponse))
-    healthRecords.value = getRecords(healthRecordsResponse)
-    shortageRecords.value = getRecords(shortageResponse)
-    consentRecords.value = getRecords(consentResponse)
     syncEditForms()
     isEditing.value = false
   } finally {
