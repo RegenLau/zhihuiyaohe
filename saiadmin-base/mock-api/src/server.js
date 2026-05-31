@@ -61,6 +61,12 @@ const includesKeyword = (keyword, values) => {
   return values.some((value) => String(value ?? '').includes(String(keyword)))
 }
 
+const shortageStatusType = (status) => {
+  if (status === '已处理') return 'success'
+  if (status === '处理中') return 'warning'
+  return 'danger'
+}
+
 const isBoundValue = (value) => Boolean(value && !['待绑定', '未绑定'].includes(String(value)))
 
 const matchesBindStatus = (value, bindStatus) => {
@@ -469,7 +475,7 @@ app.get('/app/smart-pillbox/admin/doctor/health/list', (req, res) => {
   const { patientId, keyword, riskLevel } = req.query
   const records = healthRecords.filter((item) => {
     const patientMatched = !patientId || String(item.patientId) === String(patientId)
-    const keywordMatched = includesKeyword(keyword, [item.patient, item.source])
+    const keywordMatched = includesKeyword(keyword, [item.patient])
     const riskMatched = !riskLevel || item.riskLevel === riskLevel
     return patientMatched && keywordMatched && riskMatched
   })
@@ -495,7 +501,7 @@ app.delete('/app/smart-pillbox/admin/doctor/health/delete', (req, res) => {
 })
 
 app.get('/app/smart-pillbox/admin/doctor/shortage/list', (req, res) => {
-  const records = listByQuery(shortageReports, req.query, ['patient', 'medicine', 'source', 'result'])
+  const records = listByQuery(shortageReports, req.query, ['patient', 'medicine', 'source', 'triggerScene', 'result'])
   res.json(ok(paginate(records, req.query)))
 })
 
@@ -509,9 +515,12 @@ app.post('/app/smart-pillbox/admin/doctor/shortage/save', (req, res) => {
     ok(
       saveRecord(shortageReports, {
         patient: patient?.name || req.body.patient || '-',
-        status: '待处理',
-        statusType: 'danger',
+        source: '后台创建',
+        triggerScene: '后台补录',
+        status: req.body.status || '待处理',
+        statusType: shortageStatusType(req.body.status || '待处理'),
         reportTime: formatNow(),
+        handler: req.body.status === '待处理' ? '' : req.body.handler || '医药师',
         ...req.body
       }),
       'saved'

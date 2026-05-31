@@ -572,12 +572,14 @@ export const shortageReports = [
     medicine: '阿托伐他汀钙片',
     remainingAmount: '5片',
     expectedDays: 5,
-    source: '药盒余量上报',
+    source: '药盒',
+    triggerScene: '余药不足',
     status: '待处理',
     statusType: 'danger',
     reportTime: '2026-05-21 10:42',
     handler: '',
-    result: '建议创建复诊提醒并确认是否需要补药'
+    handledAt: '',
+    result: '建议确认余药量并记录补药安排'
   },
   {
     id: 2,
@@ -586,12 +588,14 @@ export const shortageReports = [
     medicine: '二甲双胍缓释片',
     remainingAmount: '12片',
     expectedDays: 6,
-    source: '子女小程序',
+    source: '家属端',
+    triggerScene: '家属代报',
     status: '处理中',
     statusType: 'warning',
     reportTime: '2026-05-21 13:10',
     handler: '刘药师',
-    result: '已提醒家属复诊补药'
+    handledAt: '',
+    result: '已联系家属确认补药安排'
   },
   {
     id: 3,
@@ -600,12 +604,30 @@ export const shortageReports = [
     medicine: '苯磺酸氨氯地平片',
     remainingAmount: '18片',
     expectedDays: 18,
-    source: '患者小程序',
+    source: '患者端',
+    triggerScene: '患者主动上报',
     status: '已处理',
     statusType: 'success',
     reportTime: '2026-05-20 16:28',
     handler: '张药师',
+    handledAt: '2026-05-20 17:02',
     result: '暂不需要补药，继续观察余量'
+  },
+  {
+    id: 4,
+    patientId: 2,
+    patient: '张建国',
+    medicine: '缬沙坦胶囊',
+    remainingAmount: '8粒',
+    expectedDays: 4,
+    source: '后台创建',
+    triggerScene: '后台补录',
+    status: '待处理',
+    statusType: 'danger',
+    reportTime: '2026-05-21 15:30',
+    handler: '',
+    handledAt: '',
+    result: '电话随访发现余药不足，待确认补药方式'
   }
 ]
 

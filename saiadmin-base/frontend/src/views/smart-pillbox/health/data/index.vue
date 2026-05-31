@@ -11,13 +11,8 @@
             @resetSearch="handleResetSearch">
             <template #tableSearch>
               <a-col :xs="24" :md="7">
-                <a-form-item field="keyword" label="关键词">
-                  <a-input v-model="searchForm.keyword" placeholder="关键词：患者姓名或来源" allow-clear />
-                </a-form-item>
-              </a-col>
-              <a-col :xs="24" :md="6">
-                <a-form-item field="patientId" label="患者 ID">
-                  <a-input v-model="searchForm.patientId" placeholder="患者 ID" allow-clear />
+                <a-form-item field="keyword" label="患者姓名">
+                  <a-input v-model="searchForm.keyword" placeholder="请输入患者姓名" allow-clear />
                 </a-form-item>
               </a-col>
             </template>
@@ -49,15 +44,6 @@
             <template #responded="{ record }">
               <a-tag :color="record.responded ? 'green' : 'red'">{{ record.responded ? '已响应' : '未响应' }}</a-tag>
             </template>
-            <template #operationCell="{ record }">
-              <a-space size="mini">
-                <a-tooltip content="患者详情">
-                  <a-button size="mini" @click="router.push(`/doctor/patient-detail?patientId=${record.patientId}`)">
-                    <template #icon><sa-icon icon="ri:eye-line" :size="14" /></template>
-                  </a-button>
-                </a-tooltip>
-              </a-space>
-            </template>
           </sa-table>
         </a-tab-pane>
 
@@ -72,10 +58,6 @@
               </a-select>
             </a-space>
             <a-space wrap>
-              <a-button type="primary" @click="openShortageDialog">
-                <template #icon><sa-icon icon="ri:add-line" :size="16" /></template>
-                新增缺药上报
-              </a-button>
               <a-button :loading="shortageLoading" @click="loadShortageReports">
                 <template #icon><sa-icon icon="ri:refresh-line" :size="16" /></template>
                 刷新
@@ -83,28 +65,32 @@
             </a-space>
           </div>
 
-          <a-table row-key="id" :data="shortageReports" :loading="shortageLoading" :pagination="false" :scroll="{ x: 980 }" class="smart-block-gap-sm">
+          <a-table row-key="id" :data="shortageReports" :loading="shortageLoading" :pagination="false" :scroll="{ x: 1160 }" class="smart-block-gap-sm">
             <template #columns>
-              <a-table-column title="患者" data-index="patient" :width="120">
+              <a-table-column title="患者" data-index="patient" :width="110">
                 <template #cell="{ record }">
                   <a-link @click="router.push(`/doctor/patient-detail?patientId=${record.patientId}`)">{{ record.patient }}</a-link>
                 </template>
               </a-table-column>
-              <a-table-column title="药品" data-index="medicine" :width="180" />
-              <a-table-column title="剩余量" data-index="remainingAmount" :width="110" />
-              <a-table-column title="预计可用" data-index="expectedDays" :width="110">
+              <a-table-column title="药品" data-index="medicine" :width="170" />
+              <a-table-column title="剩余量" data-index="remainingAmount" :width="90" />
+              <a-table-column title="预计可用天数" data-index="expectedDays" :width="120">
                 <template #cell="{ record }">{{ record.expectedDays }} 天</template>
               </a-table-column>
-              <a-table-column title="来源" data-index="source" :width="140" />
-              <a-table-column title="状态" data-index="status" :width="110">
+              <a-table-column title="上报来源" data-index="source" :width="100" />
+              <a-table-column title="上报时间" data-index="reportTime" :width="150" />
+              <a-table-column title="处理状态" data-index="status" :width="100">
                 <template #cell="{ record }"><a-tag :color="statusColor(record.status)">{{ record.status }}</a-tag></template>
               </a-table-column>
-              <a-table-column title="处理结果" data-index="result" />
-              <a-table-column title="操作" :width="190">
+              <a-table-column title="处理人" data-index="handler" :width="90">
+                <template #cell="{ record }">{{ record.handler || '-' }}</template>
+              </a-table-column>
+              <a-table-column title="操作" :width="90">
                 <template #cell="{ record }">
                   <a-space size="mini">
-                    <a-button size="mini" type="primary" :disabled="record.status === '已处理'" @click="markShortageHandled(record)">处理</a-button>
-                    <a-button size="mini" @click="router.push(`/doctor/plans?patientId=${record.patientId}`)">计划</a-button>
+                    <a-button size="mini" :type="record.status === '已处理' ? 'text' : 'primary'" @click="openShortageProcessDialog(record)">
+                      {{ record.status === '已处理' ? '查看' : '处理' }}
+                    </a-button>
                   </a-space>
                 </template>
               </a-table-column>
@@ -144,25 +130,37 @@
       </a-form>
     </a-modal>
 
-    <a-modal v-model:visible="shortageDialogVisible" title="新增缺药上报" width="min(720px, calc(100vw - 32px))" @ok="saveShortageReport">
-      <a-form :model="shortageForm" layout="vertical">
+    <a-modal v-model:visible="shortageProcessDialogVisible" :title="shortageProcessReadonly ? '缺药上报详情' : '处理缺药上报'" width="min(720px, calc(100vw - 32px))">
+      <a-descriptions :column="2" bordered>
+        <a-descriptions-item label="患者">{{ currentShortage.patient }}</a-descriptions-item>
+        <a-descriptions-item label="药品">{{ currentShortage.medicine }}</a-descriptions-item>
+        <a-descriptions-item label="剩余量">{{ currentShortage.remainingAmount || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="预计可用">{{ currentShortage.expectedDays }} 天</a-descriptions-item>
+        <a-descriptions-item label="上报来源">{{ currentShortage.source }}</a-descriptions-item>
+        <a-descriptions-item label="触发场景">{{ currentShortage.triggerScene }}</a-descriptions-item>
+        <a-descriptions-item label="上报时间">{{ currentShortage.reportTime || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="处理人">{{ currentShortage.handler || '-' }}</a-descriptions-item>
+      </a-descriptions>
+      <a-form :model="shortageProcessForm" layout="vertical" style="margin-top: 16px">
         <a-row :gutter="16">
           <a-col :xs="24" :md="12">
-            <a-form-item label="患者" required>
-              <a-select v-model="shortageForm.patientId" placeholder="请选择患者" allow-search @change="syncShortagePatient">
-                <a-option v-for="patient in patientOptions" :key="patient.id" :value="String(patient.id)">
-                  {{ patient.name }} · {{ patient.recordNo }}
-                </a-option>
+            <a-form-item label="处理状态">
+              <a-select v-model="shortageProcessForm.status" :disabled="shortageProcessReadonly">
+                <a-option v-for="item in shortageStatusOptions" :key="item" :value="item">{{ item }}</a-option>
               </a-select>
             </a-form-item>
           </a-col>
-          <a-col :xs="24" :md="12"><a-form-item label="药品名称" required><a-input v-model="shortageForm.medicine" placeholder="请输入药品名称" /></a-form-item></a-col>
-          <a-col :xs="24" :md="12"><a-form-item label="剩余量"><a-input v-model="shortageForm.remainingAmount" placeholder="如 5片" /></a-form-item></a-col>
-          <a-col :xs="24" :md="12"><a-form-item label="预计可用天数"><a-input-number v-model="shortageForm.expectedDays" style="width: 100%" /></a-form-item></a-col>
-          <a-col :xs="24" :md="12"><a-form-item label="来源"><a-select v-model="shortageForm.source"><a-option value="药盒余量上报">药盒余量上报</a-option><a-option value="患者小程序">患者小程序</a-option><a-option value="子女小程序">子女小程序</a-option><a-option value="后台录入">后台录入</a-option></a-select></a-form-item></a-col>
-          <a-col :span="24"><a-form-item label="处理建议"><a-textarea v-model="shortageForm.result" placeholder="请输入建议或处理结果" /></a-form-item></a-col>
+          <a-col :span="24">
+            <a-form-item label="处理结果">
+              <a-textarea v-model="shortageProcessForm.result" :disabled="shortageProcessReadonly" placeholder="请输入处理结果" :auto-size="{ minRows: 3, maxRows: 5 }" />
+            </a-form-item>
+          </a-col>
         </a-row>
       </a-form>
+      <template #footer>
+        <a-button @click="shortageProcessDialogVisible = false">{{ shortageProcessReadonly ? '关闭' : '取消' }}</a-button>
+        <a-button v-if="!shortageProcessReadonly" type="primary" @click="saveShortageProcess">保存</a-button>
+      </template>
     </a-modal>
   </div>
 </template>
@@ -172,7 +170,7 @@ import { onMounted, reactive, ref, watch } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { healthApi, patientApi, shortageApi } from '@/views/plugin/smart-pillbox/api/doctor'
-import { getPayload, getRecords, pickQueryValue, statusColor } from '@/views/smart-pillbox/utils'
+import { formatDateTime, getPayload, getRecords, pickQueryValue, statusColor } from '@/views/smart-pillbox/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -186,7 +184,9 @@ const activeTab = ref(String(pickQueryValue(route.query.tab)) || 'health')
 const shortageKeyword = ref('')
 const shortageStatus = ref('')
 const healthDialogVisible = ref(false)
-const shortageDialogVisible = ref(false)
+const shortageProcessDialogVisible = ref(false)
+const shortageProcessReadonly = ref(false)
+const shortageStatusOptions = ['待处理', '处理中', '已处理']
 
 const searchForm = reactive({ keyword: '', patientId: String(pickQueryValue(route.query.patientId)) })
 const healthForm = reactive({
@@ -199,13 +199,9 @@ const healthForm = reactive({
   responded: true,
   source: '后台创建'
 })
-const shortageForm = reactive({
-  patientId: '',
-  patient: '',
-  medicine: '',
-  remainingAmount: '',
-  expectedDays: 7,
-  source: '后台录入',
+const currentShortage = reactive({})
+const shortageProcessForm = reactive({
+  status: '处理中',
   result: ''
 })
 
@@ -214,9 +210,7 @@ const tableOptions = reactive({
   pageLayout: 'normal',
   showTools: true,
   showIndex: false,
-  operationColumn: true,
-  operationColumnText: '操作',
-  operationColumnWidth: 88,
+  operationColumn: false,
   operationColumnFixed: false,
   add: { show: false },
   edit: { show: false },
@@ -266,7 +260,11 @@ const syncPatientToForm = (id, target) => {
   target.patient = patient?.name || ''
 }
 const syncHealthPatient = (id) => syncPatientToForm(id, healthForm)
-const syncShortagePatient = (id) => syncPatientToForm(id, shortageForm)
+const shortageStatusType = (status) => {
+  if (status === '已处理') return 'success'
+  if (status === '处理中') return 'warning'
+  return 'danger'
+}
 const handleResetSearch = () => {
   Object.assign(searchForm, { keyword: '', patientId: '' })
 }
@@ -300,32 +298,30 @@ const saveHealthReport = async () => {
   healthDialogVisible.value = false
   refreshData()
 }
-const openShortageDialog = () => {
-  Object.assign(shortageForm, {
-    patientId: searchForm.patientId || '',
-    patient: '',
-    medicine: '',
-    remainingAmount: '',
-    expectedDays: 7,
-    source: '后台录入',
-    result: '建议确认余药量并创建补药或复诊提醒'
+const openShortageProcessDialog = (record) => {
+  Object.assign(currentShortage, record)
+  Object.assign(shortageProcessForm, {
+    status: record.status === '待处理' ? '处理中' : record.status,
+    result: record.result || ''
   })
-  syncShortagePatient(shortageForm.patientId)
-  shortageDialogVisible.value = true
+  shortageProcessReadonly.value = record.status === '已处理'
+  shortageProcessDialogVisible.value = true
 }
-const saveShortageReport = async () => {
-  if (!shortageForm.patientId || !shortageForm.patient || !shortageForm.medicine) {
-    Message.warning('请填写患者和药品信息')
+const saveShortageProcess = async () => {
+  if (!shortageProcessForm.result) {
+    Message.warning('请输入处理结果')
     return false
   }
-  await shortageApi.save({ ...shortageForm })
-  Message.success('缺药上报已新增')
-  shortageDialogVisible.value = false
-  await loadShortageReports()
-}
-const markShortageHandled = async (record) => {
-  await shortageApi.update({ ...record, status: '已处理', statusType: 'success', handler: '医药师', result: record.result || '已完成补药提醒处理' })
-  Message.success('缺药上报已处理')
+  await shortageApi.update({
+    ...currentShortage,
+    status: shortageProcessForm.status,
+    statusType: shortageStatusType(shortageProcessForm.status),
+    handler: '医药师',
+    handledAt: shortageProcessForm.status === '已处理' ? formatDateTime() : currentShortage.handledAt || '',
+    result: shortageProcessForm.result
+  })
+  Message.success('缺药上报已保存')
+  shortageProcessDialogVisible.value = false
   await loadShortageReports()
 }
 watch(
