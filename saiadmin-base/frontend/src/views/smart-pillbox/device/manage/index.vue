@@ -56,7 +56,7 @@
           <div class="device-card-header">
             <span class="device-card-title">
               <span class="smart-muted">设备编号：</span>
-              <a-link class="device-card-sn" @click="openEditDialog(device)">{{ device.sn }}</a-link>
+              <span class="device-card-sn">{{ device.sn }}</span>
             </span>
             <a-tag :color="statusColor(device.status)" class="device-card-status">{{ device.status }}</a-tag>
           </div>
@@ -530,6 +530,7 @@ onMounted(async () => {
   display: inline-block;
   font-size: 14px;
   line-height: 1.4;
+  color: var(--color-text-1);
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: bottom;
