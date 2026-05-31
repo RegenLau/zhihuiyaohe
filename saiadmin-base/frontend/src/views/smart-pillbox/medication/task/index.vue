@@ -134,86 +134,96 @@
                   <a-button type="primary" @click="openCreatePlan">创建计划</a-button>
                 </a-empty>
 
-                <a-tabs v-else v-model:active-key="activePlanId" class="smart-block-gap-sm">
-                  <a-tab-pane v-for="plan in plans" :key="String(plan.id)" :title="plan.title">
-                    <div class="plan-overview">
-                      <div class="plan-overview-grid">
-                        <div class="plan-overview-item">
-                          <span class="smart-muted">计划周期</span>
-                          <strong>{{ plan.period }}</strong>
-                        </div>
-                        <div class="plan-overview-item">
-                          <span class="smart-muted">药品数量</span>
-                          <strong>{{ plan.drugs?.length || 0 }} 种</strong>
-                        </div>
-                        <div class="plan-overview-item">
-                          <span class="smart-muted">提醒次数</span>
-                          <strong>{{ getPlanReminderCount(plan) }} 个</strong>
-                        </div>
-                        <div class="plan-overview-item">
-                          <span class="smart-muted">计划状态</span>
-                          <a-space size="mini" wrap>
-                            <a-tag :color="statusColor(plan.status)">{{ plan.status }}</a-tag>
-                            <a-tag>{{ plan.dispatchStatus }}</a-tag>
-                            <a-tag>{{ plan.generatedTasks }}</a-tag>
-                          </a-space>
-                        </div>
-                      </div>
-                      <a-space class="plan-overview-actions" wrap>
-                        <a-button type="primary" @click="openDrugDialog(plan)">
-                          <template #icon><sa-icon icon="ri:add-line" :size="16" /></template>
-                          新增药品
-                        </a-button>
-                        <a-button :disabled="!plan.drugs?.length || plan.status === '已停用'" @click="dispatchPlan(plan)">
-                          <template #icon><sa-icon icon="ri:send-plane-line" :size="16" /></template>
-                          下发药盒
-                        </a-button>
-                        <a-popconfirm content="确定停用该计划吗？" @ok="stopPlan(plan)">
-                          <a-button status="danger" :disabled="plan.status === '已停用'">
-                            <template #icon><sa-icon icon="ri:pause-circle-line" :size="16" /></template>
-                            停用
-                          </a-button>
-                        </a-popconfirm>
+                <div v-else class="plan-card-grid smart-block-gap-sm">
+                  <a-card v-for="plan in plans" :key="plan.id" class="plan-card" :bordered="true" hoverable @click="openPlanDetail(plan)">
+                    <div class="plan-card-head">
+                      <a-typography-text bold>{{ plan.title }}</a-typography-text>
+                      <a-space size="mini" wrap>
+                        <a-tag :color="statusColor(plan.status)">{{ plan.status }}</a-tag>
+                        <a-tag>{{ plan.dispatchStatus }}</a-tag>
                       </a-space>
                     </div>
-
-                    <div class="plan-drug-header">
-                      <span>药品明细</span>
-                      <span class="smart-muted">长期方案调整后只影响后续任务</span>
+                    <div class="plan-card-meta">
+                      <div>
+                        <span class="smart-muted">计划周期</span>
+                        <strong>{{ plan.period }}</strong>
+                      </div>
+                      <div>
+                        <span class="smart-muted">药品数量</span>
+                        <strong>{{ plan.drugs?.length || 0 }} 种</strong>
+                      </div>
+                      <div>
+                        <span class="smart-muted">提醒次数</span>
+                        <strong>{{ getPlanReminderCount(plan) }} 个</strong>
+                      </div>
                     </div>
-                    <a-table row-key="name" :data="plan.drugs || []" :pagination="false" class="smart-block-gap-sm plan-drug-table" table-layout-fixed>
-                      <template #columns>
-                        <a-table-column title="药品" data-index="name">
-                          <template #cell="{ record }">
-                            {{ record.name }}
-                            <div v-if="drugMetaText(record)" class="smart-muted">{{ drugMetaText(record) }}</div>
-                          </template>
-                        </a-table-column>
-                        <a-table-column title="用法用量" :width="150">
-                          <template #cell="{ record }">{{ record.dose }} {{ record.frequency }}</template>
-                        </a-table-column>
-                        <a-table-column title="提醒时间" :width="190">
-                          <template #cell="{ record }">
-                            <a-space wrap size="mini">
-                              <a-tag v-for="node in getDrugReminderLabels(record)" :key="node" color="arcoblue">{{ node }}</a-tag>
-                            </a-space>
-                          </template>
-                        </a-table-column>
-                        <a-table-column title="操作" :width="88">
-                          <template #cell="{ record, rowIndex }">
-                            <a-button size="mini" type="primary" @click="openDrugDialog(plan, record, rowIndex)">编辑</a-button>
-                          </template>
-                        </a-table-column>
-                      </template>
-                    </a-table>
-                  </a-tab-pane>
-                </a-tabs>
+                    <div class="plan-card-foot">
+                      <span class="smart-muted">{{ plan.generatedTasks }}</span>
+                      <a-space size="mini" @click.stop>
+                        <a-button size="mini" type="primary" @click="openPlanDetail(plan)">查看详情</a-button>
+                        <a-button size="mini" :disabled="!plan.drugs?.length || plan.status === '已停用'" @click="dispatchPlan(plan)">下发药盒</a-button>
+                      </a-space>
+                    </div>
+                  </a-card>
+                </div>
               </a-tab-pane>
             </a-tabs>
           </a-card>
         </div>
       </div>
     </div>
+
+    <a-drawer v-model:visible="planDetailVisible" :title="currentPlan?.title || '用药计划详情'" width="min(860px, calc(100vw - 32px))" :footer="false" unmount-on-close>
+      <template v-if="currentPlan">
+        <div class="plan-drug-header">
+          <div>
+            <span>药品明细</span>
+            <div class="smart-muted">长期方案调整后只影响后续任务</div>
+          </div>
+          <a-space wrap>
+            <a-button type="primary" @click="openDrugDialog(currentPlan)">
+              <template #icon><sa-icon icon="ri:add-line" :size="16" /></template>
+              新增药品
+            </a-button>
+            <a-button :disabled="!currentPlan.drugs?.length || currentPlan.status === '已停用'" @click="dispatchPlan(currentPlan)">
+              <template #icon><sa-icon icon="ri:send-plane-line" :size="16" /></template>
+              下发药盒
+            </a-button>
+            <a-popconfirm content="确定停用该计划吗？" @ok="stopPlan(currentPlan)">
+              <a-button status="danger" :disabled="currentPlan.status === '已停用'">
+                <template #icon><sa-icon icon="ri:pause-circle-line" :size="16" /></template>
+                停用
+              </a-button>
+            </a-popconfirm>
+          </a-space>
+        </div>
+        <a-table row-key="name" :data="currentPlan.drugs || []" :pagination="false" class="smart-block-gap-sm plan-drug-table" table-layout-fixed>
+          <template #columns>
+            <a-table-column title="药品" data-index="name">
+              <template #cell="{ record }">
+                {{ record.name }}
+                <div v-if="drugMetaText(record)" class="smart-muted">{{ drugMetaText(record) }}</div>
+              </template>
+            </a-table-column>
+            <a-table-column title="用法用量" :width="150">
+              <template #cell="{ record }">{{ record.dose }} {{ record.frequency }}</template>
+            </a-table-column>
+            <a-table-column title="提醒时间" :width="190">
+              <template #cell="{ record }">
+                <a-space wrap size="mini">
+                  <a-tag v-for="node in getDrugReminderLabels(record)" :key="node" color="arcoblue">{{ node }}</a-tag>
+                </a-space>
+              </template>
+            </a-table-column>
+            <a-table-column title="操作" :width="88">
+              <template #cell="{ record, rowIndex }">
+                <a-button size="mini" type="primary" @click="openDrugDialog(currentPlan, record, rowIndex)">编辑</a-button>
+              </template>
+            </a-table-column>
+          </template>
+        </a-table>
+      </template>
+    </a-drawer>
 
     <a-modal v-model:visible="planVisible" title="创建用药计划" width="min(760px, calc(100vw - 32px))" @ok="saveCreatePlan">
       <a-form :model="planForm" layout="vertical">
@@ -307,6 +317,7 @@ const planLoading = ref(false)
 const planVisible = ref(false)
 const drugVisible = ref(false)
 const routineVisible = ref(false)
+const planDetailVisible = ref(false)
 const taskAdjustVisible = ref(false)
 const taskAdjustType = ref('dose')
 const drugDialogMode = ref('add')
@@ -360,6 +371,7 @@ const patientOptions = computed(() => {
   return patients.value.filter((patient) => [patient.name, patient.recordNo, patient.deviceNo].some((item) => String(item || '').includes(value)))
 })
 const currentPatient = computed(() => patients.value.find((item) => String(item.id) === String(selectedPatientId.value)) || patients.value[0] || emptyPatient)
+const currentPlan = computed(() => plans.value.find((plan) => String(plan.id) === String(activePlanId.value)) || null)
 const taskAdjustTitle = computed(() => (taskAdjustType.value === 'dose' ? '调整本次剂量' : '调整提醒时间'))
 const displayedTasks = computed(() => {
   let records = taskRecords.value
@@ -407,6 +419,11 @@ const loadPlans = async () => {
 
 const selectPatient = (id) => {
   selectedPatientId.value = id
+}
+
+const openPlanDetail = (plan) => {
+  activePlanId.value = String(plan.id)
+  planDetailVisible.value = true
 }
 
 const getDrugReminderLabels = (drug) => {
@@ -871,45 +888,51 @@ onMounted(async () => {
     width: auto;
   }
 
-  .plan-overview,
-  .plan-overview-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .plan-overview-actions {
-    justify-content: flex-start;
-  }
 }
 
-.plan-overview {
+.plan-card-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
-  align-items: start;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--color-border-2);
 }
 
-.plan-overview-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+.plan-card {
+  cursor: pointer;
+}
+
+.plan-card-head,
+.plan-card-foot {
+  display: flex;
+  justify-content: space-between;
   gap: 12px;
-  min-width: 0;
+  align-items: flex-start;
 }
 
-.plan-overview-item {
+.plan-card-head {
+  margin-bottom: 14px;
+}
+
+.plan-card-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.plan-card-meta > div {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
 }
 
-.plan-overview-item strong {
+.plan-card-meta strong {
   font-weight: 500;
 }
 
-.plan-overview-actions {
-  justify-content: flex-end;
+.plan-card-foot {
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border-2);
 }
 
 .plan-drug-header {
@@ -917,7 +940,7 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  margin-top: 16px;
+  margin-bottom: 12px;
   font-weight: 500;
 }
 
@@ -927,14 +950,6 @@ onMounted(async () => {
 }
 
 @media (max-width: 1280px) {
-  .plan-overview,
-  .plan-overview-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .plan-overview-actions {
-    justify-content: flex-start;
-  }
 }
 
 @media (max-width: 1024px) {

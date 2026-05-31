@@ -282,6 +282,37 @@ export const plans = [
     ]
   },
   {
+    id: 5,
+    patientId: 1,
+    patientName: '王秀兰',
+    title: '降压药临时调整',
+    code: 'PLAN-20260525-005',
+    period: '2026-05-25 至 2026-05-31',
+    startDate: '2026-05-25',
+    endDate: '2026-05-31',
+    status: '已停用',
+    dispatchStatus: '已停用',
+    dispatchType: 'info',
+    generatedTasks: '已生成 7 条',
+    source: '电话随访调整',
+    reminderCount: 1,
+    auditSummary: '短期调整后停用',
+    drugs: [
+      {
+        name: '硝苯地平控释片',
+        dose: '1片/次',
+        frequency: '每日1次',
+        time: '晚餐后',
+        guide: '短期调整剂量，后续以长期方案为准。',
+        specification: '30mg',
+        quantity: '1盒',
+        startDate: '2026-05-25',
+        endDate: '2026-05-31',
+        durationDays: 7
+      }
+    ]
+  },
+  {
     id: 2,
     patientId: 2,
     patientName: '张建国',
