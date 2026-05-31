@@ -35,8 +35,6 @@
         <a-descriptions-item label="设备状态">
           <a-tag :color="statusColor(createdPatient.deviceStatus)">{{ createdPatient.deviceStatus }}</a-tag>
         </a-descriptions-item>
-        <a-descriptions-item label="知情同意">{{ createdPatient.consent }}</a-descriptions-item>
-        <a-descriptions-item label="子女账号">{{ createdPatient.child }}</a-descriptions-item>
         <a-descriptions-item label="下一步">{{ nextStepText }}</a-descriptions-item>
       </a-descriptions>
     </a-card>
@@ -50,17 +48,17 @@
 
         <a-row :gutter="16">
           <a-col :xs="24" :md="12">
-            <a-form-item label="患者姓名" required>
+            <a-form-item label="患者姓名">
               <a-input v-model="form.name" placeholder="请输入患者姓名" />
             </a-form-item>
           </a-col>
           <a-col :xs="24" :md="12">
-            <a-form-item label="手机号" required>
+            <a-form-item label="手机号">
               <a-input v-model="form.phone" placeholder="请输入手机号" />
             </a-form-item>
           </a-col>
           <a-col :xs="24" :md="12">
-            <a-form-item label="性别" required>
+            <a-form-item label="性别">
               <a-select v-model="form.gender" placeholder="请选择性别">
                 <a-option value="男">男</a-option>
                 <a-option value="女">女</a-option>
@@ -68,51 +66,13 @@
             </a-form-item>
           </a-col>
           <a-col :xs="24" :md="12">
-            <a-form-item label="出生年月日" required>
-              <a-date-picker v-model="form.birthDate" style="width: 100%" />
-            </a-form-item>
-          </a-col>
-          <a-col :xs="24" :md="12">
-            <a-form-item label="慢病史">
-              <a-input v-model="form.diseasesText" placeholder="多个用顿号分隔，例如：高血压、糖尿病" />
-            </a-form-item>
-          </a-col>
-          <a-col :xs="24" :md="12">
-            <a-form-item label="过敏史">
-              <a-input v-model="form.allergiesText" placeholder="多个用顿号分隔，可留空" />
-            </a-form-item>
-          </a-col>
-          <a-col :xs="24" :md="8">
-            <a-form-item label="联系人关系">
-              <a-select v-model="form.contactRelation">
-                <a-option value="女儿">女儿</a-option>
-                <a-option value="儿子">儿子</a-option>
-                <a-option value="配偶">配偶</a-option>
-                <a-option value="其他">其他</a-option>
-              </a-select>
-            </a-form-item>
-          </a-col>
-          <a-col :xs="24" :md="8">
-            <a-form-item label="联系人姓名">
-              <a-input v-model="form.contactName" placeholder="请输入联系人姓名" />
-            </a-form-item>
-          </a-col>
-          <a-col :xs="24" :md="8">
-            <a-form-item label="联系人电话">
-              <a-input v-model="form.contactPhone" placeholder="请输入联系人电话" />
-            </a-form-item>
-          </a-col>
-          <a-col :xs="24" :md="12">
-            <a-form-item label="知情同意状态">
-              <a-select v-model="form.consent">
-                <a-option value="未同意">未同意</a-option>
-                <a-option value="已同意">已同意</a-option>
-              </a-select>
+            <a-form-item label="出生年月日">
+              <a-date-picker v-model="form.birthDate" placeholder="请选择出生年月日" style="width: 100%" />
             </a-form-item>
           </a-col>
           <a-col :span="24">
             <a-form-item label="设备绑定">
-              <a-select v-model="form.deviceId" :loading="devicesLoading" placeholder="请选择可用设备" allow-clear>
+              <a-select v-model="form.deviceId" :loading="devicesLoading" placeholder="请选择设备" allow-clear>
                 <a-option value="">暂不绑定设备</a-option>
                 <a-option v-for="device in availableDevices" :key="device.id" :value="device.id">
                   {{ device.sn }} | {{ device.status }} | 电量 {{ device.battery }}
@@ -143,7 +103,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { useRouter } from 'vue-router'
 import { deviceApi, patientApi } from '@/views/plugin/smart-pillbox/api/doctor'
-import { calculateAge, formatDateTime, generatePatientNo, getPayload, getRecords, splitTags, statusColor } from '@/views/smart-pillbox/utils'
+import { calculateAge, formatDateTime, generatePatientNo, getPayload, getRecords, statusColor } from '@/views/smart-pillbox/utils'
 
 const router = useRouter()
 const saving = ref(false)
@@ -156,12 +116,6 @@ const form = reactive({
   phone: '',
   gender: '',
   birthDate: '',
-  diseasesText: '',
-  allergiesText: '',
-  contactRelation: '女儿',
-  contactName: '',
-  contactPhone: '',
-  consent: '未同意',
   deviceId: ''
 })
 
@@ -183,17 +137,13 @@ const loadAvailableDevices = async () => {
 }
 
 const handleSubmit = async () => {
-  if (!form.name || !form.phone || !form.gender || !form.birthDate) {
-    Message.warning('请填写患者姓名、手机号、性别和出生年月日')
+  if (!form.name || !form.phone || !form.birthDate) {
+    Message.warning('请填写患者姓名、手机号和出生年月日')
     return
   }
   saving.value = true
   try {
     const now = formatDateTime()
-    const contacts = form.contactName && form.contactPhone
-      ? [{ id: `CT-${Date.now()}`, relation: form.contactRelation, name: form.contactName, phone: form.contactPhone, isPrimary: true }]
-      : []
-    const allergyNames = splitTags(form.allergiesText)
     const response = await patientApi.save({
       name: form.name,
       phone: form.phone,
@@ -201,22 +151,16 @@ const handleSubmit = async () => {
       birthDate: form.birthDate,
       age: calculateAge(form.birthDate),
       recordNo: generatePatientNo(),
-      diseases: splitTags(form.diseasesText),
+      diseases: [],
       historyDiseases: [],
-      allergies: allergyNames.map((allergen, index) => ({
-        id: `ALG-${Date.now()}-${index}`,
-        allergenType: 'other',
-        allergen,
-        severity: 'mild',
-        reaction: ''
-      })),
-      contacts,
+      allergies: [],
+      contacts: [],
       status: '正常管理',
       deviceNo: '未绑定',
       deviceStatus: '未绑定',
       deviceStatusType: 'warning',
-      consent: form.consent,
-      child: contacts.length ? `${contacts[0].relation} ${contacts[0].name} ${contacts[0].phone}` : '待绑定',
+      consent: '未同意',
+      child: '待绑定',
       nextReminder: '-',
       todayDrugs: 0,
       recentInteraction: '-',
