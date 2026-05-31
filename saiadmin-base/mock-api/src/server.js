@@ -3,18 +3,14 @@ import express from 'express'
 import morgan from 'morgan'
 import {
   agreement,
-  buildHealthSummary,
-  consentRecords,
   conversations,
   dashboard,
-  deviceEvents,
   devices,
   healthRecords,
   medicationRecords,
   messages,
   ocrRecords,
   patients,
-  planDispatchRecords,
   plans,
   prescriptionAttachments,
   shortageReports,
@@ -266,24 +262,8 @@ app.get('/app/smart-pillbox/admin/doctor/patient/medicineRecords', (req, res) =>
   res.json(ok(records))
 })
 
-app.get('/app/smart-pillbox/admin/doctor/patient/consent/list', (req, res) => {
-  const records = listByQuery(consentRecords, req.query, ['patient', 'version', 'confirmTerminal'])
-  res.json(ok(paginate(records, req.query)))
-})
-
 app.post('/app/smart-pillbox/admin/doctor/patient/save', (req, res) => {
   const record = saveRecord(patients, req.body)
-  if (record.consent === '已同意') {
-    saveRecord(consentRecords, {
-      patientId: record.id,
-      patient: record.name,
-      version: agreement.version,
-      confirmTime: formatNow(),
-      confirmTerminal: '后台建档确认',
-      status: '已同意',
-      statusType: 'success'
-    })
-  }
   syncPatientDerivedData(record)
   res.json(ok(record, 'saved'))
 })
@@ -324,16 +304,6 @@ app.put('/app/smart-pillbox/admin/doctor/device/update', (req, res) => {
 app.delete('/app/smart-pillbox/admin/doctor/device/delete', (req, res) => {
   deleteRecords(devices, req.body)
   res.json(ok(null, 'deleted'))
-})
-
-app.get('/app/smart-pillbox/admin/doctor/device/event/list', (req, res) => {
-  const records = listByQuery(deviceEvents, req.query, ['patient', 'sn', 'eventType', 'medicine', 'note'])
-  res.json(ok(paginate(records, req.query)))
-})
-
-app.get('/app/smart-pillbox/admin/doctor/device/dispatch/list', (req, res) => {
-  const records = listByQuery(planDispatchRecords, req.query, ['patient', 'deviceNo', 'planTitle', 'failReason'])
-  res.json(ok(paginate(records, req.query)))
 })
 
 app.get('/app/smart-pillbox/admin/doctor/message/list', (req, res) => {
@@ -385,40 +355,11 @@ app.post('/app/smart-pillbox/admin/doctor/plan/save', (req, res) => {
 
 app.put('/app/smart-pillbox/admin/doctor/plan/update', (req, res) => {
   const record = updateRecord(plans, req.body)
-  if (String(req.body.dispatchStatus || '').includes('已下发')) {
-    const patient = findById(patients, req.body.patientId)
-    saveRecord(planDispatchRecords, {
-      planId: req.body.id,
-      planTitle: req.body.title,
-      patientId: req.body.patientId,
-      patient: req.body.patientName || patient?.name || '-',
-      deviceNo: patient?.deviceNo || '-',
-      status: '成功',
-      statusType: 'success',
-      dispatchTime: formatNow(),
-      retryStatus: '无需重试',
-      failReason: ''
-    })
-  }
   res.json(ok(record, 'updated'))
 })
 
 app.delete('/app/smart-pillbox/admin/doctor/plan/delete', (req, res) => {
   deleteRecords(plans, req.body)
-  res.json(ok(null, 'deleted'))
-})
-
-app.get('/app/smart-pillbox/admin/doctor/plan/attachment/list', (req, res) => {
-  const records = listByQuery(prescriptionAttachments, req.query, ['patient', 'fileName', 'fileType', 'ocrStatus'])
-  res.json(ok(paginate(records, req.query)))
-})
-
-app.post('/app/smart-pillbox/admin/doctor/plan/attachment/save', (req, res) => {
-  res.json(ok(saveRecord(prescriptionAttachments, req.body), 'saved'))
-})
-
-app.delete('/app/smart-pillbox/admin/doctor/plan/attachment/delete', (req, res) => {
-  deleteRecords(prescriptionAttachments, req.body)
   res.json(ok(null, 'deleted'))
 })
 
@@ -470,10 +411,6 @@ app.put('/app/smart-pillbox/admin/doctor/task/update', (req, res) => {
   res.json(ok(updateRecord(tasks, req.body), 'updated'))
 })
 
-app.post('/app/smart-pillbox/admin/doctor/task/exportDaily', (req, res) => {
-  res.json(ok(null, 'exported'))
-})
-
 app.get('/app/smart-pillbox/admin/doctor/conversation/list', (req, res) => {
   const { patientId, type, status } = req.query
   const records = conversations.filter((item) => {
@@ -487,10 +424,6 @@ app.get('/app/smart-pillbox/admin/doctor/conversation/list', (req, res) => {
 
 app.get('/app/smart-pillbox/admin/doctor/conversation/read', (req, res) => {
   res.json(ok(findById(conversations, req.query.id) || conversations[0]))
-})
-
-app.post('/app/smart-pillbox/admin/doctor/conversation/export', (req, res) => {
-  res.json(ok(null, 'exported'))
 })
 
 app.put('/app/smart-pillbox/admin/doctor/conversation/update', (req, res) => {
@@ -521,10 +454,6 @@ app.get('/app/smart-pillbox/admin/doctor/health/list', (req, res) => {
     return patientMatched && keywordMatched && riskMatched
   })
   res.json(ok(paginate(records, req.query)))
-})
-
-app.get('/app/smart-pillbox/admin/doctor/health/summary', (req, res) => {
-  res.json(ok(buildHealthSummary(req.query.patientId)))
 })
 
 app.post('/app/smart-pillbox/admin/doctor/health/save', (req, res) => {

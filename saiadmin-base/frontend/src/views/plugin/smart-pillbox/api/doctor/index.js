@@ -86,57 +86,18 @@ export const patientApi = {
   }
 }
 
-export const deviceApi = {
-  ...crud('device'),
-  async events(params = {}) {
-    return normalizePage(
-      await request({
-        url: `${doctorBase}/device/event/list`,
-        method: 'get',
-        params
-      })
-    )
-  },
-  async dispatchRecords(params = {}) {
-    return normalizePage(
-      await request({
-        url: `${doctorBase}/device/dispatch/list`,
-        method: 'get',
-        params
-      })
-    )
-  }
-}
+export const deviceApi = crud('device')
 export const messageApi = crud('message')
 export const planApi = crud('plan')
 export const shortageApi = crud('shortage')
-export const planAttachmentApi = {
-  ...crud('plan/attachment')
-}
 export const ocrApi = {
   ...crud('plan/ocr')
 }
 
-export const taskApi = {
-  ...crud('task'),
-  exportDaily(data = {}) {
-    return request({
-      url: `${doctorBase}/task/exportDaily`,
-      method: 'post',
-      data
-    })
-  }
-}
+export const taskApi = crud('task')
 
 export const conversationApi = {
   ...crud('conversation'),
-  export(data = {}) {
-    return request({
-      url: `${doctorBase}/conversation/export`,
-      method: 'post',
-      data
-    })
-  },
   review(data = {}) {
     return request({
       url: `${doctorBase}/conversation/review`,
@@ -146,16 +107,7 @@ export const conversationApi = {
   }
 }
 
-export const healthApi = {
-  ...crud('health'),
-  summary(patientId) {
-    return request({
-      url: `${doctorBase}/health/summary`,
-      method: 'get',
-      params: { patientId }
-    })
-  }
-}
+export const healthApi = crud('health')
 
 export const settingsApi = {
   read() {
@@ -170,14 +122,5 @@ export const settingsApi = {
       method: 'put',
       data
     })
-  },
-  async consentRecords(params = {}) {
-    return normalizePage(
-      await request({
-        url: `${doctorBase}/patient/consent/list`,
-        method: 'get',
-        params
-      })
-    )
   }
 }

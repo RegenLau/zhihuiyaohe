@@ -23,12 +23,6 @@ export const formatDateTime = () => {
   )}`
 }
 
-export const addDays = (date, days) => {
-  const nextDate = new Date(date)
-  nextDate.setDate(nextDate.getDate() + days)
-  return nextDate
-}
-
 export const formatDate = (date = new Date()) => {
   const nextDate = date instanceof Date ? date : new Date(date)
   if (Number.isNaN(nextDate.getTime())) return ''

@@ -724,107 +724,6 @@ export const devices = [
   }
 ]
 
-export const deviceEvents = [
-  {
-    id: 1,
-    sn: 'PBX-202605-018',
-    patientId: 1,
-    patient: '王秀兰',
-    eventType: '开盖',
-    grid: '1号格',
-    medicine: '硝苯地平控释片',
-    taskTime: '06:30',
-    matchedPlan: false,
-    level: '关注',
-    eventTime: '2026-05-21 06:52',
-    note: '开盖时间晚于计划 22 分钟'
-  },
-  {
-    id: 2,
-    sn: 'PBX-202605-018',
-    patientId: 1,
-    patient: '王秀兰',
-    eventType: '关盖',
-    grid: '2号格',
-    medicine: '二甲双胍缓释片',
-    taskTime: '07:00',
-    matchedPlan: true,
-    level: '正常',
-    eventTime: '2026-05-21 07:08',
-    note: '与小程序打卡时间一致'
-  },
-  {
-    id: 3,
-    sn: 'PBX-202605-006',
-    patientId: 2,
-    patient: '张建国',
-    eventType: '离线',
-    grid: '-',
-    medicine: '-',
-    taskTime: '08:00',
-    matchedPlan: false,
-    level: '高风险',
-    eventTime: '2026-05-21 08:14',
-    note: '离线后未收到早餐后服药记录'
-  },
-  {
-    id: 4,
-    sn: 'PBX-202605-029',
-    patientId: 5,
-    patient: '赵春梅',
-    eventType: '低电量',
-    grid: '-',
-    medicine: '-',
-    taskTime: '-',
-    matchedPlan: true,
-    level: '关注',
-    eventTime: '2026-05-21 07:30',
-    note: '电量低于 30% 时已发充电提醒'
-  }
-]
-
-export const planDispatchRecords = [
-  {
-    id: 1,
-    planId: 1,
-    planTitle: '高血压与血糖日常用药',
-    patientId: 1,
-    patient: '王秀兰',
-    deviceNo: 'PBX-202605-018',
-    status: '成功',
-    statusType: 'success',
-    dispatchTime: '2026-05-20 09:26',
-    retryStatus: '无需重试',
-    failReason: ''
-  },
-  {
-    id: 2,
-    planId: 2,
-    planTitle: '冠心病复诊调整',
-    patientId: 2,
-    patient: '张建国',
-    deviceNo: 'PBX-202605-006',
-    status: '失败',
-    statusType: 'danger',
-    dispatchTime: '2026-05-20 11:04',
-    retryStatus: '待重试',
-    failReason: '药盒离线'
-  },
-  {
-    id: 3,
-    planId: 3,
-    planTitle: '高血脂稳定期',
-    patientId: 3,
-    patient: '李桂芳',
-    deviceNo: 'PBX-202605-011',
-    status: '成功',
-    statusType: 'success',
-    dispatchTime: '2026-05-19 15:12',
-    retryStatus: '无需重试',
-    failReason: ''
-  }
-]
-
 export const prescriptionAttachments = [
   {
     id: 1,
@@ -1302,39 +1201,6 @@ export const agreement = {
     '<p>一、服务目的：智慧药盒用于辅助用药提醒和用药管理，不替代医生诊疗意见。</p><p>二、信息采集：系统将采集患者基础信息、用药计划、药盒设备状态、服药任务记录和语音问答记录。</p><p>三、风险提示：如出现胸闷、严重不适、疑似不良反应等情况，请及时联系医药师或前往医疗机构。</p><p>四、授权确认：患者或家属点击同意后，表示已阅读并理解上述内容。</p>'
 }
 
-export const consentRecords = [
-  {
-    id: 1,
-    patientId: 1,
-    patient: '王秀兰',
-    version: 'V2026.05',
-    confirmTime: '2026-05-18 09:42',
-    confirmTerminal: '患者小程序',
-    status: '已同意',
-    statusType: 'success'
-  },
-  {
-    id: 2,
-    patientId: 2,
-    patient: '张建国',
-    version: 'V2026.05',
-    confirmTime: '2026-05-18 10:20',
-    confirmTerminal: '子女小程序',
-    status: '已同意',
-    statusType: 'success'
-  },
-  {
-    id: 3,
-    patientId: 4,
-    patient: '陈德明',
-    version: 'V2026.05',
-    confirmTime: '',
-    confirmTerminal: '-',
-    status: '未同意',
-    statusType: 'danger'
-  }
-]
-
 export const dashboard = {
   statCards: [
     { label: '今日任务', value: '86', note: '已完成 71 次', icon: 'ri:checkbox-circle-line' },
@@ -1393,42 +1259,6 @@ function getPlanEndDate(startDate, durationDays) {
   const date = new Date(`${startDate}T00:00:00`)
   date.setDate(date.getDate() + Number(durationDays) - 1)
   return date.toISOString().slice(0, 10)
-}
-
-export function buildHealthSummary(patientId) {
-  const records = healthRecords.filter((item) => String(item.patientId) === String(patientId))
-  const bpValues = records
-    .flatMap((item) => [item.morningBP, item.eveningBP])
-    .filter(Boolean)
-    .map((bp) => {
-      const [systolic, diastolic] = bp.split('/').map(Number)
-      return { systolic, diastolic }
-    })
-  const glucoseValues = records
-    .map((item) => item.fastingGlucose)
-    .filter((value) => typeof value === 'number')
-  const average = (values, key) =>
-    values.length ? Math.round(values.reduce((sum, value) => sum + value[key], 0) / values.length) : 0
-  const averageNumber = (values) =>
-    values.length
-      ? Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 10) / 10
-      : 0
-
-  return {
-    avgSystolic: average(bpValues, 'systolic'),
-    avgDiastolic: average(bpValues, 'diastolic'),
-    avgGlucose: averageNumber(glucoseValues),
-    complianceRate: records.length
-      ? Math.round((records.filter((item) => item.responded).length / records.length) * 100)
-      : 0,
-    systolicTrend: bpValues.length >= 2 ? bpValues[bpValues.length - 1].systolic - bpValues[0].systolic : 0,
-    diastolicTrend:
-      bpValues.length >= 2 ? bpValues[bpValues.length - 1].diastolic - bpValues[0].diastolic : 0,
-    glucoseTrend:
-      glucoseValues.length >= 2
-        ? Math.round((glucoseValues[glucoseValues.length - 1] - glucoseValues[0]) * 10) / 10
-        : 0
-  }
 }
 
 export function syncPatientDerivedData(patient) {
