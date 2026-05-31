@@ -80,11 +80,6 @@
                     <template #icon><sa-icon icon="ri:check-line" :size="14" /></template>
                   </a-button>
                 </a-tooltip>
-                <a-tooltip content="创建提醒">
-                  <a-button size="mini" @click="createHealthReminder(record)">
-                    <template #icon><sa-icon icon="ri:notification-3-line" :size="14" /></template>
-                  </a-button>
-                </a-tooltip>
                 <a-tooltip content="患者详情">
                   <a-button size="mini" @click="router.push(`/doctor/patient-detail?patientId=${record.patientId}`)">
                     <template #icon><sa-icon icon="ri:eye-line" :size="14" /></template>
@@ -138,7 +133,6 @@
                 <template #cell="{ record }">
                   <a-space size="mini">
                     <a-button size="mini" type="primary" :disabled="record.status === '已处理'" @click="markShortageHandled(record)">处理</a-button>
-                    <a-button size="mini" @click="createShortageReminder(record)">提醒</a-button>
                     <a-button size="mini" @click="router.push(`/doctor/plans?patientId=${record.patientId}`)">计划</a-button>
                   </a-space>
                 </template>
@@ -268,7 +262,7 @@ const overviewCards = computed(() => {
   return [
     { label: '慢病记录', value: records.value.length, note: `${responded} 条已响应` },
     { label: '指标异常', value: healthRisk, note: '关注或高风险' },
-    { label: '缺药待处理', value: pendingShortage, note: '需创建提醒或调整计划' },
+    { label: '缺药待处理', value: pendingShortage, note: '需处理余药或调整计划' },
     { label: '7天内缺药', value: urgentShortage, note: '优先处理补药' }
   ]
 })
@@ -376,33 +370,6 @@ const markShortageHandled = async (record) => {
   Message.success('缺药上报已处理')
   await loadShortageReports()
 }
-const createHealthReminder = (record) => {
-  router.push({
-    path: '/doctor/messages',
-    query: {
-      action: 'create',
-      patient: record.patient,
-      type: '慢病指标异常提醒',
-      receiver: '患者 / 子女',
-      title: `${record.patient}健康数据跟进`,
-      content: `${record.date} 上报数据为 ${record.riskLevel}，请确认血压、血糖和用药情况。`
-    }
-  })
-}
-const createShortageReminder = (record) => {
-  router.push({
-    path: '/doctor/messages',
-    query: {
-      action: 'create',
-      patient: record.patient,
-      type: '缺药提醒',
-      receiver: '患者 / 子女',
-      title: `${record.patient}${record.medicine}缺药提醒`,
-      content: `${record.medicine}剩余 ${record.remainingAmount}，预计可用 ${record.expectedDays} 天，请确认补药或复诊安排。`
-    }
-  })
-}
-
 watch(
   () => route.query.tab,
   (value) => {

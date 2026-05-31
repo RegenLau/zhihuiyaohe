@@ -83,9 +83,6 @@
           <a-button size="mini" @click="router.push(`/doctor/plans?patientId=${record.id}`)">
             计划
           </a-button>
-          <a-button size="mini" @click="router.push(`/doctor/messages?patient=${record.name}`)">
-            提醒
-          </a-button>
         </a-space>
       </template>
     </sa-table>

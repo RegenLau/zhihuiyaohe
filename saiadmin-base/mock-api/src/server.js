@@ -295,7 +295,7 @@ app.get('/app/smart-pillbox/admin/doctor/message/list', (req, res) => {
     const patientMatched = includesKeyword(patient, [item.patient, item.receiver])
     const typeMatched = !type || item.type === type
     const statusMatched = !status || item.status === status
-    const keywordMatched = includesKeyword(keyword, [item.title, item.content, item.triggerSource])
+    const keywordMatched = includesKeyword(keyword, [item.title, item.content, item.triggerScene, item.triggerSource, item.creationMode, item.creator])
     return patientMatched && typeMatched && statusMatched && keywordMatched
   })
   res.json(ok(paginate(records, req.query)))

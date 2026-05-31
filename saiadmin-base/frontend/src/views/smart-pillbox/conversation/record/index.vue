@@ -167,7 +167,6 @@
 
       <template #footer>
         <a-button @click="reviewVisible = false">关闭</a-button>
-        <a-button @click="createReminder(currentConversation)">生成提醒</a-button>
         <a-button type="primary" @click="saveReview">保存复核</a-button>
       </template>
     </a-drawer>
@@ -177,12 +176,11 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { Message } from '@arco-design/web-vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { conversationApi, patientApi } from '@/views/plugin/smart-pillbox/api/doctor'
 import { pickQueryValue } from '@/views/smart-pillbox/utils'
 
 const route = useRoute()
-const router = useRouter()
 const loading = ref(false)
 const conversations = ref([])
 const patients = ref([])
@@ -298,20 +296,6 @@ const markMessageClosed = async (message) => {
   await conversationApi.update({ ...message, status: '已闭环', handledAt: new Date().toISOString().slice(0, 16).replace('T', ' ') })
   Message.success('对话已标记处理')
   await fetchConversations()
-}
-
-const createReminder = (message) => {
-  router.push({
-    path: '/doctor/messages',
-    query: {
-      action: 'create',
-      patient: message.patient,
-      type: '系统提醒',
-      receiver: '患者 / 子女',
-      title: `${message.patient}对话跟进提醒`,
-      content: message.note || message.deviceText || message.patientText || '请根据对话记录完成跟进。'
-    }
-  })
 }
 
 const openReviewDrawer = (message) => {

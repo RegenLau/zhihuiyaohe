@@ -108,7 +108,6 @@
               <a-table-column title="操作" :width="150">
                 <template #cell="{ record }">
                   <a-space size="mini">
-                    <a-button v-if="record.statusType === 'danger'" size="mini" @click="notifyFamily(record)">通知</a-button>
                     <a-button v-if="record.status !== '已完成'" size="mini" type="primary" @click="markDone(record)">完成</a-button>
                     <a-button v-if="record.status === '待执行'" size="mini" status="danger" @click="markMissed(record)">漏服</a-button>
                   </a-space>
@@ -200,20 +199,6 @@ const markMissed = async (task) => {
   await taskApi.update({ ...task, status: '漏服', statusType: 'danger', source: '后台标记', abnormalLevel: '高风险' })
   Message.warning('已标记为漏服')
   loadTasks()
-}
-const notifyFamily = (task) => {
-  router.push({
-    path: '/doctor/messages',
-    query: {
-      action: 'create',
-      patient: currentPatient.value.name,
-      type: '子女提醒',
-      receiver: currentPatient.value.child || '患者 / 子女',
-      title: `${currentPatient.value.name}${task.drug}服药异常提醒`,
-      content: `${task.time} ${task.drug} ${task.status}，请联系患者确认实际服药情况。`
-    }
-  })
-  Message.success(`${task.drug} 异常提醒已进入创建流程`)
 }
 
 watch([selectedPatientId, statusFilter, taskDate], loadTasks)
