@@ -250,7 +250,6 @@
 
 .conversation-patient-panel,
 .conversation-message-list,
-.conversation-title-panel,
 .conversation-timeline-panel {
   min-height: 0;
 }
@@ -292,23 +291,18 @@
 }
 
 .conversation-message-list {
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
 }
 
 .conversation-timeline-panel {
   overflow: hidden;
 }
 
-.conversation-title-line,
 .conversation-patient-top {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-}
-
-.conversation-title-line h3 {
-  margin: 0;
 }
 
 .conversation-filter-tabs .arco-tabs-content,

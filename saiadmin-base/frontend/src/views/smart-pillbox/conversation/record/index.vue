@@ -40,29 +40,6 @@
         </div>
 
         <div class="conversation-message-list">
-          <div class="ma-content-block p-4 conversation-title-panel">
-            <a-row :gutter="[12, 12]" align="center" justify="space-between">
-              <a-col :xs="24" :md="14">
-                <div class="conversation-title-line">
-                  <h3>{{ activePatient?.patient || '请选择患者' }}的对话记录</h3>
-                  <a-tag color="arcoblue">患者与小智交互回流</a-tag>
-                </div>
-              </a-col>
-              <a-col :xs="24" :md="10" class="smart-filter-actions">
-                <a-space wrap>
-                  <a-button :disabled="!activePatient" @click="deviceVisible = true">
-                    <template #icon><sa-icon icon="ri:computer-line" :size="16" /></template>
-                    设备摘要
-                  </a-button>
-                  <a-button type="primary" @click="handleExport">
-                    <template #icon><sa-icon icon="ri:file-list-3-line" :size="16" /></template>
-                    导出记录
-                  </a-button>
-                </a-space>
-              </a-col>
-            </a-row>
-          </div>
-
           <div class="ma-content-block p-4 conversation-timeline-panel">
             <div class="tab-toolbar">
               <div>
@@ -116,20 +93,6 @@
         </div>
       </div>
     </a-spin>
-
-    <a-drawer v-model:visible="deviceVisible" :width="520" title="设备摘要" unmount-on-close>
-      <a-descriptions v-if="activePatient" :column="1" bordered>
-        <a-descriptions-item label="患者">{{ activePatient.patient }}</a-descriptions-item>
-        <a-descriptions-item label="处方编号">{{ activePatient.recordNo || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="设备编号">{{ activePatient.deviceNo || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="设备状态">
-          <a-tag :color="statusColor(activePatient.deviceStatus)">{{ activePatient.deviceStatus || '-' }}</a-tag>
-        </a-descriptions-item>
-        <a-descriptions-item label="最近互动">{{ activePatient.latestTime || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="待跟进">{{ activePatient.pendingCount }} 项</a-descriptions-item>
-      </a-descriptions>
-      <a-empty v-else description="请选择患者" />
-    </a-drawer>
 
     <a-drawer v-model:visible="reviewVisible" :width="720" title="对话详情与风险复核" unmount-on-close>
       <a-descriptions :column="1" bordered>
@@ -186,7 +149,6 @@ const conversations = ref([])
 const patients = ref([])
 const activePatientId = ref(String(pickQueryValue(route.query.patientId)))
 const timelineType = ref('全部')
-const deviceVisible = ref(false)
 const reviewVisible = ref(false)
 const currentConversation = reactive({})
 const reviewForm = reactive({ reviewStatus: '已复核', reviewOpinion: '' })
@@ -349,11 +311,6 @@ const summaryIconStyle = (tone) => {
     color: '#fff',
     backgroundColor: colorMap[tone] || 'rgb(var(--primary-6))'
   }
-}
-
-const handleExport = async () => {
-  await conversationApi.export()
-  Message.success('导出任务已提交')
 }
 
 watch(
