@@ -40,20 +40,12 @@
                 <div class="today-task-pane">
                   <div class="task-filter-panel">
                     <div class="task-filter-main">
-                      <a-radio-group v-model="statusFilter" type="button">
-                        <a-radio value="全部状态">全部状态</a-radio>
-                        <a-radio value="待打卡">待打卡</a-radio>
-                        <a-radio value="已打卡">已打卡</a-radio>
-                        <a-radio value="漏服">漏服</a-radio>
-                        <a-radio value="已取消">已取消</a-radio>
-                      </a-radio-group>
                       <a-radio-group v-model="drugFilter" type="button" class="task-drug-filter">
                         <a-radio v-for="option in drugFilterOptions" :key="option" :value="option">{{ option }}</a-radio>
                       </a-radio-group>
                     </div>
                     <div class="task-filter-side">
                       <a-date-picker v-model="taskDate" class="task-filter-date" />
-                      <span class="smart-muted">本页只处理当天执行调整</span>
                     </div>
                   </div>
 
@@ -300,7 +292,6 @@ const getRouteTab = () => (route.path === '/doctor/plans' || pickQueryValue(rout
 const activeTab = ref(getRouteTab())
 const activePlanId = ref('')
 const drugFilter = ref('全部用药')
-const statusFilter = ref('全部状态')
 const taskDate = ref('2026-05-21')
 const patients = ref([])
 const taskRecords = ref([])
@@ -389,8 +380,7 @@ const loadTasks = async () => {
       page: 1,
       limit: 80,
       patientId: selectedPatientId.value,
-      taskDate: taskDate.value,
-      status: statusFilter.value
+      taskDate: taskDate.value
     })
     taskRecords.value = getRecords(response)
   } finally {
@@ -572,7 +562,7 @@ const toggleTaskEnabled = async (task, checked) => {
   await loadTasks()
 }
 
-watch([selectedPatientId, statusFilter, taskDate], async () => {
+watch([selectedPatientId, taskDate], async () => {
   drugFilter.value = '全部用药'
   await Promise.all([loadTasks(), loadPlans()])
 })
