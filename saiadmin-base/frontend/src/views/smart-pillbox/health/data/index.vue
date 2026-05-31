@@ -47,10 +47,6 @@
           </sa-table>
         </a-tab-pane>
 
-        <a-tab-pane key="disease" title="基础疾病">
-          <a-table row-key="id" :data="diseaseRows" :columns="diseaseColumns" :loading="loading" :pagination="false" :scroll="{ x: 860 }" />
-        </a-tab-pane>
-
         <a-tab-pane key="shortage" title="缺药上报">
           <div class="smart-toolbar smart-row is-between smart-block-gap-sm">
             <a-space wrap>
@@ -145,18 +141,24 @@
         <a-descriptions-item label="上报时间">{{ currentShortage.reportTime || '-' }}</a-descriptions-item>
         <a-descriptions-item label="处理人">{{ currentShortage.handler || '-' }}</a-descriptions-item>
       </a-descriptions>
-      <a-form :model="shortageProcessForm" layout="vertical" style="margin-top: 16px">
+      <a-descriptions v-if="shortageProcessReadonly" :column="1" bordered style="margin-top: 16px">
+        <a-descriptions-item label="处理状态">
+          <a-tag :color="statusColor(shortageProcessForm.status)">{{ shortageProcessForm.status || '-' }}</a-tag>
+        </a-descriptions-item>
+        <a-descriptions-item label="处理结果">{{ shortageProcessForm.result || '-' }}</a-descriptions-item>
+      </a-descriptions>
+      <a-form v-else :model="shortageProcessForm" layout="vertical" style="margin-top: 16px">
         <a-row :gutter="16">
           <a-col :xs="24" :md="12">
             <a-form-item label="处理状态">
-              <a-select v-model="shortageProcessForm.status" :disabled="shortageProcessReadonly">
+              <a-select v-model="shortageProcessForm.status">
                 <a-option v-for="item in shortageStatusOptions" :key="item" :value="item">{{ item }}</a-option>
               </a-select>
             </a-form-item>
           </a-col>
           <a-col :span="24">
             <a-form-item label="处理结果">
-              <a-textarea v-model="shortageProcessForm.result" :disabled="shortageProcessReadonly" placeholder="请输入处理结果" :auto-size="{ minRows: 3, maxRows: 5 }" />
+              <a-textarea v-model="shortageProcessForm.result" placeholder="请输入处理结果" :auto-size="{ minRows: 3, maxRows: 5 }" />
             </a-form-item>
           </a-col>
         </a-row>
@@ -174,7 +176,7 @@ import { onMounted, reactive, ref, watch } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { healthApi, patientApi, shortageApi } from '@/views/plugin/smart-pillbox/api/doctor'
-import { formatDateTime, getPayload, getRecords, pickQueryValue, statusColor, unwrapAllergyNames } from '@/views/smart-pillbox/utils'
+import { formatDateTime, getPayload, getRecords, pickQueryValue, statusColor } from '@/views/smart-pillbox/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -184,8 +186,12 @@ const crudRef = ref()
 const records = ref([])
 const shortageReports = ref([])
 const patientOptions = ref([])
-const diseaseRows = ref([])
-const activeTab = ref(String(pickQueryValue(route.query.tab)) || 'health')
+const tabKeys = ['health', 'shortage']
+const normalizeTabKey = (value) => {
+  const tabKey = String(pickQueryValue(value))
+  return tabKeys.includes(tabKey) ? tabKey : 'health'
+}
+const activeTab = ref(normalizeTabKey(route.query.tab))
 const shortageKeyword = ref('')
 const shortageStatus = ref('')
 const healthDialogVisible = ref(false)
@@ -229,40 +235,6 @@ const columns = reactive([
   { title: '响应状态', dataIndex: 'responded', width: 110 },
   { title: '数据来源', dataIndex: 'source', width: 120 }
 ])
-const diseaseColumns = reactive([
-  { title: '患者', dataIndex: 'name', width: 130 },
-  { title: '患者编号', dataIndex: 'recordNo', width: 150 },
-  { title: '慢病史', dataIndex: 'diseases' },
-  { title: '过敏史', dataIndex: 'allergies' }
-])
-const formatTagText = (value) => {
-  if (Array.isArray(value)) return value.length ? value.join('、') : '-'
-  return value || '-'
-}
-const normalizeListRecords = (response) => {
-  const payload = getPayload(response)
-  const candidates = [
-    getRecords(response),
-    response?.data?.records,
-    response?.data?.data,
-    response?.data?.data?.records,
-    payload?.records,
-    payload?.data,
-    payload?.data?.records
-  ]
-  return candidates.find((item) => Array.isArray(item) && item.length) || []
-}
-const formatAllergies = (allergies) => {
-  if (Array.isArray(allergies)) return formatTagText(unwrapAllergyNames(allergies))
-  return formatTagText(allergies)
-}
-const mapDiseaseRows = (patients) => patients.map((patient) => ({
-  id: patient.id,
-  name: patient.name,
-  recordNo: patient.recordNo,
-  diseases: formatTagText(patient.diseases),
-  allergies: formatAllergies(patient.allergies)
-}))
 
 async function loadData(params = {}) {
   loading.value = true
@@ -292,8 +264,7 @@ const loadShortageReports = async () => {
 }
 const loadPatients = async () => {
   const response = await patientApi.list({ page: 1, limit: 100 })
-  patientOptions.value = normalizeListRecords(response)
-  diseaseRows.value = mapDiseaseRows(patientOptions.value)
+  patientOptions.value = getRecords(response)
 }
 const syncPatientToForm = (id, target) => {
   const patient = patientOptions.value.find((item) => String(item.id) === String(id))
@@ -311,9 +282,6 @@ const handleResetSearch = () => {
 const refreshData = async () => {
   if (activeTab.value === 'health') {
     crudRef.value?.refresh()
-  }
-  if (activeTab.value === 'disease') {
-    await loadPatients()
   }
   if (activeTab.value === 'shortage') {
     await loadShortageReports()
@@ -376,7 +344,7 @@ const saveShortageProcess = async () => {
 watch(
   () => route.query.tab,
   (value) => {
-    if (value) activeTab.value = String(pickQueryValue(value))
+    activeTab.value = normalizeTabKey(value)
   }
 )
 
