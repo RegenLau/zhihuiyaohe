@@ -37,13 +37,14 @@
     </div>
 
     <div class="device-summary-grid">
-      <div v-for="item in deviceStatusSummary" :key="item.label" class="ma-content-block p-4">
-        <a-space :size="12" align="center">
-          <a-avatar :size="44" :class="['device-summary-avatar', `is-${item.type}`]">
-            <sa-icon :icon="item.icon" :size="22" />
-          </a-avatar>
-          <a-statistic :title="item.label" :value="item.count" />
-        </a-space>
+      <div v-for="item in deviceStatusSummary" :key="item.label" class="ma-content-block p-4 device-summary-card">
+        <a-avatar :size="44" :class="['device-summary-avatar', `is-${item.type}`]">
+          <sa-icon :icon="item.icon" :size="22" />
+        </a-avatar>
+        <div class="device-summary-meta">
+          <div class="device-summary-value">{{ item.count }}</div>
+          <div class="device-summary-label">{{ item.label }}</div>
+        </div>
       </div>
     </div>
 
@@ -492,6 +493,13 @@ onMounted(async () => {
   min-width: 0;
 }
 
+.device-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 96px;
+}
+
 .device-summary-avatar.is-success {
   color: rgb(var(--green-6));
   background: rgb(var(--green-1));
@@ -505,6 +513,26 @@ onMounted(async () => {
 .device-summary-avatar.is-warning {
   color: rgb(var(--orange-6));
   background: rgb(var(--orange-1));
+}
+
+.device-summary-meta {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.device-summary-value {
+  color: var(--color-text-1);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.device-summary-label {
+  color: var(--color-text-2);
+  line-height: 1.4;
 }
 
 .device-card {
