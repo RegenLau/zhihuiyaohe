@@ -34,90 +34,88 @@
 
       <div class="detail-stack medication-main-panel">
         <div class="ma-content-block p-3">
-          <a-card :bordered="false">
-            <a-tabs v-model:active-key="activeTab" lazy-load>
+          <a-card class="medication-content-card" :bordered="false">
+            <a-tabs v-model:active-key="activeTab" class="medication-tabs" lazy-load>
               <a-tab-pane key="today" title="今日任务">
-                <div class="task-filter-panel">
-                  <div class="task-filter-main">
-                    <a-radio-group v-model="statusFilter" type="button">
-                      <a-radio value="全部状态">全部状态</a-radio>
-                      <a-radio value="待打卡">待打卡</a-radio>
-                      <a-radio value="已打卡">已打卡</a-radio>
-                      <a-radio value="漏服">漏服</a-radio>
-                      <a-radio value="已取消">已取消</a-radio>
-                    </a-radio-group>
-                    <a-radio-group v-model="drugFilter" type="button" class="task-drug-filter">
-                      <a-radio v-for="option in drugFilterOptions" :key="option" :value="option">{{ option }}</a-radio>
-                    </a-radio-group>
+                <div class="today-task-pane">
+                  <div class="task-filter-panel">
+                    <div class="task-filter-main">
+                      <a-radio-group v-model="statusFilter" type="button">
+                        <a-radio value="全部状态">全部状态</a-radio>
+                        <a-radio value="待打卡">待打卡</a-radio>
+                        <a-radio value="已打卡">已打卡</a-radio>
+                        <a-radio value="漏服">漏服</a-radio>
+                        <a-radio value="已取消">已取消</a-radio>
+                      </a-radio-group>
+                      <a-radio-group v-model="drugFilter" type="button" class="task-drug-filter">
+                        <a-radio v-for="option in drugFilterOptions" :key="option" :value="option">{{ option }}</a-radio>
+                      </a-radio-group>
+                    </div>
+                    <div class="task-filter-side">
+                      <a-date-picker v-model="taskDate" class="task-filter-date" />
+                      <span class="smart-muted">本页只处理当天执行调整</span>
+                    </div>
                   </div>
-                  <div class="task-filter-side">
-                    <a-date-picker v-model="taskDate" class="task-filter-date" />
-                    <span class="smart-muted">本页只处理当天执行调整</span>
-                  </div>
-                </div>
 
-                <a-spin :loading="taskLoading" class="task-spin">
-                  <a-empty v-if="!displayedTasks.length" class="smart-block-gap" description="暂无今日任务" />
-                  <div v-else class="task-timeline smart-block-gap-sm">
-                    <div v-for="record in displayedTasks" :key="record.id" class="task-timeline-item">
-                      <div class="task-time-node">
-                        <div class="task-time">{{ record.time }}</div>
-                        <div class="smart-muted">{{ record.period }}</div>
-                      </div>
-                      <div class="task-card">
-                        <div class="task-card-body">
-                          <div class="task-card-main">
-                            <div class="task-card-title">
-                              <a-typography-text bold class="task-drug-name">{{ record.drug }}</a-typography-text>
-                              <a-tag :color="statusColor(record.status)">{{ record.status }}</a-tag>
+                  <a-spin :loading="taskLoading" class="task-spin">
+                    <a-empty v-if="!displayedTasks.length" class="smart-block-gap" description="暂无今日任务" />
+                    <div v-else class="task-timeline smart-block-gap-sm">
+                      <div v-for="record in displayedTasks" :key="record.id" class="task-timeline-item">
+                        <div class="task-time-node">
+                          <div class="task-time">{{ record.time }}</div>
+                          <div class="smart-muted">{{ record.period }}</div>
+                        </div>
+                        <div class="task-card">
+                          <div class="task-card-body">
+                            <div class="task-card-main">
+                              <div class="task-card-title">
+                                <a-typography-text bold class="task-drug-name">{{ record.drug }}</a-typography-text>
+                                <a-tag :color="statusColor(record.status)">{{ record.status }}</a-tag>
+                              </div>
+                              <div class="task-meta-grid">
+                                <div>
+                                  <span class="smart-muted">本次剂量</span>
+                                  <strong>{{ record.dose }}</strong>
+                                </div>
+                                <div>
+                                  <span class="smart-muted">频次</span>
+                                  <strong>{{ record.frequency }}</strong>
+                                </div>
+                                <div>
+                                  <span class="smart-muted">打卡方式</span>
+                                  <strong>{{ getCheckinMethod(record) }}</strong>
+                                </div>
+                              </div>
                             </div>
-                            <div class="task-meta-grid">
-                              <div>
-                                <span class="smart-muted">本次剂量</span>
-                                <strong>{{ record.dose }}</strong>
-                              </div>
-                              <div>
-                                <span class="smart-muted">频次</span>
-                                <strong>{{ record.frequency }}</strong>
-                              </div>
-                              <div>
-                                <span class="smart-muted">打卡方式</span>
-                                <strong>{{ getCheckinMethod(record) }}</strong>
-                              </div>
+                            <div class="task-card-side">
+                              <a-space class="task-card-actions" size="mini">
+                                <template v-if="canAdjustTask(record)">
+                                  <a-button size="mini" type="primary" class="task-action-button" @click="openTaskAdjust('dose', record)">调整剂量</a-button>
+                                  <a-button size="mini" class="task-action-button" @click="openTaskAdjust('time', record)">调整时间</a-button>
+                                </template>
+                                <a-button v-else size="mini" class="task-action-button" disabled>查看</a-button>
+                              </a-space>
+                              <span class="task-execute-wrap">
+                                <a-switch
+                                  class="task-execute-switch"
+                                  :model-value="isTaskEnabled(record)"
+                                  :disabled="!canToggleTask(record)"
+                                  checked-text="执行"
+                                  unchecked-text="取消"
+                                  @change="(checked) => toggleTaskEnabled(record, checked)"
+                                />
+                              </span>
                             </div>
-                          </div>
-                          <div class="task-card-side">
-                            <a-space class="task-card-actions" size="mini">
-                              <template v-if="canAdjustTask(record)">
-                                <a-button size="mini" type="primary" class="task-action-button" @click="openTaskAdjust('dose', record)">调整剂量</a-button>
-                                <a-button size="mini" class="task-action-button" @click="openTaskAdjust('time', record)">调整时间</a-button>
-                              </template>
-                              <a-button v-else size="mini" class="task-action-button" disabled>查看</a-button>
-                            </a-space>
-                            <span class="task-execute-wrap">
-                              <a-switch
-                                class="task-execute-switch"
-                                :model-value="isTaskEnabled(record)"
-                                :disabled="!canToggleTask(record)"
-                                checked-text="执行"
-                                unchecked-text="取消"
-                                @change="(checked) => toggleTaskEnabled(record, checked)"
-                              />
-                            </span>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </a-spin>
+                  </a-spin>
+                </div>
               </a-tab-pane>
 
               <a-tab-pane key="plan" title="用药计划">
-                <div class="smart-row is-between">
-                  <div>
-                    <h3 class="scheme-title">{{ currentPatient.name }} · 用药计划</h3>
-                    <p class="smart-section-note">维护长期方案，计划变更只影响后续任务。</p>
-                  </div>
+                <div class="plan-toolbar">
                   <a-space wrap>
                     <a-button type="primary" @click="openCreatePlan">
                       <template #icon><sa-icon icon="ri:add-line" :size="16" /></template>
@@ -128,6 +126,7 @@
                       调整作息
                     </a-button>
                   </a-space>
+                  <span class="smart-muted">维护长期方案，计划变更只影响后续任务。</span>
                 </div>
 
                 <a-empty v-if="!plans.length" class="smart-block-gap" description="当前患者暂无用药计划">
@@ -140,7 +139,6 @@
                       <a-typography-text bold>{{ plan.title }}</a-typography-text>
                       <a-space size="mini" wrap>
                         <a-tag :color="statusColor(plan.status)">{{ plan.status }}</a-tag>
-                        <a-tag>{{ plan.dispatchStatus }}</a-tag>
                       </a-space>
                     </div>
                     <div class="plan-card-meta">
@@ -161,7 +159,6 @@
                       <span class="smart-muted">{{ plan.generatedTasks }}</span>
                       <a-space size="mini" @click.stop>
                         <a-button size="mini" type="primary" @click="openPlanDetail(plan)">查看详情</a-button>
-                        <a-button size="mini" :disabled="!plan.drugs?.length || plan.status === '已停用'" @click="dispatchPlan(plan)">下发药盒</a-button>
                       </a-space>
                     </div>
                   </a-card>
@@ -184,10 +181,6 @@
             <a-button type="primary" @click="openDrugDialog(currentPlan)">
               <template #icon><sa-icon icon="ri:add-line" :size="16" /></template>
               新增药品
-            </a-button>
-            <a-button :disabled="!currentPlan.drugs?.length || currentPlan.status === '已停用'" @click="dispatchPlan(currentPlan)">
-              <template #icon><sa-icon icon="ri:send-plane-line" :size="16" /></template>
-              下发药盒
             </a-button>
             <a-popconfirm content="确定停用该计划吗？" @ok="stopPlan(currentPlan)">
               <a-button status="danger" :disabled="currentPlan.status === '已停用'">
@@ -296,7 +289,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { useRoute } from 'vue-router'
-import { deviceApi, patientApi, planApi, taskApi } from '@/views/plugin/smart-pillbox/api/doctor'
+import { patientApi, planApi, taskApi } from '@/views/plugin/smart-pillbox/api/doctor'
 import { formatDateTime, getPayload, getRecords, pickQueryValue, statusColor } from '@/views/smart-pillbox/utils'
 
 const route = useRoute()
@@ -460,14 +453,13 @@ const saveCreatePlan = async () => {
     patientId: selectedPatientId.value,
     patientName: currentPatient.value.name,
     period: `${planForm.startDate || '-'} 至 ${planForm.endDate || '-'}`,
-    dispatchStatus: currentPatient.value.deviceNo && currentPatient.value.deviceNo !== '未绑定' ? '待下发' : '未绑定设备',
     generatedTasks: '待录入药品',
     source: '手动录入',
     reminderCount: 0,
     auditSummary: '请按处方和医药师建议执行。',
     drugs: []
   })
-  Message.success('用药计划已创建')
+  Message.success('用药计划已创建，系统将自动生成提醒信息')
   planVisible.value = false
   await loadPlans()
   activePlanId.value = String(getPayload(response).id || activePlanId.value)
@@ -506,32 +498,8 @@ const saveDrugEdit = async () => {
   await loadPlans()
 }
 
-const dispatchPlan = async (plan) => {
-  if (!currentPatient.value.deviceNo || currentPatient.value.deviceNo === '未绑定') {
-    Message.warning('当前患者未绑定药盒')
-    return
-  }
-  if (currentPatient.value.deviceStatus !== '在线') {
-    Message.warning('当前药盒不在线，请恢复在线后再下发')
-    return
-  }
-  const reminderCount = getPlanReminderCount(plan)
-  await planApi.update({
-    ...plan,
-    dispatchStatus: '已下发药盒',
-    generatedTasks: `${reminderCount} 条任务已生成`,
-    reminderCount,
-    updatedAt: formatDateTime()
-  })
-  const deviceResponse = await deviceApi.list({ sn: currentPatient.value.deviceNo, limit: 20 })
-  const device = getRecords(deviceResponse).find((item) => item.sn === currentPatient.value.deviceNo)
-  if (device) await deviceApi.update({ ...device, dispatchStatus: '计划已同步', lastDispatchAt: formatDateTime() })
-  Message.success('计划已下发药盒')
-  await loadPlans()
-}
-
 const stopPlan = async (plan) => {
-  await planApi.update({ ...plan, status: '已停用', dispatchStatus: '已停用', stoppedAt: formatDateTime(), stopReason: '医药师手动停用' })
+  await planApi.update({ ...plan, status: '已停用', stoppedAt: formatDateTime(), stopReason: '医药师手动停用' })
   Message.success('用药计划已停用')
   await loadPlans()
 }
@@ -674,8 +642,47 @@ onMounted(async () => {
 
 .medication-main-panel {
   align-content: start;
-  overflow-y: auto;
-  padding-right: 4px;
+  overflow: hidden;
+}
+
+.medication-main-panel > .ma-content-block,
+.medication-content-card,
+.medication-content-card :deep(.arco-card-body) {
+  height: 100%;
+  min-height: 0;
+}
+
+.medication-content-card :deep(.arco-card-body) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.medication-tabs {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.medication-tabs :deep(.arco-tabs-content) {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.medication-tabs :deep(.arco-tabs-content-list),
+.medication-tabs :deep(.arco-tabs-content-item),
+.medication-tabs :deep(.arco-tabs-pane) {
+  height: 100%;
+  min-height: 0;
+}
+
+.today-task-pane {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
 }
 
 .task-filter-date {
@@ -717,17 +724,28 @@ onMounted(async () => {
   width: 100%;
 }
 
+.task-spin {
+  flex: 1;
+  min-height: 0;
+  margin-top: 12px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
 .task-spin,
+.task-spin :deep(.arco-spin),
 .task-spin :deep(.arco-spin-children) {
-  display: block;
+  display: flex;
   width: 100%;
+  min-height: 0;
+  flex-direction: column;
 }
 
 .task-timeline::before {
   position: absolute;
   top: 18px;
   bottom: 18px;
-  left: 76px;
+  left: 90px;
   width: 1px;
   background: var(--color-border-2);
   content: '';
@@ -736,8 +754,8 @@ onMounted(async () => {
 .task-timeline-item {
   position: relative;
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
-  gap: 20px;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 36px;
   align-items: start;
   width: 100%;
 }
@@ -755,7 +773,7 @@ onMounted(async () => {
 .task-time-node::after {
   position: absolute;
   top: 25px;
-  right: -17px;
+  right: -24px;
   width: 9px;
   height: 9px;
   background: rgb(var(--primary-6));
@@ -884,15 +902,22 @@ onMounted(async () => {
     border-left: 0;
   }
 
-  .task-card-actions {
-    width: auto;
-  }
+.task-card-actions {
+  width: auto;
+}
 
+}
+
+.plan-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
 }
 
 .plan-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
 }
 
