@@ -469,7 +469,7 @@ app.get('/app/smart-pillbox/admin/doctor/health/list', (req, res) => {
   const { patientId, keyword, riskLevel } = req.query
   const records = healthRecords.filter((item) => {
     const patientMatched = !patientId || String(item.patientId) === String(patientId)
-    const keywordMatched = includesKeyword(keyword, [item.patient, item.note])
+    const keywordMatched = includesKeyword(keyword, [item.patient, item.source])
     const riskMatched = !riskLevel || item.riskLevel === riskLevel
     return patientMatched && keywordMatched && riskMatched
   })
@@ -482,7 +482,7 @@ app.get('/app/smart-pillbox/admin/doctor/health/summary', (req, res) => {
 
 app.post('/app/smart-pillbox/admin/doctor/health/save', (req, res) => {
   const patient = findById(patients, req.body.patientId)
-  res.json(ok(saveRecord(healthRecords, { patient: patient?.name || req.body.patient || '-', ...req.body }), 'saved'))
+  res.json(ok(saveRecord(healthRecords, { patient: patient?.name || req.body.patient || '-', source: '后台创建', ...req.body }), 'saved'))
 })
 
 app.put('/app/smart-pillbox/admin/doctor/health/update', (req, res) => {

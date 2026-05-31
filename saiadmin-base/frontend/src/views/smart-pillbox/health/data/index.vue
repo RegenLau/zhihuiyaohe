@@ -1,17 +1,5 @@
 <template>
   <div class="smart-page">
-    <div class="ma-content-block p-4">
-      <a-grid :cols="{ xs: 1, sm: 12, md: 24 }" :row-gap="16">
-        <a-grid-item v-for="item in overviewCards" :key="item.label" :span="6">
-          <a-space direction="vertical" :size="2">
-            <a-typography-text type="secondary">{{ item.label }}</a-typography-text>
-            <a-typography-title :heading="5" style="margin: 0">{{ item.value }}</a-typography-title>
-            <div class="smart-muted">{{ item.note }}</div>
-          </a-space>
-        </a-grid-item>
-      </a-grid>
-    </div>
-
     <div class="ma-content-block p-3">
       <a-tabs v-model:active-key="activeTab" @change="refreshData">
         <a-tab-pane key="health" title="慢病指标">
@@ -24,16 +12,7 @@
             <template #tableSearch>
               <a-col :xs="24" :md="7">
                 <a-form-item field="keyword" label="关键词">
-                  <a-input v-model="searchForm.keyword" placeholder="关键词：患者姓名或备注" allow-clear />
-                </a-form-item>
-              </a-col>
-              <a-col :xs="24" :md="6">
-                <a-form-item field="riskLevel" label="风险级别">
-                  <a-select v-model="searchForm.riskLevel" placeholder="全部" allow-clear>
-                    <a-option value="正常">正常</a-option>
-                    <a-option value="关注">关注</a-option>
-                    <a-option value="高风险">高风险</a-option>
-                  </a-select>
+                  <a-input v-model="searchForm.keyword" placeholder="关键词：患者姓名或来源" allow-clear />
                 </a-form-item>
               </a-col>
               <a-col :xs="24" :md="6">
@@ -70,16 +49,8 @@
             <template #responded="{ record }">
               <a-tag :color="record.responded ? 'green' : 'red'">{{ record.responded ? '已响应' : '未响应' }}</a-tag>
             </template>
-            <template #riskLevel="{ record }">
-              <a-tag :color="statusColor(record.riskLevel)">{{ record.riskLevel }}</a-tag>
-            </template>
             <template #operationCell="{ record }">
               <a-space size="mini">
-                <a-tooltip content="标记已响应">
-                  <a-button size="mini" type="primary" :disabled="record.responded" @click="markResponded(record)">
-                    <template #icon><sa-icon icon="ri:check-line" :size="14" /></template>
-                  </a-button>
-                </a-tooltip>
                 <a-tooltip content="患者详情">
                   <a-button size="mini" @click="router.push(`/doctor/patient-detail?patientId=${record.patientId}`)">
                     <template #icon><sa-icon icon="ri:eye-line" :size="14" /></template>
@@ -156,11 +127,19 @@
             </a-form-item>
           </a-col>
           <a-col :xs="24" :md="12"><a-form-item label="日期"><a-date-picker v-model="healthForm.date" style="width: 100%" /></a-form-item></a-col>
-          <a-col :xs="24" :md="12"><a-form-item label="风险级别"><a-select v-model="healthForm.riskLevel"><a-option value="正常">正常</a-option><a-option value="关注">关注</a-option><a-option value="高风险">高风险</a-option></a-select></a-form-item></a-col>
           <a-col :xs="24" :md="12"><a-form-item label="晨间血压"><a-input v-model="healthForm.morningBP" placeholder="如 135/85" /></a-form-item></a-col>
           <a-col :xs="24" :md="12"><a-form-item label="晚间血压"><a-input v-model="healthForm.eveningBP" placeholder="如 128/82" /></a-form-item></a-col>
           <a-col :xs="24" :md="12"><a-form-item label="空腹血糖"><a-input-number v-model="healthForm.fastingGlucose" style="width: 100%" /></a-form-item></a-col>
-          <a-col :span="24"><a-form-item label="备注"><a-textarea v-model="healthForm.note" placeholder="请输入处理建议或上报说明" /></a-form-item></a-col>
+          <a-col :xs="24" :md="12">
+            <a-form-item label="数据来源">
+              <a-select v-model="healthForm.source">
+                <a-option value="患者端">患者端</a-option>
+                <a-option value="家属端">家属端</a-option>
+                <a-option value="药盒">药盒</a-option>
+                <a-option value="后台创建">后台创建</a-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
         </a-row>
       </a-form>
     </a-modal>
@@ -189,7 +168,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { healthApi, patientApi, shortageApi } from '@/views/plugin/smart-pillbox/api/doctor'
@@ -209,7 +188,7 @@ const shortageStatus = ref('')
 const healthDialogVisible = ref(false)
 const shortageDialogVisible = ref(false)
 
-const searchForm = reactive({ keyword: '', riskLevel: '', patientId: String(pickQueryValue(route.query.patientId)) })
+const searchForm = reactive({ keyword: '', patientId: String(pickQueryValue(route.query.patientId)) })
 const healthForm = reactive({
   patientId: '',
   patient: '',
@@ -218,8 +197,7 @@ const healthForm = reactive({
   eveningBP: '',
   fastingGlucose: null,
   responded: true,
-  riskLevel: '正常',
-  note: ''
+  source: '后台创建'
 })
 const shortageForm = reactive({
   patientId: '',
@@ -238,7 +216,7 @@ const tableOptions = reactive({
   showIndex: false,
   operationColumn: true,
   operationColumnText: '操作',
-  operationColumnWidth: 132,
+  operationColumnWidth: 88,
   operationColumnFixed: false,
   add: { show: false },
   edit: { show: false },
@@ -250,22 +228,8 @@ const columns = reactive([
   { title: '血压', dataIndex: 'bloodPressure', width: 160 },
   { title: '空腹血糖', dataIndex: 'fastingGlucose', width: 130 },
   { title: '响应状态', dataIndex: 'responded', width: 110 },
-  { title: '风险级别', dataIndex: 'riskLevel', width: 110 },
-  { title: '备注', dataIndex: 'note' }
+  { title: '数据来源', dataIndex: 'source', width: 120 }
 ])
-
-const overviewCards = computed(() => {
-  const responded = records.value.filter((item) => item.responded).length
-  const healthRisk = records.value.filter((item) => item.riskLevel !== '正常').length
-  const pendingShortage = shortageReports.value.filter((item) => item.status !== '已处理').length
-  const urgentShortage = shortageReports.value.filter((item) => Number(item.expectedDays) <= 7).length
-  return [
-    { label: '慢病记录', value: records.value.length, note: `${responded} 条已响应` },
-    { label: '指标异常', value: healthRisk, note: '关注或高风险' },
-    { label: '缺药待处理', value: pendingShortage, note: '需处理余药或调整计划' },
-    { label: '7天内缺药', value: urgentShortage, note: '优先处理补药' }
-  ]
-})
 
 async function loadData(params = {}) {
   loading.value = true
@@ -304,18 +268,13 @@ const syncPatientToForm = (id, target) => {
 const syncHealthPatient = (id) => syncPatientToForm(id, healthForm)
 const syncShortagePatient = (id) => syncPatientToForm(id, shortageForm)
 const handleResetSearch = () => {
-  Object.assign(searchForm, { keyword: '', riskLevel: '', patientId: '' })
+  Object.assign(searchForm, { keyword: '', patientId: '' })
 }
 const refreshData = async () => {
   if (activeTab.value === 'health') {
     crudRef.value?.refresh()
   }
   await loadShortageReports()
-}
-const markResponded = async (record) => {
-  await healthApi.update({ ...record, responded: true, responseTime: new Date().toISOString().slice(0, 16).replace('T', ' ') })
-  Message.success('健康指标已标记响应')
-  refreshData()
 }
 const openHealthDialog = () => {
   Object.assign(healthForm, {
@@ -326,8 +285,7 @@ const openHealthDialog = () => {
     eveningBP: '',
     fastingGlucose: null,
     responded: true,
-    riskLevel: '正常',
-    note: ''
+    source: '后台创建'
   })
   syncHealthPatient(healthForm.patientId)
   healthDialogVisible.value = true

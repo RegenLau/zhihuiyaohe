@@ -1203,6 +1203,7 @@ export const healthRecords = [
     fastingGlucose: 6.2,
     responded: true,
     riskLevel: '正常',
+    source: '药盒',
     note: '数据完整'
   },
   {
@@ -1215,6 +1216,7 @@ export const healthRecords = [
     fastingGlucose: 6.8,
     responded: true,
     riskLevel: '关注',
+    source: '患者端',
     note: '晨间血压偏高'
   },
   {
@@ -1227,6 +1229,7 @@ export const healthRecords = [
     fastingGlucose: null,
     responded: false,
     riskLevel: '高风险',
+    source: '药盒',
     note: '全天未上报'
   },
   {
@@ -1239,6 +1242,7 @@ export const healthRecords = [
     fastingGlucose: null,
     responded: true,
     riskLevel: '关注',
+    source: '药盒',
     note: '血压偏高，设备离线后缺晚间数据'
   },
   {
@@ -1251,6 +1255,7 @@ export const healthRecords = [
     fastingGlucose: 5.8,
     responded: true,
     riskLevel: '正常',
+    source: '家属端',
     note: '血压血糖稳定'
   }
 ]

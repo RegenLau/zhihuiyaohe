@@ -110,7 +110,7 @@
           <a-col :xs="24" :md="12"><a-form-item label="手机号"><a-input v-model="createForm.phone" /></a-form-item></a-col>
           <a-col :xs="24" :md="12">
             <a-form-item label="性别">
-              <a-select v-model="createForm.gender">
+              <a-select v-model="createForm.gender" placeholder="请选择性别">
                 <a-option value="男">男</a-option>
                 <a-option value="女">女</a-option>
               </a-select>
@@ -122,7 +122,7 @@
           <a-col :xs="24">
             <a-form-item label="设备绑定">
               <a-select v-model="createForm.deviceId" :loading="devicesLoading" placeholder="请选择设备" allow-clear>
-                <a-option value="">全部 / 暂不绑定设备</a-option>
+                <a-option value="">暂不绑定设备</a-option>
                 <a-option v-for="device in availableDevices" :key="device.id" :value="device.id">
                   {{ device.sn }} | {{ device.status }} | 电量 {{ device.battery }}
                 </a-option>
@@ -197,7 +197,7 @@ const bindVisible = ref(false)
 const createdPatient = ref(null)
 
 const searchForm = reactive({ keyword: '', deviceBindStatus: '', childBindStatus: '' })
-const createForm = reactive({ name: '', phone: '', gender: '男', birthDate: '', deviceId: '' })
+const createForm = reactive({ name: '', phone: '', gender: '', birthDate: '', deviceId: '' })
 const bindForm = reactive({ patientId: '', patientName: '', deviceId: '' })
 const tableOptions = reactive({
   api: loadPatients,
@@ -261,7 +261,7 @@ const refreshPatients = () => {
 
 const openCreateDialog = async () => {
   createdPatient.value = null
-  Object.assign(createForm, { name: '', phone: '', gender: '男', birthDate: '', deviceId: '' })
+  Object.assign(createForm, { name: '', phone: '', gender: '', birthDate: '', deviceId: '' })
   createVisible.value = true
   await loadAvailableDevices()
 }

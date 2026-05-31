@@ -113,7 +113,7 @@
           <a-col :span="24">
             <a-form-item label="设备绑定">
               <a-select v-model="form.deviceId" :loading="devicesLoading" placeholder="请选择可用设备" allow-clear>
-                <a-option value="">全部 / 暂不绑定设备</a-option>
+                <a-option value="">暂不绑定设备</a-option>
                 <a-option v-for="device in availableDevices" :key="device.id" :value="device.id">
                   {{ device.sn }} | {{ device.status }} | 电量 {{ device.battery }}
                 </a-option>
@@ -154,7 +154,7 @@ const availableDevices = ref([])
 const form = reactive({
   name: '',
   phone: '',
-  gender: '男',
+  gender: '',
   birthDate: '',
   diseasesText: '',
   allergiesText: '',
