@@ -56,6 +56,8 @@ export const statusColor = (status, fallback = 'gray') => {
     未绑定: 'orange',
     已完成: 'green',
     待执行: 'orange',
+    已打卡: 'green',
+    待打卡: 'orange',
     未打卡: 'red',
     漏服: 'red',
     待处理: 'orange',

@@ -96,24 +96,26 @@ const homePageRoutes = [
     component: () => import('@/layout/empty.vue'),
     children: [
       {
+        id: 32,
+        name: 'SmartTasks',
+        path: '/doctor/tasks',
+        meta: {
+          title: '患者用药',
+          icon: 'ri:checkbox-circle-line',
+          type: 'M'
+        },
+        component: () => import('@/views/smart-pillbox/medication/task/index.vue')
+      },
+      {
         id: 31,
         name: 'SmartPlans',
         path: '/doctor/plans',
         meta: {
           title: '用药计划',
           icon: 'ri:calendar-check-line',
-          type: 'M'
-        },
-        component: () => import('@/views/smart-pillbox/medication/plan/index.vue')
-      },
-      {
-        id: 32,
-        name: 'SmartTasks',
-        path: '/doctor/tasks',
-        meta: {
-          title: '服药任务',
-          icon: 'ri:checkbox-circle-line',
-          type: 'M'
+          type: 'M',
+          activeMenu: 'SmartTasks',
+          hidden: true
         },
         component: () => import('@/views/smart-pillbox/medication/task/index.vue')
       },
