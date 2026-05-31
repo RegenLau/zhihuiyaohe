@@ -7,27 +7,28 @@
       :searchForm="searchForm"
       @resetSearch="handleResetSearch">
       <template #tableSearch>
-        <a-col :xs="24" :md="6">
+        <a-col :xs="24" :md="12" :xl="6">
           <a-form-item field="patient" label="患者">
             <a-input v-model="searchForm.patient" placeholder="患者或接收人" allow-clear />
           </a-form-item>
         </a-col>
-        <a-col :xs="24" :md="7">
+        <a-col :xs="24" :md="12" :xl="6">
           <a-form-item field="keyword" label="关键词">
-            <a-input v-model="searchForm.keyword" placeholder="关键词：标题或触发场景" allow-clear />
+            <a-input v-model="searchForm.keyword" placeholder="标题或内容关键词" allow-clear />
           </a-form-item>
         </a-col>
-        <a-col :xs="24" :md="5">
+        <a-col :xs="24" :md="12" :xl="5">
           <a-form-item field="type" label="消息类型">
             <a-select v-model="searchForm.type" placeholder="消息类型" allow-clear>
-              <a-option value="子女提醒">子女提醒</a-option>
+              <a-option value="漏服提醒">漏服提醒</a-option>
               <a-option value="复诊提醒">复诊提醒</a-option>
+              <a-option value="药盒离线">药盒离线</a-option>
               <a-option value="系统提醒">系统提醒</a-option>
               <a-option value="缺药提醒">缺药提醒</a-option>
             </a-select>
           </a-form-item>
         </a-col>
-        <a-col :xs="24" :md="4">
+        <a-col :xs="24" :md="12" :xl="5">
           <a-form-item field="status" label="推送状态">
             <a-select v-model="searchForm.status" placeholder="推送状态" allow-clear>
               <a-option value="待推送">待推送</a-option>
@@ -54,24 +55,19 @@
         </a-button>
       </template>
 
-      <template #messageNo="{ record }">{{ formatMessageNo(record) }}</template>
-      <template #type="{ record }"><a-tag>{{ record.type }}</a-tag></template>
+      <template #pushTime="{ record }">{{ formatDisplayTime(record.sendTime) }}</template>
+      <template #type="{ record }"><a-tag :color="getMessageTypeColor(record.type)">{{ record.type }}</a-tag></template>
       <template #receiver="{ record }">
         <a-space size="mini" wrap>
           <a-tag v-for="item in getReceiverLabels(record)" :key="item">{{ item }}</a-tag>
         </a-space>
       </template>
       <template #channel="{ record }">
-        <a-space size="mini" wrap>
-          <a-tag v-for="item in getChannelLabels(record)" :key="item" :color="getChannelColor(item)">{{ item }}</a-tag>
-        </a-space>
+        {{ formatChannelText(record) }}
       </template>
       <template #creationMode="{ record }"><a-tag>{{ getCreationMode(record) }}</a-tag></template>
       <template #status="{ record }">
-        <a-space direction="vertical" :size="2" fill>
-          <a-tag :color="statusColor(record.status)">{{ record.status }}</a-tag>
-          <span class="smart-muted">{{ record.createTime }}</span>
-        </a-space>
+        <a-tag :color="statusColor(record.status)">{{ record.status }}</a-tag>
       </template>
       <template #operationCell="{ record }">
         <a-space size="mini">
@@ -105,8 +101,9 @@
           <a-col :xs="24" :md="12">
             <a-form-item label="消息类型" required>
               <a-select v-model="formData.type" placeholder="请选择消息类型">
-                <a-option value="子女提醒">子女提醒</a-option>
+                <a-option value="漏服提醒">漏服提醒</a-option>
                 <a-option value="复诊提醒">复诊提醒</a-option>
+                <a-option value="药盒离线">药盒离线</a-option>
                 <a-option value="系统提醒">系统提醒</a-option>
                 <a-option value="缺药提醒">缺药提醒</a-option>
               </a-select>
@@ -162,14 +159,12 @@
         <a-descriptions-item label="接收方">
           <a-space size="mini" wrap><a-tag v-for="item in getReceiverLabels(currentMessage)" :key="item">{{ item }}</a-tag></a-space>
         </a-descriptions-item>
-        <a-descriptions-item label="渠道">
-          <a-space size="mini" wrap><a-tag v-for="item in getChannelLabels(currentMessage)" :key="item" :color="getChannelColor(item)">{{ item }}</a-tag></a-space>
-        </a-descriptions-item>
+        <a-descriptions-item label="渠道">{{ formatChannelText(currentMessage) }}</a-descriptions-item>
         <a-descriptions-item label="触发场景">{{ currentMessage.triggerScene || currentMessage.triggerSource || '手动创建' }}</a-descriptions-item>
         <a-descriptions-item label="创建方式">{{ getCreationMode(currentMessage) }}</a-descriptions-item>
         <a-descriptions-item label="创建人">{{ currentMessage.creator || (getCreationMode(currentMessage) === '系统推送' ? '系统' : '医药师') }}</a-descriptions-item>
         <a-descriptions-item label="推送状态"><a-tag :color="statusColor(currentMessage.status)">{{ currentMessage.status }}</a-tag></a-descriptions-item>
-        <a-descriptions-item v-if="currentMessage.sendTime" label="推送时间">{{ currentMessage.sendTime }}</a-descriptions-item>
+        <a-descriptions-item v-if="currentMessage.sendTime" label="推送时间">{{ formatDisplayTime(currentMessage.sendTime) }}</a-descriptions-item>
         <a-descriptions-item v-if="currentMessage.cancelTime" label="取消时间">{{ currentMessage.cancelTime }}</a-descriptions-item>
       </a-descriptions>
     </a-modal>
@@ -213,18 +208,18 @@ const tableOptions = reactive({
   delete: { show: false }
 })
 const columns = reactive([
-  { title: '消息编号', dataIndex: 'messageNo', width: 100 },
+  { title: '推送时间', dataIndex: 'pushTime', width: 100 },
   { title: '类型', dataIndex: 'type', width: 90 },
   { title: '患者', dataIndex: 'patient', width: 74 },
-  { title: '接收方', dataIndex: 'receiver', width: 100 },
   { title: '渠道', dataIndex: 'channel', width: 108 },
+  { title: '接收方', dataIndex: 'receiver', width: 100 },
   { title: '创建方式', dataIndex: 'creationMode', width: 92 },
   { title: '推送状态', dataIndex: 'status', width: 100 }
 ])
 const formData = reactive({
   id: undefined,
   patientId: '',
-  type: '子女提醒',
+  type: '漏服提醒',
   patient: '',
   receiverTargets: [],
   channels: [],
@@ -261,8 +256,6 @@ const handleResetSearch = () => {
 const refreshMessages = () => {
   crudRef.value?.refresh()
 }
-const formatMessageNo = (record) => `MSG-${String(record?.id || 0).padStart(3, '0')}`
-
 const canChange = (record) => record.status === '待推送'
 const getCreationMode = (record) => record.creationMode || (record.creator === '医药师' ? '后台创建' : '系统推送')
 const normalizeChannelLabels = (record) => {
@@ -284,14 +277,28 @@ const normalizeChannelLabels = (record) => {
   return labels.length ? labels : ['患者端']
 }
 const getChannelLabels = (record) => normalizeChannelLabels(record)
-const getChannelColor = (channel) => {
+const formatChannelText = (record) => getChannelLabels(record).join('、')
+const formatDisplayTime = (value) => {
+  if (!value) return '-'
+  const text = String(value)
+  if (text.startsWith('今日')) return text
+  const match = text.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}:\d{2})/)
+  if (!match) return text
+  const now = new Date()
+  const pad = (item) => String(item).padStart(2, '0')
+  const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+  const date = `${match[1]}-${match[2]}-${match[3]}`
+  return date === today ? `今日 ${match[4]}` : `${date} ${match[4]}`
+}
+const getMessageTypeColor = (type) => {
   const colorMap = {
-    药盒: 'orange',
-    患者端: 'green',
-    家属端: 'purple',
-    后台: 'gray'
+    漏服提醒: 'red',
+    复诊提醒: 'arcoblue',
+    药盒离线: 'purple',
+    系统提醒: 'gray',
+    缺药提醒: 'orange'
   }
-  return colorMap[channel] || 'gray'
+  return colorMap[type] || 'gray'
 }
 const getReceiverLabels = (record) => {
   const value = String(record?.receiver || '')
@@ -335,7 +342,7 @@ const showDialog = (type, record = {}) => {
   Object.assign(formData, {
     id: record.id,
     patientId: type === 'add' ? '' : findPatientId(record),
-    type: record.type || '子女提醒',
+    type: record.type || '漏服提醒',
     patient: record.patient || '',
     receiverTargets: type === 'add' ? [] : receiverCodesFromRecord(record),
     channels: type === 'add' ? [] : getChannelLabels(record).filter((item) => item !== '后台'),
