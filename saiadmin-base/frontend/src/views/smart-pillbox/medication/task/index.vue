@@ -22,7 +22,7 @@
                     <a-tag v-if="item.deviceStatus" :color="statusColor(item.deviceStatus)">{{ item.deviceStatus }}</a-tag>
                   </div>
                   <a-space direction="vertical" :size="4" fill>
-                    <span class="smart-muted">处方编号：{{ item.recordNo }}</span>
+                    <span class="smart-muted">设备编号：{{ item.deviceNo || '未绑定' }}</span>
                     <span>今日药品 {{ item.todayDrugs }} 种 · 下一提醒 {{ item.nextReminder }}</span>
                   </a-space>
                 </a-card>
@@ -87,23 +87,23 @@
                             </div>
                           </div>
                           <div class="task-card-side">
-                            <div class="task-switch-line">
-                              <span class="smart-muted">执行状态</span>
+                            <a-space class="task-card-actions" size="mini">
+                              <template v-if="canAdjustTask(record)">
+                                <a-button size="mini" type="primary" class="task-action-button" @click="openTaskAdjust('dose', record)">调整剂量</a-button>
+                                <a-button size="mini" class="task-action-button" @click="openTaskAdjust('time', record)">调整时间</a-button>
+                              </template>
+                              <a-button v-else size="mini" class="task-action-button" disabled>查看</a-button>
+                            </a-space>
+                            <span class="task-execute-wrap">
                               <a-switch
+                                class="task-execute-switch"
                                 :model-value="isTaskEnabled(record)"
                                 :disabled="!canToggleTask(record)"
                                 checked-text="执行"
                                 unchecked-text="取消"
                                 @change="(checked) => toggleTaskEnabled(record, checked)"
                               />
-                            </div>
-                            <a-space class="task-card-actions" size="mini" wrap>
-                              <template v-if="canAdjustTask(record)">
-                                <a-button size="mini" type="primary" @click="openTaskAdjust('dose', record)">调整剂量</a-button>
-                                <a-button size="mini" @click="openTaskAdjust('time', record)">调整时间</a-button>
-                              </template>
-                              <a-button v-else size="mini" disabled>查看</a-button>
-                            </a-space>
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -136,19 +136,30 @@
 
                 <a-tabs v-else v-model:active-key="activePlanId" class="smart-block-gap-sm">
                   <a-tab-pane v-for="plan in plans" :key="String(plan.id)" :title="plan.title">
-                    <div class="scheme-header">
-                      <div>
-                        <div class="scheme-title-line">
-                          <sa-icon icon="ri:shield-check-line" :size="20" />
-                          <h3 class="scheme-title">{{ plan.title }}</h3>
+                    <div class="plan-overview">
+                      <div class="plan-overview-grid">
+                        <div class="plan-overview-item">
+                          <span class="smart-muted">计划周期</span>
+                          <strong>{{ plan.period }}</strong>
                         </div>
-                        <div class="scheme-meta-line">
-                          <span>{{ plan.period }}</span>
-                          <span>药品 {{ plan.drugs?.length || 0 }} 种</span>
-                          <span>提醒 {{ getPlanReminderCount(plan) }} 个</span>
+                        <div class="plan-overview-item">
+                          <span class="smart-muted">药品数量</span>
+                          <strong>{{ plan.drugs?.length || 0 }} 种</strong>
+                        </div>
+                        <div class="plan-overview-item">
+                          <span class="smart-muted">提醒次数</span>
+                          <strong>{{ getPlanReminderCount(plan) }} 个</strong>
+                        </div>
+                        <div class="plan-overview-item">
+                          <span class="smart-muted">计划状态</span>
+                          <a-space size="mini" wrap>
+                            <a-tag :color="statusColor(plan.status)">{{ plan.status }}</a-tag>
+                            <a-tag>{{ plan.dispatchStatus }}</a-tag>
+                            <a-tag>{{ plan.generatedTasks }}</a-tag>
+                          </a-space>
                         </div>
                       </div>
-                      <a-space wrap>
+                      <a-space class="plan-overview-actions" wrap>
                         <a-button type="primary" @click="openDrugDialog(plan)">
                           <template #icon><sa-icon icon="ri:add-line" :size="16" /></template>
                           新增药品
@@ -166,13 +177,11 @@
                       </a-space>
                     </div>
 
-                    <div class="smart-row scheme-status-row">
-                      <a-tag :color="statusColor(plan.status)">{{ plan.status }}</a-tag>
-                      <a-tag>{{ plan.dispatchStatus }}</a-tag>
-                      <a-tag>{{ plan.generatedTasks }}</a-tag>
+                    <div class="plan-drug-header">
+                      <span>药品明细</span>
+                      <span class="smart-muted">长期方案调整后只影响后续任务</span>
                     </div>
-
-                    <a-table row-key="name" :data="plan.drugs || []" :pagination="false" class="smart-block-gap-sm" table-layout-fixed>
+                    <a-table row-key="name" :data="plan.drugs || []" :pagination="false" class="smart-block-gap-sm plan-drug-table" table-layout-fixed>
                       <template #columns>
                         <a-table-column title="药品" data-index="name">
                           <template #cell="{ record }">
@@ -190,7 +199,6 @@
                             </a-space>
                           </template>
                         </a-table-column>
-                        <a-table-column title="说明" data-index="guide" />
                         <a-table-column title="操作" :width="88">
                           <template #cell="{ record, rowIndex }">
                             <a-button size="mini" type="primary" @click="openDrugDialog(plan, record, rowIndex)">编辑</a-button>
@@ -755,7 +763,7 @@ onMounted(async () => {
 
 .task-card-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 190px;
+  grid-template-columns: minmax(0, 1fr) 280px;
   gap: 18px;
   align-items: stretch;
   padding: 16px 18px;
@@ -765,8 +773,7 @@ onMounted(async () => {
   min-width: 0;
 }
 
-.task-card-title,
-.task-switch-line {
+.task-card-title {
   display: flex;
   gap: 8px;
   align-items: center;
@@ -800,22 +807,39 @@ onMounted(async () => {
 
 .task-card-side {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 12px;
+  align-items: center;
   padding-left: 18px;
   border-left: 1px solid var(--color-border-2);
 }
 
-.task-switch-line {
-  justify-content: space-between;
-  width: 100%;
+.task-card-actions {
+  flex: 0 1 auto;
+  white-space: nowrap;
 }
 
-.task-card-actions {
-  width: 100%;
-  justify-content: flex-end;
+.task-action-button {
+  min-width: 72px;
+}
+
+.task-execute-wrap {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.task-execute-wrap::before {
+  display: inline-block;
+  width: 1px;
+  height: 24px;
+  margin-right: 10px;
+  background: var(--color-border-3);
+  content: '';
+}
+
+.task-execute-switch {
+  flex: 0 0 auto;
 }
 
 @media (max-width: 1280px) {
@@ -846,19 +870,71 @@ onMounted(async () => {
   .task-card-actions {
     width: auto;
   }
+
+  .plan-overview,
+  .plan-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-overview-actions {
+    justify-content: flex-start;
+  }
 }
 
-.scheme-title-line,
-.scheme-meta-line {
+.plan-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--color-border-2);
+}
+
+.plan-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.plan-overview-item {
   display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
 }
 
-.scheme-meta-line {
-  color: var(--color-text-3);
-  margin-top: 6px;
+.plan-overview-item strong {
+  font-weight: 500;
+}
+
+.plan-overview-actions {
+  justify-content: flex-end;
+}
+
+.plan-drug-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  font-weight: 500;
+}
+
+.plan-drug-table :deep(.arco-table-cell) {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+@media (max-width: 1280px) {
+  .plan-overview,
+  .plan-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-overview-actions {
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 1024px) {
