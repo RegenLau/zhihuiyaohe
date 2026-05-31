@@ -291,7 +291,7 @@ const handleUpdate = async () => {
 }
 
 onMounted(async () => {
-  const treeData = dictList['attachment_type']
+  const treeData = Array.isArray(dictList['attachment_type']) ? dictList['attachment_type'] : []
   sliderData.value = [{ label: '所有', value: 'all' }, ...treeData]
   await getAttachmentList({ page: 1 })
 })

@@ -11,7 +11,7 @@
 
     <a-modal style="z-index: 1000" v-model:visible="resourceVisible" :render-to-body="false" :width="1080" :footer="false" draggable>
       <template #title>资源选择器</template>
-      <sa-resource v-model="list" multiple ref="resource" returnType="url" />
+      <sa-resource v-if="resourceVisible" v-model="list" multiple ref="resource" returnType="url" />
     </a-modal>
   </div>
 </template>

@@ -246,9 +246,9 @@ const deviceSummary = [
 ]
 
 const focusPatients = [
-  { name: '张建国', reason: '近 3 天晚间任务连续延迟', status: '待随访', color: 'orange', route: '/doctor/patients/2' },
-  { name: '陈德明', reason: '未绑定设备且今日无服药记录', status: '需建档', color: 'red', route: '/doctor/patients/4' },
-  { name: '王秀兰', reason: '今日药品 3 种，晚间仍有提醒', status: '跟进中', color: 'arcoblue', route: '/doctor/patients/1' }
+  { name: '张建国', reason: '近 3 天晚间任务连续延迟', status: '待随访', color: 'orange', route: '/doctor/patient-detail?patientId=2' },
+  { name: '陈德明', reason: '未绑定设备且今日无服药记录', status: '需建档', color: 'red', route: '/doctor/patient-detail?patientId=4' },
+  { name: '王秀兰', reason: '今日药品 3 种，晚间仍有提醒', status: '跟进中', color: 'arcoblue', route: '/doctor/patient-detail?patientId=1' }
 ]
 
 const operationStages = [

@@ -187,7 +187,48 @@ app.get('/core/system/dictAll', (req, res) => {
       ],
       dashboard: [
         { id: 1, label: 'Console', value: '/dashboard/console', color: '#3b82f6' }
+      ],
+      attachment_type: [
+        { id: 1, label: '图片', value: 'image' },
+        { id: 2, label: '文档', value: 'application' }
+      ],
+      upload_mode: [
+        { id: 1, label: '本地存储', value: 'local' },
+        { id: 2, label: '网络图片', value: 'remote' }
       ]
+    })
+  )
+})
+
+app.get('/core/system/getResourceList', (req, res) => {
+  const { mime_type: mimeType, origin_name: originName } = req.query
+  const resources = prescriptionAttachments.map((item) => ({
+    id: item.id,
+    hash: `mock-resource-${item.id}`,
+    origin_name: item.fileName,
+    object_name: item.fileName,
+    storage_path: '/mock/prescription',
+    storage_mode: 'local',
+    mime_type: item.fileName.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg',
+    suffix: item.fileName.split('.').pop() || 'jpg',
+    url: `https://placehold.co/320x220?text=${encodeURIComponent(item.fileName)}`,
+    create_time: item.uploadTime,
+    size_info: '1.2 MB'
+  }))
+  const records = resources.filter((item) => {
+    const typeMatched = !mimeType || item.mime_type.includes(String(mimeType))
+    const nameMatched = !originName || item.origin_name.includes(String(originName))
+    return typeMatched && nameMatched
+  })
+  const page = paginate(records, req.query)
+  res.json(
+    ok({
+      data: page.records,
+      records: page.records,
+      total: page.total,
+      current_page: page.current,
+      current: page.current,
+      size: page.size
     })
   )
 })

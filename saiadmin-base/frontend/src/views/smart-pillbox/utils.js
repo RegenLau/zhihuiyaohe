@@ -23,6 +23,19 @@ export const formatDateTime = () => {
   )}`
 }
 
+export const addDays = (date, days) => {
+  const nextDate = new Date(date)
+  nextDate.setDate(nextDate.getDate() + days)
+  return nextDate
+}
+
+export const formatDate = (date = new Date()) => {
+  const nextDate = date instanceof Date ? date : new Date(date)
+  if (Number.isNaN(nextDate.getTime())) return ''
+  const pad = (value) => String(value).padStart(2, '0')
+  return `${nextDate.getFullYear()}-${pad(nextDate.getMonth() + 1)}-${pad(nextDate.getDate())}`
+}
+
 export const generatePatientNo = () => {
   const now = new Date()
   const pad = (value) => String(value).padStart(2, '0')

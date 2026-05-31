@@ -207,7 +207,6 @@ const tableOptions = reactive({
   operationColumn: true,
   operationColumnText: '操作',
   operationColumnWidth: 230,
-  operationColumnFixed: false,
   add: { show: false },
   edit: { show: false },
   delete: { show: false }

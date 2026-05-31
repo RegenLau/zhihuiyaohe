@@ -16,7 +16,7 @@
               <a-col :xs="24" :md="12"><a-form-item label="当前版本"><a-input v-model="agreement.version" placeholder="请输入版本号" /></a-form-item></a-col>
               <a-col :xs="24" :md="12"><a-form-item label="启用状态"><a-switch v-model="agreement.status" :checked-value="1" :unchecked-value="0" /></a-form-item></a-col>
               <a-col :xs="24" :md="12"><a-form-item label="适用端"><a-input model-value="小程序患者端 / 子女端" readonly /></a-form-item></a-col>
-              <a-col :span="24"><a-form-item label="协议摘要"><ma-wangEditor v-model="agreement.summary" :height="160" /></a-form-item></a-col>
+              <a-col :span="24"><a-form-item label="协议摘要"><a-textarea v-model="agreement.summary" :auto-size="{ minRows: 3, maxRows: 5 }" /></a-form-item></a-col>
               <a-col :span="24"><a-form-item label="协议正文"><ma-wangEditor v-model="agreement.content" :height="360" /></a-form-item></a-col>
             </a-row>
           </a-form>

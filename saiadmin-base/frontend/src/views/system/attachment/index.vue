@@ -213,7 +213,7 @@ const columns = reactive([
 
 // 页面加载完成执行
 onMounted(async () => {
-  const treeData = dictList['attachment_type']
+  const treeData = Array.isArray(dictList['attachment_type']) ? dictList['attachment_type'] : []
   sliderData.value = [{ label: '所有', value: 'all' }, ...treeData]
   crudRef.value?.refresh()
 })

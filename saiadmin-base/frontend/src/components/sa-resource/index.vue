@@ -82,7 +82,7 @@ const props = defineProps({
 })
 
 onMounted(async () => {
-  const treeData = dictList['attachment_type']
+  const treeData = Array.isArray(dictList['attachment_type']) ? dictList['attachment_type'] : []
   sliderData.value = [{ label: '所有', value: 'all' }, ...treeData]
   await getAttachmentList({ page: 1 })
 
@@ -99,7 +99,7 @@ const getAttachmentList = async (params = {}) => {
     total: response?.data?.total ?? 0,
     currentPage: response?.data?.current_page ?? 21,
   }
-  attachmentList.value = response?.data?.data
+  attachmentList.value = response?.data?.data || response?.data?.records || []
   resourceLoading.value = false
 }
 

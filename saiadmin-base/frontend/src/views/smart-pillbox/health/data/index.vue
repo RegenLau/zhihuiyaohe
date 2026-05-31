@@ -222,7 +222,6 @@ const tableOptions = reactive({
   showTools: true,
   showIndex: false,
   operationColumn: false,
-  operationColumnFixed: false,
   add: { show: false },
   edit: { show: false },
   delete: { show: false }

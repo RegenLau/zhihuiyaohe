@@ -421,7 +421,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { useRoute } from 'vue-router'
 import { ocrApi, patientApi, planApi, taskApi } from '@/views/plugin/smart-pillbox/api/doctor'
-import { formatDateTime, getPayload, getRecords, pickQueryValue, statusColor } from '@/views/smart-pillbox/utils'
+import { formatDate, formatDateTime, getPayload, getRecords, pickQueryValue, statusColor } from '@/views/smart-pillbox/utils'
 
 const route = useRoute()
 
@@ -431,7 +431,7 @@ const getRouteTab = () => (route.path === '/doctor/plans' || pickQueryValue(rout
 const activeTab = ref(getRouteTab())
 const activePlanId = ref('')
 const drugFilter = ref('全部用药')
-const taskDate = ref('2026-05-21')
+const taskDate = ref(formatDate())
 const patients = ref([])
 const taskRecords = ref([])
 const plans = ref([])
