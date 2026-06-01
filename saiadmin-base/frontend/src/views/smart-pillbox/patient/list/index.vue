@@ -88,21 +88,7 @@
     </sa-table>
 
     <a-modal v-model:visible="createVisible" title="新增患者建档" width="min(720px, calc(100vw - 32px))" :footer="false">
-      <a-alert v-if="createdPatient" type="success" show-icon style="margin-bottom: 16px">
-        {{ createdPatient.name }} 已完成建档，{{ hasBoundDevice ? '下一步可以继续设置用药计划' : '下一步需要先绑定设备，再设置用药计划' }}
-      </a-alert>
-      <a-descriptions v-if="createdPatient" :column="2" bordered>
-        <a-descriptions-item label="姓名">{{ createdPatient.name }}</a-descriptions-item>
-        <a-descriptions-item label="手机号">{{ createdPatient.phone }}</a-descriptions-item>
-        <a-descriptions-item label="性别">{{ createdPatient.gender }}</a-descriptions-item>
-        <a-descriptions-item label="出生年月日">{{ createdPatient.birthDate }}</a-descriptions-item>
-        <a-descriptions-item label="设备状态">
-          <a-tag :color="statusColor(createdPatient.deviceStatus)">{{ createdPatient.deviceStatus }}</a-tag>
-        </a-descriptions-item>
-        <a-descriptions-item label="下一步">{{ hasBoundDevice ? '设置用药计划' : '绑定药盒设备' }}</a-descriptions-item>
-      </a-descriptions>
-
-      <a-form v-else :model="createForm" layout="vertical">
+      <a-form :model="createForm" layout="vertical">
         <h3 class="form-step-title">患者基础信息</h3>
         <p class="smart-muted" style="margin-top: 6px">批量导入和 HIS 同步也会先进入同样的基础档案状态。</p>
         <a-row :gutter="16" style="margin-top: 16px">
@@ -137,16 +123,7 @@
           <template #icon><sa-icon icon="ri:close-line" :size="16" /></template>
           关闭
         </a-button>
-        <a-button v-if="createdPatient" @click="router.push('/doctor/patients')">返回列表</a-button>
-        <a-button v-if="createdPatient && hasBoundDevice" type="primary" @click="goToMedicationPlan(createdPatient)">
-          <template #icon><sa-icon icon="ri:calendar-check-line" :size="16" /></template>
-          设置用药计划
-        </a-button>
-        <a-button v-if="createdPatient && !hasBoundDevice" type="primary" @click="goToDeviceBinding(createdPatient)">
-          <template #icon><sa-icon icon="ri:link-m" :size="16" /></template>
-          继续绑定设备
-        </a-button>
-        <a-button v-if="!createdPatient" type="primary" :loading="saving" @click="saveCreate">
+        <a-button type="primary" :loading="saving" @click="saveCreate">
           <template #icon><sa-icon icon="ri:save-3-line" :size="16" /></template>
           保存基础档案
         </a-button>
@@ -179,7 +156,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { useRouter } from 'vue-router'
 import { deviceApi, patientApi } from '@/views/plugin/smart-pillbox/api/doctor'
@@ -194,7 +171,6 @@ const patients = ref([])
 const availableDevices = ref([])
 const createVisible = ref(false)
 const bindVisible = ref(false)
-const createdPatient = ref(null)
 
 const searchForm = reactive({ keyword: '', deviceBindStatus: '', childBindStatus: '' })
 const createForm = reactive({ name: '', phone: '', gender: '', birthDate: '', deviceId: '' })
@@ -219,8 +195,6 @@ const columns = reactive([
   { title: '子女绑定状态', dataIndex: 'child', width: 140 },
   { title: '完成率', dataIndex: 'completionRate', width: 150 }
 ])
-
-const hasBoundDevice = computed(() => isDeviceBound(createdPatient.value || {}))
 
 async function loadPatients(params = {}) {
   loading.value = true
@@ -259,7 +233,6 @@ const refreshPatients = () => {
 }
 
 const openCreateDialog = async () => {
-  createdPatient.value = null
   Object.assign(createForm, { name: '', phone: '', gender: '', birthDate: '', deviceId: '' })
   createVisible.value = true
   await loadAvailableDevices()
@@ -267,7 +240,6 @@ const openCreateDialog = async () => {
 
 const closeCreateDialog = () => {
   createVisible.value = false
-  createdPatient.value = null
 }
 
 const isChildBound = (child) => isBoundValue(child)
@@ -310,8 +282,9 @@ const saveCreate = async () => {
       lastActiveAt: null
     })
     const patient = getPayload(response)
-    createdPatient.value = await bindSelectedDevice(patient, createForm.deviceId)
+    await bindSelectedDevice(patient, createForm.deviceId)
     Message.success(createForm.deviceId ? '患者已建档并绑定设备' : '患者基础档案已保存')
+    createVisible.value = false
     refreshPatients()
   } finally {
     saving.value = false
@@ -367,14 +340,6 @@ const saveBindDevice = async () => {
   } finally {
     saving.value = false
   }
-}
-
-const goToDeviceBinding = (patient) => {
-  router.push({ path: '/doctor/devices', query: { action: 'bind', patientId: patient.id, patientName: patient.name } })
-}
-
-const goToMedicationPlan = (patient) => {
-  router.push({ path: '/doctor/plans', query: { patientId: patient.id, action: 'create' } })
 }
 
 onMounted(refreshPatients)
