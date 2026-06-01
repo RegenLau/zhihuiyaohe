@@ -113,7 +113,9 @@ const homePageRoutes = [
         meta: {
           title: '服药任务',
           icon: 'ri:checkbox-circle-line',
-          type: 'M'
+          type: 'M',
+          activeMenu: 'SmartPlans',
+          hidden: true
         },
         component: () => import('@/views/smart-pillbox/medication/task/index.vue')
       },
